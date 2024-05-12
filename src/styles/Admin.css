@@ -1,0 +1,219 @@
+/* admin.css */
+
+/* Container styles */
+
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+.admin-container {
+    padding: 40px;
+}
+
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #28a745;
+    --background-color: #f8f9fa;
+    --text-color: #343a40;
+}
+
+.bg-dark {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+
+
+
+.admin-content {
+    margin-top: 20px;
+}
+
+/* Search and filter styles */
+.search-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.search-container input[type="text"] {
+    padding: 12px;
+    margin-right: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+
+}
+
+.search-container button{
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    margin-top: 20px;
+
+}
+
+.search-container button:hover,  .next-btn:hover {
+    background-color: #0056b3;
+}
+.next-btn{
+    padding: 8px 16px;
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    margin-top: 20px;
+
+}
+
+.next-btn:hover{
+    background-color: #28a745;
+
+}
+
+.filter-button {
+    padding: 8px 16px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 8px;
+    margin-left: 8px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+
+}
+
+.filters-dropdown {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.filter-dropdown.active {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.filter-group {
+    margin-bottom: 16px;
+}
+
+.filter-label {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.case-type-options {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.case-type-option {
+    padding: 8px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    color: #007bff;
+    cursor: pointer;
+}
+
+.case-type-option.selected {
+    background-color: #28a745;
+    color: white;
+}
+
+.radio-buttons {
+    display: flex;
+    align-items: center;
+}
+
+.radio-buttons label {
+    margin-right: 16px;
+}
+
+.date-range-selector {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+/* Patient table styles */
+.patient-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+
+}
+
+.patient-table th,
+.patient-table td {
+    padding: 12px;
+    text-align: left;
+}
+
+.patient-table th {
+    background-color: green;
+    color: white;
+}
+
+.patient-table tbody tr:nth-child(even) {
+    background-color: #f0f0f0;
+}
+
+.patient-table tbody tr:nth-child(odd) {
+    background-color: #e6f7ff;
+}
+
+.patient-table tbody tr:hover {
+    background-color: #dcdcdc;
+}
+.pagination-container {
+    margin-top: 20px;
+    text-align: center;
+}
+@media (max-width: 768px) {
+    .admin-container {
+        padding: 20px;
+    }
+
+    .search-container {
+        flex-direction: column;
+    }
+
+    .search-container input[type="text"] {
+        margin-bottom: 12px;
+    }
+}
+.filter-modal {
+    display: none;
+    position: fixed;
+    top: calc(100% + 10px); /* Position below the filter button */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    /* Add other modal styles as needed */
+}
