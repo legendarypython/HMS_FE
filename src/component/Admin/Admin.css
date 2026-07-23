@@ -1,0 +1,92 @@
+.dashboard-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.dashboard-toolbar .ui-input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.filters-modal {
+  margin-top: var(--space-4);
+}
+
+.filter-group {
+  margin-bottom: var(--space-4);
+}
+
+.filter-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.case-type-options {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.case-type-option {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.case-type-option.selected {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.date-range-selector {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.date-range-selector input {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.radio-buttons {
+  display: flex;
+  gap: var(--space-4);
+  font-size: 0.9rem;
+}
+
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .dashboard-toolbar .ui-input {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+
+  .dashboard-toolbar .ui-btn {
+    flex: 1;
+  }
+
+  .date-range-selector {
+    flex-wrap: wrap;
+  }
+
+  .date-range-selector .react-datepicker-wrapper {
+    flex: 1;
+    min-width: 130px;
+  }
+}

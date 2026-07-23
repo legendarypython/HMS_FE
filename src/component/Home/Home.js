@@ -1,45 +1,73 @@
-import React, { Component } from 'react';
-import Homeimage from "../Homeimage"
-import Navber from '../Navber/Navber';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import AppNavbar from '../Shared/AppNavbar';
+import Footer from '../Footer';
+import Button from '../ui/Button';
+import { API_BASE } from '../../utils/api';
+import hospitalImage from '../../photos/hospital.jpg';
 import './Home.css';
 
-import OurDoctors from '../OurDoctors';
-import Footer from '../Footer';
-import HomeQuote from '../HomeQuote';
-import Mission from '../Mission';
+const Home = () => {
+  const [doctors, setDoctors] = useState([]);
 
+  useEffect(() => {
+    fetch(`${API_BASE}/api/doctors/public`)
+      .then(res => res.json())
+      .then(json => setDoctors(json.data || []))
+      .catch(err => console.error('Error fetching doctors:', err));
+  }, []);
 
-class Home extends Component {
-    
+  return (
+    <div>
+      <AppNavbar role="public" />
 
-    render() {
-        return (
-            <div className = "bg-dark">
-                <Navber />
-                <Homeimage/>
-                <Mission/>
-                <br>
-                
-                </br>
-                
-                <h1 className="head text-white" align="center"> Our Doctors </h1>
-                <br />
-                <br/>
-                <OurDoctors/>
+      <section className="home-hero" style={{ backgroundImage: `url(${hospitalImage})` }}>
+        <div className="home-hero-content">
+          <h1>Panchkuiyan Hospital Pvt. Ltd.</h1>
+          <p>Compassionate, accessible healthcare for the community.</p>
+          <Link to="/book-appointment">
+            <Button variant="primary">Book an Appointment</Button>
+          </Link>
+        </div>
+      </section>
 
-                <br></br>
-                <br></br>
-                <h1 className="text-white" align="center">News and Achievements</h1>
-                <br/>
-                <br/>
-                <HomeQuote/>
-                <br/>
-                <br/>
-                <Footer/>
-               
-            </div>
-        );
-    }
-}
+      <section className="home-section">
+        <span className="ui-eyebrow">Who We Are</span>
+        <h2 className="section-title">Our Mission</h2>
+        <p>
+          Our mission is to provide compassionate, accessible, high quality, cost-effective
+          healthcare to the community, to promote health, and to participate in appropriate
+          clinical care for every patient we see.
+        </p>
+      </section>
+
+      {doctors.length > 0 && (
+        <section className="home-section home-section-alt">
+          <span className="ui-eyebrow">Meet The Team</span>
+          <h2 className="section-title">Our Doctors</h2>
+          <div className="doctor-grid">
+            {doctors.map(doc => (
+              <div className="doctor-card ui-card" key={doc._id}>
+                <h4>{doc.name}</h4>
+                <p className="text-muted">{doc.specialization}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="cta-section">
+        <span className="ui-eyebrow" style={{ color: 'rgba(255,255,255,0.85)' }}>Get Started</span>
+        <h2>Ready to see a doctor?</h2>
+        <p>Book an appointment online in a few seconds - no account required.</p>
+        <Link to="/book-appointment">
+          <Button variant="secondary" style={{ backgroundColor: '#fff' }}>Book Now</Button>
+        </Link>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
 
 export default Home;

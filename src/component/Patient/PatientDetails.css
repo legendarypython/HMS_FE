@@ -1,0 +1,29 @@
+.patient-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.patient-detail-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .patient-detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .patient-detail-actions {
+    flex-direction: column;
+  }
+
+  .patient-detail-actions .ui-btn {
+    width: 100%;
+  }
+}

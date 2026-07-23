@@ -1,194 +1,145 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useHistory, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
-import '../../styles/PatientDetails.css';
-import {AddPatientForm} from './AddPatient'; // Import the modified AddPatientForm component
+import AppNavbar from '../Shared/AppNavbar';
+import DocumentPreviewModal from '../Shared/DocumentPreviewModal';
+import Card from '../ui/Card';
+import Badge from '../ui/Badge';
+import Button from '../ui/Button';
+import Spinner from '../ui/Spinner';
+import Icon from '../ui/Icon';
+import { AddPatientForm } from './AddPatient';
+import { getAuthHeader } from '../../utils/auth';
+import { API_BASE } from '../../utils/api';
+import './PatientDetails.css';
+
+const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
 
 const PatientDetails = () => {
+  const role = sessionStorage.getItem('userRole');
   const { patientId } = useParams();
   const [patientDetails, setPatientDetails] = useState(null);
-  const [documents, setDocuments] = useState([]);
+  const [error, setError] = useState(null);
   const [previewDocument, setPreviewDocument] = useState(null);
-  const history = useHistory();
-  const [editMode, setEditMode] = useState(false); // State to manage edit mode
+  const [editMode, setEditMode] = useState(false);
 
-  useEffect(() => {
-    const fetchPatientDetails = async () => {
-      try {
-        const response = await axios.get(`http://localhost:6000/api/patients/${patientId}`);
-        if (response.status === 200) {
-          const data = response.data.data;
-          setPatientDetails(data);
-          setDocuments(data.documents || []);
-        } else {
-          console.error('Failed to fetch patient details');
-        }
-      } catch (error) {
-        console.error('Error fetching patient details:', error);
-      }
-    };
-  
-
-    fetchPatientDetails();
-  }, [patientId]);
-
- 
-  const applyStyles = () => {
-    const iframe = document.querySelector('iframe');
-    if (iframe) {
-      const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-      const imgElement = iframeDocument.querySelector('img');
-      if (imgElement) {
-        // Apply styles to the img element
-        imgElement.style.width = '100%';
-        imgElement.style.height = '100%';
-        imgElement.style.objectFit = 'contain'
-      }
+  const fetchPatientDetails = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/api/patients/${patientId}`, { headers: getAuthHeader() });
+      setPatientDetails(response.data.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not load this patient record.');
     }
   };
+
+  useEffect(() => { fetchPatientDetails(); }, [patientId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleDocumentPreview = async (document) => {
     try {
-      // Assuming 'document' contains the necessary information to fetch the document content
-      const response = await axios.get(`http://localhost:6000/api/documents/${document._id}`, {
-        responseType: 'blob' // Set the response type to 'blob' for binary data
+      const response = await axios.get(`${API_BASE}/api/documents/${document._id}`, {
+        responseType: 'blob',
+        headers: getAuthHeader()
       });
-
-      // Create a URL for the blob content to use in iframe or other elements
       const documentUrl = URL.createObjectURL(response.data);
-      setPreviewDocument({ name: document.name, url: documentUrl });
+      setPreviewDocument({ name: document.filename, url: documentUrl });
     } catch (error) {
       console.error('Error fetching document:', error);
     }
   };
 
-  const closePreview = () => {
-    setPreviewDocument(null);
-  };
-  const handleEdit = () => {
-    setEditMode(true); // Enable edit mode
+  const handleSaved = () => {
+    setEditMode(false);
+    fetchPatientDetails();
   };
 
-  const handleCancelEdit = () => {
-    setEditMode(false); // Disable edit mode
-  };
-  if (!patientDetails) {
-    return <div>Loading...</div>;
+  if (error) {
+    return (
+      <div>
+        <AppNavbar role={role} />
+        <div className="page page-narrow">
+          <div className="ui-banner ui-banner-error">{error}</div>
+          <Link to="/dashboard"><Button variant="ghost">Back to Patients</Button></Link>
+        </div>
+      </div>
+    );
   }
- 
+
+  if (!patientDetails) {
+    return (
+      <div>
+        <AppNavbar role={role} />
+        <Spinner fullPage label="Loading patient record..." />
+      </div>
+    );
+  }
 
   return (
-    <div className="background-container">
-      <div className='form-container'>
-        <h2>Patient Details</h2>
-    {!editMode && <><div className="patient-details">
-                  <div>
-                      <label>First Name:</label>
-                      <span>{patientDetails.firstName}</span>
-                  </div>
-                  <div>
-                      <label>Last Name:</label>
-                      <span>{patientDetails.lastName}</span>
-                  </div>
-                  <div>
-                      <label>Husband's First Name:</label>
-                      <span>{patientDetails.husbandFirstName}</span>
-                  </div>
-                  <div>
-                      <label>Husband's Last Name:</label>
-                      <span>{patientDetails.husbandLastName}</span>
-                  </div>
-                  <div>
-                      <label>Date of Birth:</label>
-                      <span>{patientDetails.dateOfBirth}</span>
-                  </div>
-                  <div>
-                      <label>Address:</label>
-                      <span>{patientDetails.address}</span>
-                  </div>
-                  <div>
-                      <label>Aadhar Number:</label>
-                      <span>{patientDetails.aadhar}</span>
-                  </div>
-                  <div>
-                      <label>Phone Number:</label>
-                      <span>{patientDetails.phone}</span>
-                  </div>
-                  <div>
-                      <label>Email:</label>
-                      <span>{patientDetails.email}</span>
-                  </div>
-                  <div>
-                      <label>Married For (Years):</label>
-                      <span>{patientDetails.marriedFor}</span>
-                  </div>
-                  <div>
-                      <label>Diagnosis:</label>
-                      <span>{patientDetails.diagnosis}</span>
-                  </div>
-                  <div>
-                      <label>Date of Admission:</label>
-                      <span>{patientDetails.dateOfAdmission}</span>
-                  </div>
-                  <div>
-                      <label>Case Type:</label>
-                      <span>{patientDetails.caseType}</span>
-                  </div>
-                  <div>
-                      <label>Is New Patient:</label>
-                      <span>{patientDetails.isNewPatient ? 'Yes' : 'No'}</span>
-                  </div>
-              </div><div className="documents-preview">
-                      <h3>Documents</h3>
-                      {documents.length > 0 ? (
-                          <ul className="document-list">
-                              {documents.map((document, index) => (
-                                  <li key={index} onClick={() => handleDocumentPreview(document)}>
-                                      {document.filename}
-                                  </li>
-                              ))}
-                          </ul>
-                      ) : (
-                          <p>No documents uploaded.</p>
-                      )}
-                  </div><button onClick={handleEdit} className='edit-btn'>Edit</button>
-        {patientDetails.caseType === 1 &&
-        <Link to= {`/patient/view/anteNatalForm/${patientId}`} className="cancel-btn">
-          View AnteNatal Form 
-        </Link>}
-        {
-          patientDetails.caseType === 2 &&
-          <Link to= {`/patient/view/infertilityForm/${patientId}`} className="cancel-btn">
-            View Infertility Form 
-          </Link>  
-        }
-               
-
-      
-        <Link to="/administrator/login/admin_home" className="cancel-btn">
-          Back
-        </Link>
-        </> }
-        {editMode &&  <AddPatientForm
-            initialPatientDetails={patientDetails}
-          />}
-
-        </div>
-        
-        {previewDocument && (
-          <div className="document-preview-overlay">
-            <div className="document-preview-container">
-              <button className="close-preview-btn" onClick={closePreview}>
-                Close Preview
-              </button>
-              <iframe src={previewDocument.url} title={previewDocument.name} onLoad={applyStyles} />
+    <div>
+      <AppNavbar role={role} />
+      <div className="page">
+        {editMode ? (
+          <AddPatientForm initialPatientDetails={patientDetails} onSaved={handleSaved} />
+        ) : (
+          <Card>
+            <div className="patient-detail-header">
+              <h2 className="section-title" style={{ margin: 0 }}>{patientDetails.firstName} {patientDetails.lastName}</h2>
+              <Badge variant="primary">{CASE_TYPE_LABELS[patientDetails.caseType] || '-'}</Badge>
             </div>
-          </div>
-          
-        )}
+
+            <div className="record-grid">
+              <div><div className="record-field-label">Husband's Name</div><div className="record-field-value">{patientDetails.husbandFirstName} {patientDetails.husbandLastName}</div></div>
+              <div><div className="record-field-label">Date of Birth</div><div className="record-field-value">{patientDetails.dateOfBirth}</div></div>
+              <div><div className="record-field-label">Address</div><div className="record-field-value">{patientDetails.address}</div></div>
+              <div><div className="record-field-label">Aadhar Number</div><div className="record-field-value">{patientDetails.aadhar}</div></div>
+              <div><div className="record-field-label">Phone Number</div><div className="record-field-value">{patientDetails.phone}</div></div>
+              <div><div className="record-field-label">Email</div><div className="record-field-value">{patientDetails.email || '-'}</div></div>
+              <div><div className="record-field-label">Married For (Years)</div><div className="record-field-value">{patientDetails.marriedFor}</div></div>
+              <div><div className="record-field-label">Date of Admission</div><div className="record-field-value">{new Date(patientDetails.dateOfAdmission).toLocaleDateString()}</div></div>
+              <div><div className="record-field-label">Is New Patient</div><div className="record-field-value">{patientDetails.isNewPatient ? 'Yes' : 'No'}</div></div>
+            </div>
+            <div style={{ marginTop: 'var(--space-5)' }}>
+              <div className="record-field-label">Diagnosis</div>
+              <div className="record-field-value">{patientDetails.diagnosis || '-'}</div>
+            </div>
+
+            <h3 className="record-section-title">Documents</h3>
+            {patientDetails.documents && patientDetails.documents.length > 0 ? (
+              <div className="record-documents">
+                {patientDetails.documents.map((document) => (
+                  <button key={document._id} className="record-document-item" onClick={() => handleDocumentPreview(document)}>
+                    <Icon name="file" size={18} />
+                    {document.filename}
+                  </button>
+                ))}
               </div>
+            ) : (
+              <div className="ui-empty-state">
+                <Icon name="inbox" size={28} />
+                <p>No documents uploaded.</p>
+              </div>
+            )}
 
+            <div className="patient-detail-actions">
+              {role === 'owner' && <Button onClick={() => setEditMode(true)}>Edit</Button>}
+              {patientDetails.caseType === 1 && (
+                <Link to={`/patients/view/anteNatalForm/${patientId}`}><Button variant="secondary">View AnteNatal Form</Button></Link>
+              )}
+              {patientDetails.caseType === 2 && (
+                <Link to={`/patients/view/infertilityForm/${patientId}`}><Button variant="secondary">View Infertility Form</Button></Link>
+              )}
+              <Link to="/dashboard"><Button variant="ghost">Back</Button></Link>
+            </div>
+          </Card>
+        )}
 
-      
+        <DocumentPreviewModal
+          document={previewDocument}
+          documents={patientDetails?.documents || []}
+          onSelect={handleDocumentPreview}
+          onClose={() => setPreviewDocument(null)}
+        />
+      </div>
+    </div>
   );
 };
 

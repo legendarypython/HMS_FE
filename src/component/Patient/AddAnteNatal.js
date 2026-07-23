@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory,Link } from 'react-router-dom';
-import '../../styles/AddAnteNatal.css';
+import AppNavbar from '../Shared/AppNavbar';
+import '../../styles/caseForms.css';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { getAuthHeader } from '../../utils/auth';
+import { API_BASE } from '../../utils/api';
 
 const AntenatalDetailsForm = () => {
   const { patientId } = useParams();
@@ -78,14 +81,15 @@ const AntenatalDetailsForm = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:6000/api/antenatal/create', formData, {
+      const response = await axios.post(`${API_BASE}/api/antenatal/create`, formData, {
         method: 'POST',
         headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
+            ...getAuthHeader()
         }      });
       if (response.status === 201) {
         // Submission successful
-        history.push( `/administrator/login/admin_home`); // Redirect to success page
+        history.push( `/dashboard`); // Redirect to success page
       } else {
         // Handle error response
         const errorData =  response.data;
@@ -189,7 +193,9 @@ const AntenatalDetailsForm = () => {
   }, [antenatalDetails]);
 
   return (
-    <div className="background-container">
+    <div>
+      <AppNavbar role={sessionStorage.getItem('userRole')} />
+      <div className="background-container">
       <div className="antenatal-details-form-container">
         <h2>Antenatal Details Form</h2>
         <form onSubmit={handleSubmit}>
@@ -460,13 +466,16 @@ const AntenatalDetailsForm = () => {
             ))}
           </div>
         </div>  
-          <button type="submit" className="submit-btn">
-            Submit Antenatal Details
-          </button>
-          <Link to="/administrator/login/admin_home" className="cancel-btn">
+          <div className="case-form-actions">
+            <button type="submit" className="submit-btn">
+              Submit Antenatal Details
+            </button>
+            <Link to="/dashboard" className="cancel-btn">
               Cancel
-              </Link>
+            </Link>
+          </div>
         </form>
+      </div>
       </div>
     </div>
   );

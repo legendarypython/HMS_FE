@@ -1,0 +1,55 @@
+.patient-form-file-label {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.patient-form-file-label:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.patient-form-file-input {
+  display: none;
+}
+
+.patient-form-document-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--color-bg);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.patient-form-document-item button {
+  background-color: var(--color-danger);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+}
+
+.patient-form-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .patient-form-actions {
+    flex-direction: column;
+  }
+
+  .patient-form-actions .ui-btn {
+    width: 100%;
+  }
+}

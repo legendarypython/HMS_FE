@@ -1,30 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams, useHistory } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
-import '../../styles/ViewAnteNatalDetails.css';
+import AppNavbar from '../Shared/AppNavbar';
+import DocumentPreviewModal from '../Shared/DocumentPreviewModal';
+import Button from '../ui/Button';
+import Spinner from '../ui/Spinner';
+import '../../styles/caseForms.css';
+import { getAuthHeader } from '../../utils/auth';
+import { API_BASE } from '../../utils/api';
 
 const ViewAntenatalForm = () => {
   const { patientId } = useParams();
-  const history = useHistory();
   const [antenatalDetails, setAntenatalDetails] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [previewDocument, setPreviewDocument] = useState(null);
 
   useEffect(() => {
     const fetchAntenatalDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:6000/api/antenatal/getByPatientId`, {
+        const response = await axios.get(`${API_BASE}/api/antenatal/getByPatientId`, {
             params: {
                 patientId: patientId
-            }
+            },
+            headers: getAuthHeader()
         });
-        if (response.status === 200) {
-            console.log(JSON.stringify(response.data.data));
-          setAntenatalDetails(response.data.data);
-        } else {
-          console.error('Failed to fetch antenatal details');
-        }
-      } catch (error) {
-        console.error('Error fetching antenatal details:', error);
+        setAntenatalDetails(response.data.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'No antenatal case found for this patient.');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -34,7 +39,7 @@ const ViewAntenatalForm = () => {
   const renderInvestigationDocuments = (investigation) => {
     return (
         <div className="documents-preview">
-        <h4 style={{color: 'green'}}>Documents</h4>
+        <h4>Documents</h4>
         {antenatalDetails && antenatalDetails.investigations[investigation].documents.length > 0 ? (
           <ul className="document-list">
             {antenatalDetails.investigations[investigation].documents.map((doc, index) => (
@@ -44,35 +49,22 @@ const ViewAntenatalForm = () => {
             ))}
           </ul>
         ) : (
-          <p style={{color: 'red'}}>No documents uploaded</p>
+          <p className="text-muted">No documents uploaded</p>
         )}
       </div>
     );
   };
-  const applyStyles = () => {
-    const iframe = document.querySelector('iframe');
-    if (iframe) {
-      const iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-      const imgElement = iframeDocument.querySelector('img');
-      if (imgElement) {
-        // Apply styles to the img element
-        imgElement.style.width = '100%';
-        imgElement.style.height = '100%';
-        imgElement.style.objectFit = 'contain'
-      }
-    }
-  };
-
   const handleDocumentPreview = async (document) => {
     try {
       // Assuming 'document' contains the necessary information to fetch the document content
-      const response = await axios.get(`http://localhost:6000/api/documents/${document._id}`, {
-        responseType: 'blob' // Set the response type to 'blob' for binary data
+      const response = await axios.get(`${API_BASE}/api/documents/${document._id}`, {
+        responseType: 'blob', // Set the response type to 'blob' for binary data
+        headers: getAuthHeader()
       });
 
       // Create a URL for the blob content to use in iframe or other elements
       const documentUrl = URL.createObjectURL(response.data);
-      setPreviewDocument({ name: document.name, url: documentUrl });
+      setPreviewDocument({ name: document.filename, url: documentUrl });
     } catch (error) {
       console.error('Error fetching document:', error);
     }
@@ -83,12 +75,31 @@ const ViewAntenatalForm = () => {
     setPreviewDocument(null);
   };
 
-  if (!antenatalDetails) {
-    return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div>
+        <AppNavbar role={sessionStorage.getItem('userRole')} />
+        <Spinner fullPage label="Loading antenatal details..." />
+      </div>
+    );
+  }
+
+  if (error || !antenatalDetails) {
+    return (
+      <div>
+        <AppNavbar role={sessionStorage.getItem('userRole')} />
+        <div className="page page-narrow">
+          <div className="ui-banner ui-banner-error">{error || 'No antenatal case found for this patient.'}</div>
+          <Link to="/dashboard"><Button variant="ghost">Back to Patients</Button></Link>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="background-container">
+    <div>
+      <AppNavbar role={sessionStorage.getItem('userRole')} />
+      <div className="background-container">
       <div className="antenatal-details-form-container">
         <h2>Antenatal Details</h2>
         <div className="form-group">
@@ -155,21 +166,11 @@ const ViewAntenatalForm = () => {
           <span>{antenatalDetails.investigations.xrayInvestigation.details}</span>
           {renderInvestigationDocuments('xrayInvestigation')}
         </div>
-        <Link to="/administrator/login/admin_home" className="cancel-btn">
-          Back
-        </Link>
+        <Link to="/dashboard"><Button variant="ghost">Back</Button></Link>
       </div>
 
-      {previewDocument && (
-        <div className="document-preview-overlay">
-          <div className="document-preview-container">
-            <button className="close-preview-btn" onClick={closePreview}>
-              Close Preview
-            </button>
-            <iframe src={previewDocument.url} title={previewDocument.name} onLoad={applyStyles} />
-          </div>
-        </div>
-      )}
+      <DocumentPreviewModal document={previewDocument} onClose={closePreview} />
+      </div>
     </div>
   );
 };

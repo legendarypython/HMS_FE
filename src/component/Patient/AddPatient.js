@@ -1,79 +1,45 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
-import '../../styles/AddPatient.css'; // Import your custom CSS file
+import Card from '../ui/Card';
+import Field from '../ui/Field';
+import Button from '../ui/Button';
+import { getAuthHeader } from '../../utils/auth';
+import { API_BASE } from '../../utils/api';
+import './AddPatient.css';
 
-const AddPatientForm = () => {
+const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
+const CASE_TYPE_ENUM = { AnteNatal: 1, Infertility: 2, General: 3 };
+
+const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
+  const isEditMode = Boolean(initialPatientDetails);
+  const history = useHistory();
+
+  const [form, setForm] = useState(() => ({
+    firstName: initialPatientDetails?.firstName || '',
+    lastName: initialPatientDetails?.lastName || '',
+    husbandFirstName: initialPatientDetails?.husbandFirstName || '',
+    husbandLastName: initialPatientDetails?.husbandLastName || '',
+    dateOfBirth: initialPatientDetails?.dateOfBirth || '',
+    address: initialPatientDetails?.address || '',
+    aadhar: initialPatientDetails?.aadhar || '',
+    phone: initialPatientDetails?.phone || initialPhone || '',
+    email: initialPatientDetails?.email || '',
+    marriedFor: initialPatientDetails?.marriedFor || '',
+    diagnosis: initialPatientDetails?.diagnosis || '',
+    dateOfAdmission: initialPatientDetails?.dateOfAdmission ? initialPatientDetails.dateOfAdmission.slice(0, 10) : '',
+    caseType: initialPatientDetails ? '' : '',
+    isNewPatient: initialPatientDetails ? initialPatientDetails.isNewPatient : true
+  }));
+  const [documents, setDocuments] = useState([]);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const [documents, setDocuments] = useState([]); // State to manage uploaded documents
-  const [caseType, setCaseType] = useState(''); // State to manage selected case type
-  const history = useHistory(); // Access history for navigation
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = async (event) => {
-    setError(null);
-        event.preventDefault();
-    const formData = new FormData(event.target);
-    documents.forEach((doc) => {
-      formData.append('documents', doc.file);
-    });
-    formData.append('caseTypeEnum', mapCaseTypeToEnum(caseType)); // Append caseType to form data
-    const isNewPatient = event.target.elements.isNewPatient.checked;
-
-    // Set isNewPatient directly in the FormData object
-    formData.set('isNewPatient', isNewPatient.toString()); // Convert to string (true/false)
-  
-    try {
-      const response = await fetch('http://localhost:6000/api/patients/create', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (response.ok) {
-        const responseData = await response.json();
-        const newPatientId = responseData.patient.patientId;
-        console.log(newPatientId);
-        // Form submitted successfully
-        setSuccess(true);
-        setError(null);
-        setDocuments([]);
-        switch (caseType) {
-          case 'AnteNatal':
-            history.push(`/patient/add/anteNatalForm/${newPatientId}`);
-            break;
-          case 'Infertility':
-            history.push(`/patient/add/infertilityForm/${newPatientId}`);
-            break;
-          
-          default:
-            setError("Please select correct Case Type");
-            history.push( `/administrator/login/admin_home`); // Redirect to success page
-            break;
-        } // Clear the list of uploaded documents
-
-      } else {
-        // Error handling for failed form submission
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to add patient');
-        setSuccess(false);
-      }
-    } catch (error) {
-      // Network or other errors
-      setError('Network error. Please try again.');
-      setSuccess(false);
-    }
+  const handleChange = (field) => (e) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setForm(prev => ({ ...prev, [field]: value }));
   };
-  const mapCaseTypeToEnum = (selectedType) => {
-    switch (selectedType) {
-      case 'AnteNatal':
-        return 1;
-      case 'Infertility':
-        return 2;
-      case 'General':
-        return 3;
-      default:
-        return ''; // Handle default or unknown caseType
-    }
-  };
+
   const handleFileChange = (event) => {
     const files = event.target.files;
     const newDocuments = Array.from(files).map((file) => ({ name: file.name, file }));
@@ -81,148 +47,178 @@ const AddPatientForm = () => {
   };
 
   const removeDocument = (index) => {
-    const updatedDocuments = [...documents];
-    updatedDocuments.splice(index, 1);
-    setDocuments(updatedDocuments);
+    const updated = [...documents];
+    updated.splice(index, 1);
+    setDocuments(updated);
+  };
+
+  const handleEditSubmit = async (event) => {
+    event.preventDefault();
+    setError(null);
+    setSaving(true);
+    try {
+      const { caseType, ...editableFields } = form;
+      const response = await fetch(`${API_BASE}/api/patients/update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({
+          data: {
+            patientId: initialPatientDetails.patientId,
+            ...editableFields
+          }
+        })
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setError(json.message || 'Failed to update patient');
+        return;
+      }
+      setSuccess(true);
+      if (onSaved) onSaved(json.data);
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCreateSubmit = async (event) => {
+    event.preventDefault();
+    setError(null);
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        if (key === 'caseType') return;
+        formData.append(key, value);
+      });
+      formData.set('isNewPatient', form.isNewPatient.toString());
+      formData.append('caseTypeEnum', CASE_TYPE_ENUM[form.caseType] || '');
+      documents.forEach((doc) => formData.append('documents', doc.file));
+
+      const response = await fetch(`${API_BASE}/api/patients/create`, {
+        method: 'POST',
+        headers: getAuthHeader(),
+        body: formData
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        const newPatientId = responseData.patient.patientId;
+        setSuccess(true);
+        setDocuments([]);
+        switch (form.caseType) {
+          case 'AnteNatal':
+            history.push(`/patients/add/anteNatalForm/${newPatientId}`);
+            break;
+          case 'Infertility':
+            history.push(`/patients/add/infertilityForm/${newPatientId}`);
+            break;
+          default:
+            history.push('/dashboard');
+            break;
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to add patient');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="background-container">
-    <div className="form-container">
-      <h2>Add New Patient</h2>
-      {error && <div className="error-message">{error}</div>}
-        {success && (
-          <div className="success-message">
-            <span role="img" aria-label="checkmark">
-              ✔️
-            </span>{' '}
-            Patient Added Successfully
-          </div>
-        )}
-      <form onSubmit={handleSubmit}>
-        {/* Input fields for patient information */}
-        <div className="form-group">
-          <label htmlFor="firstName">First Name<span>*</span></label>
-          <input type="text" id="firstName" name="firstName" required />
-        </div>
+    <Card style={{ maxWidth: 640, margin: '0 auto' }}>
+      <span className="ui-eyebrow">Patient Records</span>
+      <h2 className="section-title">{isEditMode ? 'Edit Patient' : 'Add New Patient'}</h2>
+      {error && <div className="ui-banner ui-banner-error">{error}</div>}
+      {success && <div className="ui-banner ui-banner-success">{isEditMode ? 'Patient updated successfully' : 'Patient added successfully'}</div>}
 
-        <div className="form-group">
-          <label htmlFor="lastName">Last Name<span>*</span></label>
-          <input type="text" id="lastName" name="lastName" required />
-        </div>
+      <form onSubmit={isEditMode ? handleEditSubmit : handleCreateSubmit}>
+        <Field label="First Name" required htmlFor="firstName">
+          <input className="ui-input" id="firstName" value={form.firstName} onChange={handleChange('firstName')} required />
+        </Field>
+        <Field label="Last Name" required htmlFor="lastName">
+          <input className="ui-input" id="lastName" value={form.lastName} onChange={handleChange('lastName')} required />
+        </Field>
+        <Field label="Husband's First Name" htmlFor="husbandFirstName">
+          <input className="ui-input" id="husbandFirstName" value={form.husbandFirstName} onChange={handleChange('husbandFirstName')} />
+        </Field>
+        <Field label="Husband's Last Name" htmlFor="husbandLastName">
+          <input className="ui-input" id="husbandLastName" value={form.husbandLastName} onChange={handleChange('husbandLastName')} />
+        </Field>
+        <Field label="Date of Birth" required htmlFor="dateOfBirth">
+          <input className="ui-input" type="date" id="dateOfBirth" value={form.dateOfBirth} onChange={handleChange('dateOfBirth')} required />
+        </Field>
+        <Field label="Address" required htmlFor="address">
+          <input className="ui-input" id="address" value={form.address} onChange={handleChange('address')} required />
+        </Field>
+        <Field label="Aadhar Number" required htmlFor="aadhar">
+          <input className="ui-input" id="aadhar" value={form.aadhar} onChange={handleChange('aadhar')} required />
+        </Field>
+        <Field label="Phone Number" required htmlFor="phone">
+          <input className="ui-input" type="tel" id="phone" pattern="\d{10}" title="10-digit mobile number" value={form.phone} onChange={handleChange('phone')} required />
+        </Field>
+        <Field label="Email" htmlFor="email">
+          <input className="ui-input" type="email" id="email" value={form.email} onChange={handleChange('email')} />
+        </Field>
+        <Field label="Married For (Years)" required htmlFor="marriedFor">
+          <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
+        </Field>
+        <Field label="Diagnosis" htmlFor="diagnosis">
+          <textarea className="ui-textarea" id="diagnosis" rows={4} value={form.diagnosis} onChange={handleChange('diagnosis')} />
+        </Field>
 
-        <div className="form-group">
-          <label htmlFor="husbandFirstName">Husband's First Name</label>
-          <input type="text" id="husbandFirstName" name="husbandFirstName" />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="husbandLastName">Husband's Last Name</label>
-          <input type="text" id="husbandLastName" name="husbandLastName" />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="dateOfBirth">Date of Birth<span>*</span></label>
-          <input type="date" id="dateOfBirth" name="dateOfBirth" required />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="address">Address<span>*</span></label>
-          <input type="text" id="address" name="address" required />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="aadhar">Aadhar Number<span>*</span></label>
-          <input type="text" id="aadhar" name="aadhar" required />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="phone">Phone Number</label>
-          <input type="tel" id="phone" name="phone" />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input type="email" id="email" name="email" />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="marriedFor">Married For (Years)<span>*</span></label>
-          <input type="number" id="marriedFor" name="marriedFor" required />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="diagnosis">Diagnosis</label>
-          <textarea id="diagnosis" name="diagnosis" rows="4" cols="50" />
-        </div>
-
-        {/* File upload for documents */}
-        <div className="form-group">
-            <label htmlFor="documents">Choose Documents</label>
-            <input
-              type="file"
-              id="documents"
-              name="documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-          </div>
-
-          {/* Display uploaded documents as a list */}
-          <div className="uploaded-documents">
+        {!isEditMode && (
+          <Field label="Choose Documents" htmlFor="documents">
+            <label htmlFor="documents" className="patient-form-file-label">Choose Documents</label>
+            <input type="file" id="documents" multiple onChange={handleFileChange} className="patient-form-file-input" />
             {documents.map((doc, index) => (
-              <div key={index} className="document-item">
+              <div key={index} className="patient-form-document-item">
                 <span>{doc.name}</span>
-                <button type="button" onClick={() => removeDocument(index)}>
-                  x
-                </button>
+                <button type="button" onClick={() => removeDocument(index)}>x</button>
               </div>
             ))}
-          </div>
-        <div className="form-group">
-          <label htmlFor="dateOfAdmission">Date of Admission<span>*</span></label>
-          <input type="date" id="dateOfAdmission" name="dateOfAdmission" required />
-        </div>
-        <div className="form-group">
-            <label htmlFor="caseType">Case Type</label>
-            <select
-              id="caseType"
-              name="caseType"
-              value={caseType}
-              onChange={(e) => setCaseType(e.target.value)}
-              required
-            >
+          </Field>
+        )}
+
+        <Field label="Date of Admission" required htmlFor="dateOfAdmission">
+          <input className="ui-input" type="date" id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
+        </Field>
+
+        {isEditMode ? (
+          <Field label="Case Type" htmlFor="caseTypeDisplay">
+            <input className="ui-input" id="caseTypeDisplay" value={CASE_TYPE_LABELS[initialPatientDetails.caseType] || ''} disabled />
+          </Field>
+        ) : (
+          <Field label="Case Type" required htmlFor="caseType">
+            <select className="ui-select" id="caseType" value={form.caseType} onChange={handleChange('caseType')} required>
               <option value="">Select Case Type</option>
               <option value="AnteNatal">AnteNatal</option>
               <option value="Infertility">Infertility</option>
               <option value="General">General</option>
             </select>
-          
-          </div>
+          </Field>
+        )}
 
-        <div className="form-group">
-          <label htmlFor="isNewPatient">Is New Patient<span>*</span></label>
-          <input type="checkbox" id="isNewPatient" name="isNewPatient" defaultChecked />
+        <label className="ui-checkbox-field" htmlFor="isNewPatient">
+          <input type="checkbox" id="isNewPatient" checked={form.isNewPatient} onChange={handleChange('isNewPatient')} />
+          <span>Is New Patient</span>
+        </label>
+
+        <div className="patient-form-actions">
+          <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Next')}</Button>
+          <Link to="/dashboard"><Button type="button" variant="ghost">Cancel</Button></Link>
         </div>
-
-        <button type="submit" className="submit-btn">Next</button> {/* Cancel button that navigates to the homepage */}
-            <Link to="/administrator/login/admin_home" className="cancel-btn">
-              Cancel
-              </Link>
-
       </form>
-    </div>
-    </div>
+    </Card>
   );
 };
 
-const AddPatientPage = () => {
-  return (
-    <div>
-      <Link to="/patient/add" className='add-patient'>Add New</Link>
-    </div>
-  );
-};
+const AddPatientPage = () => (
+  <Link to="/patients/add" className="add-patient">Add New</Link>
+);
 
 export { AddPatientForm, AddPatientPage };

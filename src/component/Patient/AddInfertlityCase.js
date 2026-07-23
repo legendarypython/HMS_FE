@@ -3,7 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
-import '../../styles/AddInfertilityCase.css'; // Assuming you have specific styles for infertility form
+import AppNavbar from '../Shared/AppNavbar';
+import '../../styles/caseForms.css';
+import { getAuthHeader } from '../../utils/auth';
+import { API_BASE } from '../../utils/api';
 
 const InfertilityDetailsForm = () => {
   const { patientId } = useParams();
@@ -75,14 +78,15 @@ const InfertilityDetailsForm = () => {
       // Append secondary history investigations details and documents
       appendInvestigationDetails(formData, 'secondaryHistory', infertilityDetails.secondaryHistory);
   
-      const response = await fetch('http://localhost:6000/api/infertility/create', {
+      const response = await fetch(`${API_BASE}/api/infertility/create`, {
         method: 'POST',
+        headers: getAuthHeader(),
         body: formData
       });
   
       if (response.ok) {
         // Submission successful
-        history.push( `/administrator/login/admin_home`); // Redirect to success page
+        history.push( `/dashboard`); // Redirect to success page
       } else {
         // Handle error response
         const errorData = await response.json();
@@ -186,13 +190,15 @@ const InfertilityDetailsForm = () => {
   };
 
   return (
-    <div className="background-container">
+    <div>
+      <AppNavbar role={sessionStorage.getItem('userRole')} />
+      <div className="background-container">
       <div className="infertility-details-form-container">
         <h2>Infertility Details Form</h2>
         <form onSubmit={handleSubmit}>
           <input type="hidden" name="patientId" value={patientId} />
           <div className="history-section">
-          <h3 style={{color: 'red'}}>Primary History</h3>
+          <h3>Primary History</h3>
           {/* Blood Investigation */}
           <div className="form-group">  
             <label htmlFor="bloodInvestigation">Blood Investigation</label>
@@ -335,7 +341,7 @@ const InfertilityDetailsForm = () => {
           </div>
            {/* Secondary History Section */}
            <div className="history-section">
-            <h3 style={{color: 'red'}}>Secondary History</h3>
+            <h3>Secondary History</h3>
             <div className="form-group">
               <label htmlFor="obstetricHistory">Obstetric History</label>
               <select
@@ -494,13 +500,16 @@ const InfertilityDetailsForm = () => {
           </div>
 
           {/* Add Submit Button */}
-          <button type="submit" className="submit-btn">
-            Submit Infertility Details
-          </button>
-          <Link to="/administrator/login/admin_home" className="cancel-btn">
+          <div className="case-form-actions">
+            <button type="submit" className="submit-btn">
+              Submit Infertility Details
+            </button>
+            <Link to="/dashboard" className="cancel-btn">
               Cancel
-              </Link>
+            </Link>
+          </div>
         </form>
+      </div>
       </div>
     </div>
   );
