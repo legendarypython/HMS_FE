@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
 import { API_BASE } from '../../utils/api';
+import { auth } from '../../utils/firebase';
 import './Login.css';
+
+// Firebase error codes -> user-facing messages. Anything not listed falls
+// back to a generic message rather than showing Firebase's raw error text.
+const FIREBASE_ERROR_MESSAGES = {
+  'auth/invalid-phone-number': 'Enter a valid 10-digit mobile number',
+  'auth/too-many-requests': 'Too many attempts. Please try again later.',
+  'auth/invalid-verification-code': 'Invalid OTP',
+  'auth/code-expired': 'OTP expired - please request a new one',
+};
 
 const Login = () => {
   const [step, setStep] = useState('mobile'); // mobile | password | otp | not_found
@@ -12,9 +23,10 @@ const Login = () => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
-  const [devOtp, setDevOtp] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const confirmationResultRef = useRef(null);
+  const recaptchaVerifierRef = useRef(null);
 
   const handleMobileSubmit = async (e) => {
     e.preventDefault();
@@ -47,18 +59,20 @@ const Login = () => {
   };
 
   const requestOtp = async () => {
-    const res = await fetch(`${API_BASE}/api/auth/patient/otp/request`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mobile })
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      setError(json.message || 'Could not send OTP');
-      return;
+    try {
+      if (!recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+      }
+      confirmationResultRef.current = await signInWithPhoneNumber(auth, `+91${mobile}`, recaptchaVerifierRef.current);
+      setStep('otp');
+    } catch (err) {
+      setError(FIREBASE_ERROR_MESSAGES[err.code] || 'Could not send OTP. Please try again.');
+      // A failed send can leave the reCAPTCHA in a used state - reset so the next attempt gets a fresh one.
+      if (recaptchaVerifierRef.current) {
+        recaptchaVerifierRef.current.clear();
+        recaptchaVerifierRef.current = null;
+      }
     }
-    setDevOtp(json.devOtp || '');
-    setStep('otp');
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -91,21 +105,27 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/patient/otp/verify`, {
+      const userCredential = await confirmationResultRef.current.confirm(otp);
+      const idToken = await userCredential.user.getIdToken();
+
+      // Firebase confirms the phone number is real, but our own backend still
+      // owns the app's session model - exchange the Firebase ID token for our
+      // usual JWT so every other route keeps working exactly as before.
+      const res = await fetch(`${API_BASE}/api/auth/patient/firebase-verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mobile, otp })
+        body: JSON.stringify({ idToken })
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.message || 'Invalid OTP');
+        setError(json.message || 'Login failed');
         return;
       }
       sessionStorage.setItem('usertoken', json.token);
       sessionStorage.setItem('userRole', json.role);
       window.location.href = '/patient/my-record';
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      setError(FIREBASE_ERROR_MESSAGES[err.code] || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -163,10 +183,7 @@ const Login = () => {
             <form onSubmit={handleOtpSubmit}>
               <span className="ui-eyebrow">{name ? `Welcome, ${name}` : 'Welcome'}</span>
               <h2>Enter OTP</h2>
-              <p className="login-hint">
-                An OTP was sent to {mobile}.
-                {devOtp && ` (dev mode, no SMS provider configured yet: ${devOtp})`}
-              </p>
+              <p className="login-hint">An OTP was sent to {mobile}.</p>
               {error && <div className="ui-banner ui-banner-error">{error}</div>}
               <Field label="One-Time Password" required htmlFor="otp">
                 <input
@@ -198,6 +215,7 @@ const Login = () => {
             </div>
           )}
         </Card>
+        <div id="recaptcha-container" />
       </div>
     </div>
   );
