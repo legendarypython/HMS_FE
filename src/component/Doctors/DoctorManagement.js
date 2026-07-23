@@ -131,10 +131,12 @@ const DoctorManagement = () => {
                       <Badge variant={doc.active ? 'success' : 'neutral'}>{doc.active ? 'Active' : 'Inactive'}</Badge>
                     </td>
                     <td data-label="Actions">
-                      {doc.active ? (
-                        <Button size="sm" variant="danger" onClick={() => handleRemove(doc._id)}>Remove</Button>
-                      ) : (
-                        <Button size="sm" variant="secondary" onClick={() => handleRestore(doc._id)}>Restore</Button>
+                      {role === 'owner' && (
+                        doc.active ? (
+                          <Button size="sm" variant="danger" onClick={() => handleRemove(doc._id)}>Remove</Button>
+                        ) : (
+                          <Button size="sm" variant="secondary" onClick={() => handleRestore(doc._id)}>Restore</Button>
+                        )
                       )}
                     </td>
                   </tr>
