@@ -108,7 +108,7 @@ const AntenatalDetailsForm = () => {
     // Update state based on input field name
     if (name.startsWith('investigations')) {
 
-        const [category, nestedCategory, nestedProperty] = name.split('.');
+        const [, nestedCategory, nestedProperty] = name.split('.');
 
         // Check if the input is for documents
         if (nestedProperty === 'details') {
@@ -156,7 +156,7 @@ const AntenatalDetailsForm = () => {
     
     const [category, subCategory] = name.split('.');
 
-    const [nestedCategory, nestedProperty] = subCategory.split('.');     
+    const [nestedCategory] = subCategory.split('.');
     // Check if the input is for documents
     if (category === 'investigations') {
       // Update the state to append new documents to the specified investigation
