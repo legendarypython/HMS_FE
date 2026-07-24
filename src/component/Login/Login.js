@@ -4,6 +4,7 @@ import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
+import IconBadge from '../ui/IconBadge';
 import { API_BASE } from '../../utils/api';
 import { auth } from '../../utils/firebase';
 import './Login.css';
@@ -136,7 +137,8 @@ const Login = () => {
     <div>
       <AppNavbar role="public" />
       <div className="login-page">
-        <Card className="login-card">
+        <Card className="login-card" variant="elevated">
+          <IconBadge name="lock" />
           {step === 'mobile' && (
             <form onSubmit={handleMobileSubmit}>
               <span className="ui-eyebrow">Welcome Back</span>

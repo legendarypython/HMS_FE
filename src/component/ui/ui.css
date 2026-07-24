@@ -109,6 +109,37 @@
   padding: var(--space-6);
 }
 
+.ui-card-elevated {
+  box-shadow: var(--shadow-xl);
+  border-color: transparent;
+}
+
+.ui-card-interactive {
+  cursor: pointer;
+}
+
+.ui-card-tinted {
+  background-color: var(--color-primary-bg);
+  border-color: transparent;
+}
+
+.ui-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  margin-bottom: var(--space-4);
+}
+
+.ui-icon-badge-md { width: 44px; height: 44px; }
+.ui-icon-badge-lg { width: 56px; height: 56px; border-radius: var(--radius-lg); }
+
+.ui-icon-badge-primary { background-color: var(--color-primary-bg); color: var(--color-primary-dark); }
+.ui-icon-badge-success { background-color: var(--color-success-bg); color: var(--color-success); }
+.ui-icon-badge-warm { background-color: var(--color-warm-bg); color: var(--color-warm-dark); }
+.ui-icon-badge-neutral { background-color: var(--color-bg); color: var(--color-text-muted); }
+
 .ui-eyebrow {
   display: block;
   font-size: 0.72rem;

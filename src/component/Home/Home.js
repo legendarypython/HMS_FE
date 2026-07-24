@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
 import Footer from '../Footer';
 import Button from '../ui/Button';
+import Card from '../ui/Card';
 import Icon from '../ui/Icon';
+import IconBadge from '../ui/IconBadge';
 import { API_BASE } from '../../utils/api';
 import './Home.css';
 
@@ -92,11 +94,11 @@ const Home = () => {
         <h2 className="section-title">What Makes Care Here Different</h2>
         <div className="feature-grid">
           {FEATURES.map(f => (
-            <div className="feature-card ui-hover-lift" key={f.title}>
-              <div className="feature-icon"><Icon name={f.icon} size={24} /></div>
+            <Card className="feature-card" variant="interactive" key={f.title}>
+              <IconBadge name={f.icon} />
               <h3>{f.title}</h3>
               <p>{f.body}</p>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
@@ -107,7 +109,7 @@ const Home = () => {
           <h2 className="section-title">Our Doctors</h2>
           <div className="doctor-grid">
             {doctors.map(doc => (
-              <div className="doctor-card ui-hover-lift" key={doc._id}>
+              <Card className="doctor-card" variant="interactive" key={doc._id}>
                 {doc.hasPhoto ? (
                   <img
                     src={`${API_BASE}/api/doctors/${doc._id}/photo`}
@@ -121,7 +123,7 @@ const Home = () => {
                 )}
                 <h4>{doc.name}</h4>
                 <p className="text-muted">{doc.specialization}</p>
-              </div>
+              </Card>
             ))}
           </div>
         </section>

@@ -3,7 +3,9 @@ import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
+import IconBadge from '../ui/IconBadge';
 import { API_BASE } from '../../utils/api';
+import './BookAppointment.css';
 
 const CONSULTATION_FEE_DISPLAY = '₹500';
 const RAZORPAY_SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -122,10 +124,12 @@ const BookAppointment = () => {
   return (
     <div>
       <AppNavbar role="public" />
-      <div className="page page-narrow">
-        <Card>
+      <div className="booking-page-bg">
+        <div className="page page-narrow">
+          <Card variant="elevated">
           {success ? (
             <>
+              <IconBadge name="check-circle" variant="success" />
               <h2 className="section-title">Request Sent</h2>
               <p>
                 Thanks, {form.patientName}. Your payment was received and your appointment request has been
@@ -134,6 +138,7 @@ const BookAppointment = () => {
             </>
           ) : (
             <form onSubmit={handleSubmit}>
+              <IconBadge name="calendar" />
               <h2 className="section-title">Book an Appointment</h2>
               <p className="text-muted" style={{ marginTop: '-12px', marginBottom: '20px' }}>
                 A consultation fee of {CONSULTATION_FEE_DISPLAY} is collected online to confirm your slot.
@@ -175,7 +180,8 @@ const BookAppointment = () => {
               </Button>
             </form>
           )}
-        </Card>
+          </Card>
+        </div>
       </div>
     </div>
   );
