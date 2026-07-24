@@ -322,6 +322,58 @@
   color: var(--color-text);
 }
 
+.ui-file-upload-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 18px;
+  background-color: var(--color-surface);
+  color: var(--color-primary-dark);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: var(--space-2);
+  transition: background-color var(--transition-fast);
+}
+
+.ui-file-upload-label:hover {
+  background-color: var(--color-primary-bg);
+}
+
+.ui-file-upload-input {
+  display: none;
+}
+
+.ui-document-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px 14px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-2);
+  font-size: 0.9rem;
+}
+
+.ui-document-chip span {
+  flex: 1;
+}
+
+.ui-document-chip button {
+  background-color: var(--color-danger);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
 .record-documents {
   display: flex;
   flex-direction: column;

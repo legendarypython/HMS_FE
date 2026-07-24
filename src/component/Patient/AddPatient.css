@@ -8,57 +8,6 @@
   grid-column: 1 / -1;
 }
 
-.patient-form-file-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 10px 18px;
-  background-color: var(--color-surface);
-  color: var(--color-primary-dark);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: background-color var(--transition-fast);
-}
-
-.patient-form-file-label:hover {
-  background-color: var(--color-primary-bg);
-}
-
-.patient-form-file-input {
-  display: none;
-}
-
-.patient-form-document-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 10px 14px;
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  margin-top: var(--space-2);
-  font-size: 0.9rem;
-}
-
-.patient-form-document-item span {
-  flex: 1;
-}
-
-.patient-form-document-item button {
-  background-color: var(--color-danger);
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  width: 22px;
-  height: 22px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
 .patient-form-actions {
   display: flex;
   gap: var(--space-3);

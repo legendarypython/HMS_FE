@@ -208,12 +208,12 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
           <>
             <h3 className="record-section-title">Documents</h3>
             <Field label="Upload Documents" htmlFor="documents">
-              <label htmlFor="documents" className="patient-form-file-label">
+              <label htmlFor="documents" className="ui-file-upload-label">
                 <Icon name="file" size={16} /> Choose Documents
               </label>
-              <input type="file" id="documents" multiple onChange={handleFileChange} className="patient-form-file-input" />
+              <input type="file" id="documents" multiple onChange={handleFileChange} className="ui-file-upload-input" />
               {documents.map((doc, index) => (
-                <div key={index} className="patient-form-document-item">
+                <div key={index} className="ui-document-chip">
                   <Icon name="file" size={16} />
                   <span>{doc.name}</span>
                   <button type="button" onClick={() => removeDocument(index)}>x</button>

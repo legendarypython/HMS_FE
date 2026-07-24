@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useHistory,Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useHistory, Link } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
+import Card from '../ui/Card';
+import Field from '../ui/Field';
+import Button from '../ui/Button';
+import IconBadge from '../ui/IconBadge';
+import InvestigationField from './InvestigationField';
 import '../../styles/caseForms.css';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -92,19 +97,16 @@ const AntenatalDetailsForm = () => {
         history.push( `/dashboard`); // Redirect to success page
       } else {
         // Handle error response
-        const errorData =  response.data;
-        console.log(errorData); // Log error response
+        console.error('Error submitting antenatal details:', response.data);
       }
     } catch (error) {
       console.error('Error submitting antenatal details:', error);
     }
   };
-  
+
   // Handle input changes
   const handleChange = (event) => {
     const { name, value } = event.target;
-    console.log('Handling change for:', name);
-    console.log('New value:', value);
     // Update state based on input field name
     if (name.startsWith('investigations')) {
 
@@ -135,7 +137,7 @@ const AntenatalDetailsForm = () => {
       }));
     } else  if (name.startsWith('specificHistory')) {
         const [category, subCategory] = name.split('.');
-        
+
         setAntenatalDetails((prevState) => ({
           ...prevState,
            [category]: {
@@ -153,7 +155,7 @@ const AntenatalDetailsForm = () => {
   const handleFileChange = (event) => {
     const { name, files } = event.target;
     const newDocuments = Array.from(files).map((file) => ({ name: file.name, file }));
-    
+
     const [category, subCategory] = name.split('.');
 
     const [nestedCategory] = subCategory.split('.');
@@ -170,7 +172,7 @@ const AntenatalDetailsForm = () => {
           }
         }
       }));
-    } 
+    }
   };
 
   const removeDocument = (index, name) => {
@@ -185,297 +187,209 @@ const AntenatalDetailsForm = () => {
             documents: updatedDocuments
           }
         }
-      }));    
+      }));
   };
-  
-  useEffect(() => {
-    console.log('Component re-rendered with updated state:', antenatalDetails);
-  }, [antenatalDetails]);
 
   return (
     <div>
       <AppNavbar role={sessionStorage.getItem('userRole')} />
       <div className="background-container">
-      <div className="antenatal-details-form-container">
-        <h2>Antenatal Details Form</h2>
-        <form onSubmit={handleSubmit}>
-          <input type="hidden" name="patientId" value={patientId} />
+        <Card variant="elevated" style={{ width: '100%', maxWidth: 680 }}>
+          <IconBadge name="baby" />
+          <span className="ui-eyebrow">Patient Records</span>
+          <h2 className="section-title">Antenatal Details Form</h2>
+          <form onSubmit={handleSubmit}>
+            <input type="hidden" name="patientId" value={patientId} />
 
-          {/* Obstetric History */}
-          <div className="form-group">
-            <label htmlFor="obstetricHistory">Obstetric History</label>
-            <select
-              id="obstetricHistory"
-              name="obstetricHistory"
-              value={antenatalDetails.obstetricHistory}
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
+            <Field label="Obstetric History" required htmlFor="obstetricHistory">
+              <select
+                className="ui-select"
+                id="obstetricHistory"
+                name="obstetricHistory"
+                value={antenatalDetails.obstetricHistory}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Obstetric History</option>
+                <option value="G">G</option>
+                <option value="P">P</option>
+                <option value="A">A</option>
+                <option value="L">L</option>
+              </select>
+            </Field>
+
+            <Field label="Last Menstrual Period (LMP)" required htmlFor="LMP">
+              <input
+                className="ui-input"
+                type="date"
+                id="LMP"
+                name="LMP"
+                value={antenatalDetails.LMP}
+                onChange={handleChange}
+                required
+              />
+            </Field>
+
+            <Field label="Expected Date of Delivery" required htmlFor="expectedDateOfDelivery">
+              <input
+                className="ui-input"
+                type="date"
+                id="expectedDateOfDelivery"
+                name="expectedDateOfDelivery"
+                value={antenatalDetails.expectedDateOfDelivery}
+                onChange={handleChange}
+                required
+              />
+            </Field>
+
+            <Field label="Pregnancy Complications" required htmlFor="pregnancyComplications">
+              <input
+                className="ui-input"
+                type="text"
+                id="pregnancyComplications"
+                name="specificHistory.pregnancyComplications"
+                value={antenatalDetails.specificHistory.pregnancyComplications}
+                onChange={handleChange}
+                required
+              />
+            </Field>
+
+            <Field label="Previous Delivery By" htmlFor="previousDeliveryBy">
+              <select
+                className="ui-select"
+                id="previousDeliveryBy"
+                name="specificHistory.previousDeliveryBy"
+                value={antenatalDetails.specificHistory.previousDeliveryBy}
+                onChange={handleChange}
+              >
+                <option value="">Select Previous Delivery By</option>
+                <option value="Normal">Normal</option>
+                <option value="Caesarean">Caesarean</option>
+                <option value="Ventouse">Ventouse</option>
+                <option value="Others">Others</option>
+              </select>
+            </Field>
+
+            <h3 className="record-section-title">Medical History</h3>
+            <Field label="Heart Disease" htmlFor="heartDisease">
+              <textarea
+                className="ui-textarea"
+                id="heartDisease"
+                name="medicalComplications.heartDisease"
+                rows={2}
+                value={antenatalDetails.medicalComplications.heartDisease}
+                onChange={handleChange}
+              />
+            </Field>
+
+            <Field label="Liver Disease" htmlFor="liverDisease">
+              <textarea
+                className="ui-textarea"
+                id="liverDisease"
+                name="medicalComplications.liverDisease"
+                rows={2}
+                value={antenatalDetails.medicalComplications.liverDisease}
+                onChange={handleChange}
+              />
+            </Field>
+
+            <Field label="Gastrointestinal Tract (GIT) Disease" htmlFor="GIT">
+              <textarea
+                className="ui-textarea"
+                id="GIT"
+                name="medicalComplications.GIT"
+                rows={2}
+                value={antenatalDetails.medicalComplications.GIT}
+                onChange={handleChange}
+              />
+            </Field>
+
+            <Field label="Kidney Disease" htmlFor="Kidney">
+              <textarea
+                className="ui-textarea"
+                id="Kidney"
+                name="medicalComplications.Kidney"
+                rows={2}
+                value={antenatalDetails.medicalComplications.Kidney}
+                onChange={handleChange}
+              />
+            </Field>
+
+            <Field label="Spine Problem" htmlFor="SpineProblem">
+              <textarea
+                className="ui-textarea"
+                id="SpineProblem"
+                name="medicalComplications.SpineProblem"
+                rows={2}
+                value={antenatalDetails.medicalComplications.SpineProblem}
+                onChange={handleChange}
+              />
+            </Field>
+
+            <Field label="Other Medical Complications" htmlFor="Others">
+              <textarea
+                className="ui-textarea"
+                id="Others"
+                name="medicalComplications.Others"
+                rows={2}
+                value={antenatalDetails.medicalComplications.Others}
+                onChange={handleChange}
+              />
+            </Field>
+
+            <h3 className="record-section-title">Investigations</h3>
+            <InvestigationField
+              label="Blood Investigation"
+              id="bloodInvestigation"
+              name="investigations.bloodInvestigation.details"
+              fileFieldName="investigations.bloodInvestigation.documents"
+              value={antenatalDetails.investigations.bloodInvestigation.details}
               onChange={handleChange}
-              required
-            >
-              <option value="">Select Obstetric History</option>
-              <option value="G">G</option>
-              <option value="P">P</option>
-              <option value="A">A</option>
-              <option value="L">L</option>
-            </select>
-          </div>
-
-          {/* LMP */}
-          <div className="form-group">
-            <label htmlFor="LMP">Last Menstrual Period (LMP)</label>
-            <input
-              type="date"
-              id="LMP"
-              name="LMP"
-              value={antenatalDetails.LMP}
+              documents={antenatalDetails.investigations.bloodInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument(index, 'bloodInvestigation')}
+            />
+            <InvestigationField
+              label="Urine Investigation"
+              id="urineInvestigation"
+              name="investigations.urineInvestigation.details"
+              fileFieldName="investigations.urineInvestigation.documents"
+              value={antenatalDetails.investigations.urineInvestigation.details}
               onChange={handleChange}
-              required
+              documents={antenatalDetails.investigations.urineInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument(index, 'urineInvestigation')}
             />
-          </div>
-
-          {/* Expected Date of Delivery */}
-          <div className="form-group">
-            <label htmlFor="expectedDateOfDelivery">Expected Date of Delivery</label>
-            <input
-              type="date"
-              id="expectedDateOfDelivery"
-              name="expectedDateOfDelivery"
-              value={antenatalDetails.expectedDateOfDelivery}
+            <InvestigationField
+              label="Ultrasound Investigation"
+              id="ultrasoundInvestigation"
+              name="investigations.ultrasoundInvestigation.details"
+              fileFieldName="investigations.ultrasoundInvestigation.documents"
+              value={antenatalDetails.investigations.ultrasoundInvestigation.details}
               onChange={handleChange}
-              required
+              documents={antenatalDetails.investigations.ultrasoundInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument(index, 'ultrasoundInvestigation')}
             />
-          </div>
-
-          {/* Specific History */}
-          <div className="form-group">
-            <label htmlFor="pregnancyComplications">Pregnancy Complications</label>
-            <input
-              type="text"
-              id="pregnancyComplications"
-              name="specificHistory.pregnancyComplications"
-              value={antenatalDetails.specificHistory.pregnancyComplications}
+            <InvestigationField
+              label="X-ray Investigation"
+              id="xrayInvestigation"
+              name="investigations.xrayInvestigation.details"
+              fileFieldName="investigations.xrayInvestigation.documents"
+              value={antenatalDetails.investigations.xrayInvestigation.details}
               onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="previousDeliveryBy">Previous Delivery By</label>
-            <select
-              id="previousDeliveryBy"
-              name="specificHistory.previousDeliveryBy"
-              value={antenatalDetails.specificHistory.previousDeliveryBy}
-              onChange={handleChange}
-            >
-              <option value="">Select Previous Delivery By</option>
-              <option value="Normal">Normal</option>
-              <option value="Caesarean">Caesarean</option>
-              <option value="Ventouse">Ventouse</option>
-              <option value="Others">Others</option>
-            </select>
-          </div>
-
-          {/* Medical Complications */}
-          <div className="form-group">
-            <label htmlFor="heartDisease">Heart Disease</label>
-            <textarea
-              type="text"
-              id="heartDisease"
-              name="medicalComplications.heartDisease"
-              value={antenatalDetails.medicalComplications.heartDisease}
-              onChange={handleChange}
-            />
-          </div>
-        
-          <div className="form-group">
-            <label htmlFor="liverDisease">Liver Disease</label>
-            <textarea
-              type="text"
-              id="liverDisease"
-              name="medicalComplications.liverDisease"
-              value={antenatalDetails.medicalComplications.liverDisease}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="GIT">GIT</label>
-            <textarea
-              type="text"
-              id="GIT"
-              name="medicalComplications.GIT"
-              value={antenatalDetails.medicalComplications.GIT}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="Kidney">Kidney Disease</label>
-            <textarea
-              type="text"
-              id="Kidney"
-              name="medicalComplications.Kidney"
-              value={antenatalDetails.medicalComplications.Kidney}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="SpineProblem">Spine Problem</label>
-            <textarea
-              type="text"
-              id="SpineProblem"
-              name="medicalComplications.SpineProblem"
-              value={antenatalDetails.medicalComplications.SpineProblem}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="Others">Other Complications</label>
-            <textarea
-              type="text"
-              id="Others"
-              name="medicalComplications.Others"
-              value={antenatalDetails.medicalComplications.Others}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Blood Investigation */}
-          <div className="form-group">
-            <label htmlFor="bloodInvestigation">Blood Investigation</label>
-            <textarea
-    id="bloodInvestigation"
-    name="investigations.bloodInvestigation.details"
-    value={antenatalDetails.investigations.bloodInvestigation.details}
-    onChange={handleChange}
-  />
-
-            <label htmlFor="bloodInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="bloodInvestigationDocs"
-              name="investigations.bloodInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
+              documents={antenatalDetails.investigations.xrayInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument(index, 'xrayInvestigation')}
             />
 
-          {/* Display uploaded documents as a list */}
-            <div className="uploaded-documents">
-            {antenatalDetails.investigations.bloodInvestigation.documents.map((doc, index) => (
-              <div key={index} className="document-item">
-                <span>{doc.name}</span>
-                <button type="button" name="bloodInvestigation" className='removeButton' onClick={() => removeDocument(index, "bloodInvestigation")}>
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>  
-
- {/* Urine Investigation */}
- <div className="form-group">
-            <label htmlFor="urineInvestigation">Urine Investigation</label>
-            <textarea
-    id="urineInvestigation"
-    name="investigations.urineInvestigation.details"
-    value={antenatalDetails.investigations.urineInvestigation.details}
-    onChange={handleChange}
-  />
-
-            <label htmlFor="urineInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="urineInvestigationDocs"
-              name="investigations.urineInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-
-          {/* Display uploaded documents as a list */}
-            <div className="uploaded-documents">
-            {antenatalDetails.investigations.urineInvestigation.documents.map((doc, index) => (
-              <div key={index} className="document-item">
-                <span>{doc.name}</span>
-                <button type="button" name="urineInvestigation"  className='removeButton' onClick={() => removeDocument(index, "urineInvestigation")}>
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>  
-         {/* UltraSound Investigation */}
-         <div className="form-group">
-            <label htmlFor="ultrasoundInvestigation">UltraSound Investigation</label>
-            <textarea
-    id="ultrasoundInvestigation"
-    name="investigations.ultrasoundInvestigation.details"
-    value={antenatalDetails.investigations.ultrasoundInvestigation.details}
-    onChange={handleChange}
-  />
-
-            <label htmlFor="ultrasoundInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="ultrasoundInvestigationDocs"
-              name="investigations.ultrasoundInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-
-          {/* Display uploaded documents as a list */}
-            <div className="uploaded-documents">
-            {antenatalDetails.investigations.ultrasoundInvestigation.documents.map((doc, index) => (
-              <div key={index} className="document-item">
-                <span>{doc.name}</span>
-                <button type="button" name="ultrasoundInvestigation"  className='removeButton' onClick={() => removeDocument(index, "ultrasoundInvestigation")}>
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>  
-         {/* X-ray Investigation */}
-         <div className="form-group">
-            <label htmlFor="xrayInvestigation">X-ray Investigation</label>
-            <textarea
-    id="xrayInvestigation"
-    name="investigations.xrayInvestigation.details"
-    value={antenatalDetails.investigations.xrayInvestigation.details}
-    onChange={handleChange}
-  />
-
-            <label htmlFor="xrayInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="xrayInvestigationDocs"
-              name="investigations.xrayInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-
-          {/* Display uploaded documents as a list */}
-            <div className="uploaded-documents">
-            {antenatalDetails.investigations.xrayInvestigation.documents.map((doc, index) => (
-              <div key={index} className="document-item">
-                <span>{doc.name}</span>
-                <button type="button" name="xrayInvestigation"  className='removeButton' onClick={() => removeDocument(index, "xrayInvestigation")}>
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>  
-          <div className="case-form-actions">
-            <button type="submit" className="submit-btn">
-              Submit Antenatal Details
-            </button>
-            <Link to="/dashboard" className="cancel-btn">
-              Cancel
-            </Link>
-          </div>
-        </form>
-      </div>
+            <div className="case-form-actions">
+              <Button type="submit">Submit Antenatal Details</Button>
+              <Link to="/dashboard"><Button type="button" variant="ghost">Cancel</Button></Link>
+            </div>
+          </form>
+        </Card>
       </div>
     </div>
   );

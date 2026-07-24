@@ -1,9 +1,14 @@
 // InfertilityDetailsForm.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
+import Card from '../ui/Card';
+import Field from '../ui/Field';
+import Button from '../ui/Button';
+import IconBadge from '../ui/IconBadge';
+import InvestigationField from './InvestigationField';
 import '../../styles/caseForms.css';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
@@ -57,104 +62,99 @@ const InfertilityDetailsForm = () => {
       }
     }
   });
-  useEffect(() => {
-    console.log('Component re-rendered with updated state:', infertilityDetails);
-  }, [infertilityDetails]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     try {
       const formData = new FormData();
-  
+
       // Append patientId
       formData.append('patientId', infertilityDetails.patientId);
-  
+
       // Append primary history details and documents
       appendInvestigationDetails(formData, 'primaryHistory', infertilityDetails.primaryHistory);
-  
+
       // Append secondary history details including ObstetricHistory
       formData.append('secondaryHistory.obstetricHistory', infertilityDetails.secondaryHistory.obstetricHistory);
-  
+
       // Append secondary history investigations details and documents
       appendInvestigationDetails(formData, 'secondaryHistory', infertilityDetails.secondaryHistory);
-  
+
       const response = await apiFetch(`${API_BASE}/api/infertility/create`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: formData
       });
-  
+
       if (response.ok) {
         // Submission successful
         history.push( `/dashboard`); // Redirect to success page
       } else {
         // Handle error response
         const errorData = await response.json();
-        console.log(errorData); // Log error response
+        console.error('Error submitting infertility details:', errorData);
       }
     } catch (error) {
       console.error('Error submitting infertility details:', error);
     }
   };
-  
+
   // Helper function to append investigation details and documents to FormData
   const appendInvestigationDetails = (formData, historyType, historyDetails) => {
     // Iterate over investigations (blood, urine, ultrasound, xray)
     Object.keys(historyDetails.investigations).forEach((category) => {
       const investigation = historyDetails.investigations[category];
-  
+
       // Append investigation details
       formData.append(`${historyType}.investigations.${category}.details`, investigation.details);
-  
+
       // Append investigation documents
       investigation.documents.forEach((doc) => {
         formData.append(`${historyType}.investigations.${category}.documents`, doc.file);
       });
     });
   };
-  
+
   const handleChange = (event) => {
     const { name, value } = event.target;
-  
+
     // Split the name attribute by '.' to get nested property names
     const nameParts = name.split('.');
-  
+
     // Identify the main category (e.g., primaryHistory or secondaryHistory)
     const mainCategory = nameParts[0];
-  
+
     // Determine the nested property path within the main category
     const nestedPath = nameParts.slice(1); // Exclude the first part (main category)
-  
+
     // Update state based on the main category and nested property path
     setInfertilityDetails((prevState) => ({
       ...prevState,
       [mainCategory]: updateNestedProperty(prevState[mainCategory], nestedPath, value)
     }));
   };
-  
+
   // Helper function to update nested properties dynamically
   const updateNestedProperty = (obj, path, value) => {
     const newObj = { ...obj };
-  
+
     let current = newObj;
     for (let i = 0; i < path.length - 1; i++) {
       const key = path[i];
       current[key] = { ...current[key] };
       current = current[key];
     }
-  
+
     current[path[path.length - 1]] = value;
-  
+
     return newObj;
   };
-  
+
   const handleFileChange = (event) => {
-    
     const { name, files } = event.target;
-    console.log(name);
     const [category, subCategory, nestedCategory] = name.split('.');
     const newDocuments = Array.from(files).map((file) => ({ name: file.name, file }));
-    console.log(name,category, subCategory, nestedCategory)
     setInfertilityDetails((prevState) => ({
       ...prevState,
       [category]: {
@@ -170,18 +170,21 @@ const InfertilityDetailsForm = () => {
     }));
   };
 
-  const removeDocument = (index, investigationType) => {
-    const updatedDocuments = infertilityDetails.primaryHistory.investigations[investigationType].documents.slice();
+  // historyType ('primaryHistory' | 'secondaryHistory') is now passed in
+  // explicitly - the original always mutated primaryHistory regardless of
+  // which section the Remove button was actually clicked in.
+  const removeDocument = (historyType, investigationType, index) => {
+    const updatedDocuments = infertilityDetails[historyType].investigations[investigationType].documents.slice();
     updatedDocuments.splice(index, 1);
 
     setInfertilityDetails((prevState) => ({
       ...prevState,
-      primaryHistory: {
-        ...prevState.primaryHistory,
+      [historyType]: {
+        ...prevState[historyType],
         investigations: {
-          ...prevState.primaryHistory.investigations,
+          ...prevState[historyType].investigations,
           [investigationType]: {
-            ...prevState.primaryHistory.investigations[investigationType],
+            ...prevState[historyType].investigations[investigationType],
             documents: updatedDocuments
           }
         }
@@ -193,158 +196,63 @@ const InfertilityDetailsForm = () => {
     <div>
       <AppNavbar role={sessionStorage.getItem('userRole')} />
       <div className="background-container">
-      <div className="infertility-details-form-container">
-        <h2>Infertility Details Form</h2>
-        <form onSubmit={handleSubmit}>
-          <input type="hidden" name="patientId" value={patientId} />
-          <div className="history-section">
-          <h3>Primary History</h3>
-          {/* Blood Investigation */}
-          <div className="form-group">  
-            <label htmlFor="bloodInvestigation">Blood Investigation</label>
-            <textarea
-              id="bloodInvestigation"
+        <Card variant="elevated" style={{ width: '100%', maxWidth: 680 }}>
+          <IconBadge name="baby" />
+          <span className="ui-eyebrow">Patient Records</span>
+          <h2 className="section-title">Infertility Details Form</h2>
+          <form onSubmit={handleSubmit}>
+            <input type="hidden" name="patientId" value={patientId} />
+
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Primary History</h3>
+            <InvestigationField
+              label="Blood Investigation"
+              id="primaryBlood"
               name="primaryHistory.investigations.bloodInvestigation.details"
+              fileFieldName="primaryHistory.investigations.bloodInvestigation.documents"
               value={infertilityDetails.primaryHistory.investigations.bloodInvestigation.details}
               onChange={handleChange}
+              documents={infertilityDetails.primaryHistory.investigations.bloodInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument('primaryHistory', 'bloodInvestigation', index)}
             />
-            <label htmlFor="bloodInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="bloodInvestigationDocs"
-              name="primaryHistory.investigations.bloodInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-            {/* Display uploaded documents */}
-            <div className="uploaded-documents">
-              {infertilityDetails.primaryHistory.investigations.bloodInvestigation.documents.map((doc, index) => (
-                <div key={index} className="document-item">
-                  <span>{doc.name}</span>
-                  <button
-                    type="button"
-                    className='removeButton'
-                    onClick={() => removeDocument(index, 'bloodInvestigation')}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-            {/* Urine Investigation */}
-            <div className="form-group">
-            <label htmlFor="urineInvestigation">Urine Investigation</label>
-            <textarea
-              id="urineInvestigation"
+            <InvestigationField
+              label="Urine Investigation"
+              id="primaryUrine"
               name="primaryHistory.investigations.urineInvestigation.details"
+              fileFieldName="primaryHistory.investigations.urineInvestigation.documents"
               value={infertilityDetails.primaryHistory.investigations.urineInvestigation.details}
               onChange={handleChange}
+              documents={infertilityDetails.primaryHistory.investigations.urineInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument('primaryHistory', 'urineInvestigation', index)}
             />
-            <label htmlFor="urineInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="urineInvestigationDocs"
-              name="primaryHistory.investigations.urineInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-            {/* Display uploaded documents */}
-            <div className="uploaded-documents">
-              {infertilityDetails.primaryHistory.investigations.urineInvestigation.documents.map((doc, index) => (
-                <div key={index} className="document-item">
-                  <span>{doc.name}</span>
-                  <button
-                    type="button"
-                    className='removeButton'
-                    onClick={() => removeDocument(index, 'urineInvestigation')}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-{/* Ultrasound Investigation */}
-<div className="form-group">
-            <label htmlFor="ultrasoundInvestigation">UltraSound Investigation</label>
-            <textarea
-              id="ultrasoundInvestigation"
+            <InvestigationField
+              label="Ultrasound Investigation"
+              id="primaryUltrasound"
               name="primaryHistory.investigations.ultrasoundInvestigation.details"
+              fileFieldName="primaryHistory.investigations.ultrasoundInvestigation.documents"
               value={infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.details}
               onChange={handleChange}
+              documents={infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument('primaryHistory', 'ultrasoundInvestigation', index)}
             />
-            <label htmlFor="ultrasoundInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="ultrasoundInvestigationDocs"
-              name="primaryHistory.investigations.ultrasoundInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-            {/* Display uploaded documents */}
-            <div className="uploaded-documents">
-              {infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.documents.map((doc, index) => (
-                <div key={index} className="document-item">
-                  <span>{doc.name}</span>
-                  <button
-                    type="button"
-                    className='removeButton'
-                    onClick={() => removeDocument(index, 'ultrasoundInvestigation')}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-{/* Xray Investigation */}
-<div className="form-group">
-            <label htmlFor="xrayInvestigation">X-ray Investigation</label>
-            <textarea
-              id="xrayInvestigation"
+            <InvestigationField
+              label="X-ray Investigation"
+              id="primaryXray"
               name="primaryHistory.investigations.xrayInvestigation.details"
+              fileFieldName="primaryHistory.investigations.xrayInvestigation.documents"
               value={infertilityDetails.primaryHistory.investigations.xrayInvestigation.details}
               onChange={handleChange}
+              documents={infertilityDetails.primaryHistory.investigations.xrayInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument('primaryHistory', 'xrayInvestigation', index)}
             />
-            <label htmlFor="xrayInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="xrayInvestigationDocs"
-              name="primaryHistory.investigations.xrayInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-            {/* Display uploaded documents */}
-            <div className="uploaded-documents">
-              {infertilityDetails.primaryHistory.investigations.xrayInvestigation.documents.map((doc, index) => (
-                <div key={index} className="document-item">
-                  <span>{doc.name}</span>
-                  <button
-                    type="button"
-                    className='removeButton'
-                    onClick={() => removeDocument(index, 'xrayInvestigation')}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-          </div>
-           {/* Secondary History Section */}
-           <div className="history-section">
-            <h3>Secondary History</h3>
-            <div className="form-group">
-              <label htmlFor="obstetricHistory">Obstetric History</label>
+
+            <h3 className="record-section-title">Secondary History</h3>
+            <Field label="Obstetric History" htmlFor="obstetricHistory">
               <select
+                className="ui-select"
                 id="obstetricHistory"
                 name="secondaryHistory.obstetricHistory"
                 value={infertilityDetails.secondaryHistory.obstetricHistory}
@@ -356,160 +264,59 @@ const InfertilityDetailsForm = () => {
                 <option value="A">A</option>
                 <option value="L">L</option>
               </select>
-            </div>
+            </Field>
 
-            {/* Include secondary history investigations here */}
-            {/* Blood Investigation */}
-            <div className="form-group">
-              <label htmlFor="bloodInvestigation">Blood Investigation</label>
-              <textarea
-                id="bloodInvestigation"
-                name="secondaryHistory.investigations.bloodInvestigation.details"
-                value={infertilityDetails.secondaryHistory.investigations.bloodInvestigation.details}
-                onChange={handleChange}
-              />
-              <label htmlFor="shbloodInvestigationDocs">Choose Documents</label>
-              <input
-                type="file"
-                id="shbloodInvestigationDocs"
-                name="secondaryHistory.investigations.bloodInvestigation.documents"
-                multiple
-                onChange={handleFileChange}
-                className="file-input"
-              />
-              {/* Display uploaded documents */}
-              <div className="uploaded-documents">
-                {infertilityDetails.secondaryHistory.investigations.bloodInvestigation.documents.map((doc, index) => (
-                  <div key={index} className="document-item">
-                    <span>{doc.name}</span>
-                    <button
-                      type="button"
-                      className="removeButton"
-                      onClick={() => removeDocument(index, 'bloodInvestigation')}
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-             {/* Urine Investigation */}
-             <div className="form-group">
-            <label htmlFor="urineInvestigation">Urine Investigation</label>
-            <textarea
-              id="urineInvestigation"
+            <InvestigationField
+              label="Blood Investigation"
+              id="secondaryBlood"
+              name="secondaryHistory.investigations.bloodInvestigation.details"
+              fileFieldName="secondaryHistory.investigations.bloodInvestigation.documents"
+              value={infertilityDetails.secondaryHistory.investigations.bloodInvestigation.details}
+              onChange={handleChange}
+              documents={infertilityDetails.secondaryHistory.investigations.bloodInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument('secondaryHistory', 'bloodInvestigation', index)}
+            />
+            <InvestigationField
+              label="Urine Investigation"
+              id="secondaryUrine"
               name="secondaryHistory.investigations.urineInvestigation.details"
+              fileFieldName="secondaryHistory.investigations.urineInvestigation.documents"
               value={infertilityDetails.secondaryHistory.investigations.urineInvestigation.details}
               onChange={handleChange}
+              documents={infertilityDetails.secondaryHistory.investigations.urineInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument('secondaryHistory', 'urineInvestigation', index)}
             />
-            <label htmlFor="shurineInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="shurineInvestigationDocs"
-              name="secondaryHistory.investigations.urineInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-            {/* Display uploaded documents */}
-            <div className="uploaded-documents">
-              {infertilityDetails.secondaryHistory.investigations.urineInvestigation.documents.map((doc, index) => (
-                <div key={index} className="document-item">
-                  <span>{doc.name}</span>
-                  <button
-                    type="button"
-                    className='removeButton'
-                    onClick={() => removeDocument(index, 'urineInvestigation')}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-{/* Ultrasound Investigation */}
-<div className="form-group">
-            <label htmlFor="ultrasoundInvestigation">UltraSound Investigation</label>
-            <textarea
-              id="ultrasoundInvestigation"
+            <InvestigationField
+              label="Ultrasound Investigation"
+              id="secondaryUltrasound"
               name="secondaryHistory.investigations.ultrasoundInvestigation.details"
+              fileFieldName="secondaryHistory.investigations.ultrasoundInvestigation.documents"
               value={infertilityDetails.secondaryHistory.investigations.ultrasoundInvestigation.details}
               onChange={handleChange}
+              documents={infertilityDetails.secondaryHistory.investigations.ultrasoundInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument('secondaryHistory', 'ultrasoundInvestigation', index)}
             />
-            <label htmlFor="shultrasoundInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="shultrasoundInvestigationDocs"
-              name="secondaryHistory.investigations.ultrasoundInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-            {/* Display uploaded documents */}
-            <div className="uploaded-documents">
-              {infertilityDetails.secondaryHistory.investigations.ultrasoundInvestigation.documents.map((doc, index) => (
-                <div key={index} className="document-item">
-                  <span>{doc.name}</span>
-                  <button
-                    type="button"
-                    className='removeButton'
-                    onClick={() => removeDocument(index, 'ultrasoundInvestigation')}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-{/* Xray Investigation */}
-<div className="form-group">
-            <label htmlFor="shxrayInvestigation">X-ray Investigation</label>
-            <textarea
-              id="xrayInvestigation"
+            <InvestigationField
+              label="X-ray Investigation"
+              id="secondaryXray"
               name="secondaryHistory.investigations.xrayInvestigation.details"
+              fileFieldName="secondaryHistory.investigations.xrayInvestigation.documents"
               value={infertilityDetails.secondaryHistory.investigations.xrayInvestigation.details}
               onChange={handleChange}
+              documents={infertilityDetails.secondaryHistory.investigations.xrayInvestigation.documents}
+              onFileChange={handleFileChange}
+              onRemoveDocument={(index) => removeDocument('secondaryHistory', 'xrayInvestigation', index)}
             />
-            <label htmlFor="shxrayInvestigationDocs">Choose Documents</label>
-            <input
-              type="file"
-              id="shxrayInvestigationDocs"
-              name="secondaryHistory.investigations.xrayInvestigation.documents"
-              multiple
-              onChange={handleFileChange}
-              className="file-input"
-            />
-            {/* Display uploaded documents */}
-            <div className="uploaded-documents">
-              {infertilityDetails.secondaryHistory.investigations.xrayInvestigation.documents.map((doc, index) => (
-                <div key={index} className="document-item">
-                  <span>{doc.name}</span>
-                  <button
-                    type="button"
-                    className='removeButton'
-                    onClick={() => removeDocument(index, 'xrayInvestigation')}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-          </div>
 
-          {/* Add Submit Button */}
-          <div className="case-form-actions">
-            <button type="submit" className="submit-btn">
-              Submit Infertility Details
-            </button>
-            <Link to="/dashboard" className="cancel-btn">
-              Cancel
-            </Link>
-          </div>
-        </form>
-      </div>
+            <div className="case-form-actions">
+              <Button type="submit">Submit Infertility Details</Button>
+              <Link to="/dashboard"><Button type="button" variant="ghost">Cancel</Button></Link>
+            </div>
+          </form>
+        </Card>
       </div>
     </div>
   );

@@ -4,6 +4,9 @@
   justify-content: center;
 }
 
+/* Used directly (unwrapped by <Card>) by the read-only case-detail view
+   pages (ViewAnteNatal.js/ViewInfertilityCase.js) - the create forms use
+   <Card> instead and don't reference this class. */
 .antenatal-details-form-container,
 .infertility-details-form-container {
   width: 100%;
@@ -21,198 +24,10 @@
   font-size: 1.5rem;
 }
 
-.antenatal-details-form-container .form-group,
-.infertility-details-form-container .form-group {
-  margin-bottom: var(--space-5);
-}
-
-.antenatal-details-form-container label,
-.infertility-details-form-container label {
-  display: block;
-  margin-bottom: var(--space-2);
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--color-text);
-}
-
-.antenatal-details-form-container span,
-.infertility-details-form-container span {
-  color: var(--color-text-muted);
-}
-
-.antenatal-details-form-container input[type="text"],
-.antenatal-details-form-container input[type="number"],
-.antenatal-details-form-container input[type="tel"],
-.antenatal-details-form-container input[type="email"],
-.antenatal-details-form-container input[type="date"],
-.antenatal-details-form-container textarea,
-.antenatal-details-form-container select,
-.infertility-details-form-container input[type="text"],
-.infertility-details-form-container input[type="number"],
-.infertility-details-form-container input[type="tel"],
-.infertility-details-form-container input[type="email"],
-.infertility-details-form-container input[type="date"],
-.infertility-details-form-container textarea,
-.infertility-details-form-container select {
-  width: 100%;
-  padding: 10px 12px;
-  font-size: 16px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  box-sizing: border-box;
-  font-family: var(--font-family);
-}
-
-.antenatal-details-form-container textarea,
-.infertility-details-form-container textarea {
-  height: 100px;
-}
-
 .case-form-actions {
   display: flex;
   gap: var(--space-3);
   margin-top: var(--space-6);
-}
-
-.antenatal-details-form-container .submit-btn,
-.infertility-details-form-container .submit-btn {
-  background-color: var(--color-primary);
-  color: #fff;
-  padding: 10px 20px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-}
-
-.antenatal-details-form-container .submit-btn:hover,
-.infertility-details-form-container .submit-btn:hover {
-  background-color: var(--color-primary-dark);
-}
-
-.antenatal-details-form-container .cancel-btn,
-.infertility-details-form-container .cancel-btn {
-  display: inline-block;
-  background-color: var(--color-surface);
-  color: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  padding: 10px 20px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.antenatal-details-form-container .cancel-btn:hover,
-.infertility-details-form-container .cancel-btn:hover {
-  background-color: var(--color-primary-bg);
-}
-
-.antenatal-details-form-container label[for$="Docs"],
-.infertility-details-form-container label[for$="Docs"] {
-  display: inline-block;
-  padding: 8px 16px;
-  background-color: var(--color-primary);
-  color: #fff;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 0.85rem;
-}
-
-.antenatal-details-form-container label[for$="Docs"]:hover,
-.infertility-details-form-container label[for$="Docs"]:hover {
-  background-color: var(--color-primary-dark);
-}
-
-.antenatal-details-form-container .file-input,
-.infertility-details-form-container .file-input {
-  display: none;
-}
-
-.antenatal-details-form-container .uploaded-documents,
-.infertility-details-form-container .uploaded-documents {
-  margin-top: var(--space-3);
-}
-
-.antenatal-details-form-container .document-item,
-.infertility-details-form-container .document-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background-color: var(--color-bg);
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-2);
-  font-size: 0.9rem;
-}
-
-.antenatal-details-form-container .removeButton,
-.infertility-details-form-container .removeButton {
-  background-color: var(--color-danger);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  padding: 4px 10px;
-  font-size: 0.8rem;
-}
-
-.antenatal-details-form-container .history-section,
-.infertility-details-form-container .history-section {
-  margin-bottom: var(--space-6);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.antenatal-details-form-container .error-message,
-.infertility-details-form-container .error-message {
-  background-color: var(--color-danger-bg);
-  color: var(--color-danger);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-4);
-}
-
-.antenatal-details-form-container .success-message,
-.infertility-details-form-container .success-message {
-  background-color: var(--color-success-bg);
-  color: var(--color-success);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-4);
-}
-
-.documents-preview {
-  margin-top: var(--space-2);
-}
-
-.documents-preview h4 {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  margin-bottom: var(--space-1);
-}
-
-.document-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.document-list li {
-  padding: 6px 10px;
-  background-color: var(--color-bg);
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-1);
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: var(--color-accent);
-}
-
-.document-list li:hover {
-  background-color: var(--color-primary-bg);
 }
 
 @media (max-width: 640px) {
@@ -229,13 +44,7 @@
     flex-direction: column;
   }
 
-  .antenatal-details-form-container .submit-btn,
-  .infertility-details-form-container .submit-btn,
-  .antenatal-details-form-container .cancel-btn,
-  .infertility-details-form-container .cancel-btn {
+  .case-form-actions .ui-btn {
     width: 100%;
-    text-align: center;
-    box-sizing: border-box;
-    padding: 12px 20px;
   }
 }
