@@ -124,7 +124,7 @@ const DoctorManagement = () => {
                 onChange={(e) => setPhoto(e.target.files[0] || null)}
               />
             </Field>
-            <Button type="submit">Add Doctor</Button>
+            <Button type="submit" style={{ marginBottom: 'var(--space-4)' }}>Add Doctor</Button>
           </form>
         </Card>
 

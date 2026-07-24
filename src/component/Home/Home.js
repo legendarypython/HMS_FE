@@ -78,15 +78,22 @@ const Home = () => {
         </div>
       </section>
 
-      <section className="home-section">
-        <span className="ui-eyebrow">About Us</span>
-        <h2 className="section-title">A Gynaecology Hospital, Built Around Our Patients</h2>
-        <p>
-          Panchkuiyan Hospital is a small, dedicated gynaecology and antenatal care practice
-          led by Dr. Bhavana Gupta (MBBS, MS). We focus on giving every patient the time,
-          attention, and continuity of care that comes from seeing the same trusted doctor
-          throughout your pregnancy or treatment - not a rotating cast of unfamiliar faces.
-        </p>
+      <section className="home-section about-section">
+        <div className="about-section-text">
+          <span className="ui-eyebrow">About Us</span>
+          <h2 className="section-title">A Gynaecology Hospital, Built Around Our Patients</h2>
+          <p>
+            Panchkuiyan Hospital is a small, dedicated gynaecology and antenatal care practice
+            led by Dr. Bhavana Gupta (MBBS, MS). We focus on giving every patient the time,
+            attention, and continuity of care that comes from seeing the same trusted doctor
+            throughout your pregnancy or treatment - not a rotating cast of unfamiliar faces.
+          </p>
+        </div>
+        <img
+          src="/images/clinic-entrance.webp"
+          alt="Panchkuiyan Hospital entrance"
+          className="about-section-photo"
+        />
       </section>
 
       <section className="home-section features-section">
@@ -128,6 +135,19 @@ const Home = () => {
           </div>
         </section>
       )}
+
+      <section className="home-section visit-section">
+        <img
+          src="/images/clinic-courtyard.webp"
+          alt="Panchkuiyan Hospital courtyard"
+          className="visit-section-photo"
+        />
+        <div className="visit-section-text">
+          <span className="ui-eyebrow">Visit Us</span>
+          <h2 className="section-title">Find Us in Agra</h2>
+          <p>1/89, Panchkuian Hospital, Panchkuian, near Mathur Vaishya Bhawan, Agra</p>
+        </div>
+      </section>
 
       <section className="cta-section">
         <div className="cta-section-blob" aria-hidden="true" />
