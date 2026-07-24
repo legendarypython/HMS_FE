@@ -3,9 +3,27 @@ import { Link } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
 import Footer from '../Footer';
 import Button from '../ui/Button';
+import Icon from '../ui/Icon';
 import { API_BASE } from '../../utils/api';
-import hospitalImage from '../../photos/hospital.jpg';
 import './Home.css';
+
+const FEATURES = [
+  {
+    icon: 'heart',
+    title: 'Continuity of Care',
+    body: 'You see the same doctor every visit - Dr. Bhavana Gupta - not a rotating cast of unfamiliar faces.',
+  },
+  {
+    icon: 'calendar',
+    title: 'Simple Online Booking',
+    body: 'Book an appointment in a few seconds, no account or app download required.',
+  },
+  {
+    icon: 'shield',
+    title: 'Personal Attention',
+    body: 'A small, focused practice means real time with your doctor, not a rushed 5-minute slot.',
+  },
+];
 
 const Home = () => {
   const [doctors, setDoctors] = useState([]);
@@ -21,13 +39,40 @@ const Home = () => {
     <div>
       <AppNavbar role="public" />
 
-      <section className="home-hero" style={{ backgroundImage: `url(${hospitalImage})` }}>
+      <section className="home-hero">
+        <div className="home-hero-blob home-hero-blob-1" aria-hidden="true" />
+        <div className="home-hero-blob home-hero-blob-2" aria-hidden="true" />
         <div className="home-hero-content">
-          <h1>Panchkuiyan Hospital</h1>
-          <p>Compassionate, accessible healthcare for the community.</p>
+          <span className="hero-badge">
+            <Icon name="stethoscope" size={15} /> MBBS, MS &middot; Gynaecology &amp; Antenatal Care
+          </span>
+          <h1>Care that stays with you, from first visit to delivery.</h1>
+          <p>Panchkuiyan Hospital is a focused gynaecology practice built around one thing: knowing your name and your history, every time you walk in.</p>
           <Link to="/book-appointment">
-            <Button variant="secondary" className="hero-cta-btn">Book an Appointment</Button>
+            <Button variant="secondary" size="lg" className="hero-cta-btn">
+              Book an Appointment <Icon name="arrow-right" size={18} />
+            </Button>
           </Link>
+        </div>
+      </section>
+
+      <section className="stat-strip">
+        <div className="stat-strip-inner">
+          <div className="stat-item">
+            <Icon name="heart" size={22} className="stat-icon" />
+            <div className="stat-value">1-on-1</div>
+            <div className="stat-label">Doctor continuity, every visit</div>
+          </div>
+          <div className="stat-item">
+            <Icon name="clock" size={22} className="stat-icon" />
+            <div className="stat-value">Same-Day</div>
+            <div className="stat-label">Appointment booking online</div>
+          </div>
+          <div className="stat-item">
+            <Icon name="award" size={22} className="stat-icon" />
+            <div className="stat-value">MBBS, MS</div>
+            <div className="stat-label">Qualified &amp; specialised care</div>
+          </div>
         </div>
       </section>
 
@@ -42,13 +87,27 @@ const Home = () => {
         </p>
       </section>
 
+      <section className="home-section features-section">
+        <span className="ui-eyebrow">Why Choose Us</span>
+        <h2 className="section-title">What Makes Care Here Different</h2>
+        <div className="feature-grid">
+          {FEATURES.map(f => (
+            <div className="feature-card ui-hover-lift" key={f.title}>
+              <div className="feature-icon"><Icon name={f.icon} size={24} /></div>
+              <h3>{f.title}</h3>
+              <p>{f.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {doctors.length > 0 && (
         <section className="home-section home-section-alt">
           <span className="ui-eyebrow">Meet The Team</span>
           <h2 className="section-title">Our Doctors</h2>
           <div className="doctor-grid">
             {doctors.map(doc => (
-              <div className="doctor-card ui-card" key={doc._id}>
+              <div className="doctor-card ui-hover-lift" key={doc._id}>
                 {doc.hasPhoto ? (
                   <img
                     src={`${API_BASE}/api/doctors/${doc._id}/photo`}
@@ -69,11 +128,14 @@ const Home = () => {
       )}
 
       <section className="cta-section">
+        <div className="cta-section-blob" aria-hidden="true" />
         <span className="ui-eyebrow" style={{ color: 'rgba(255,255,255,0.85)' }}>Get Started</span>
         <h2>Ready to see a doctor?</h2>
         <p>Book an appointment online in a few seconds - no account required.</p>
         <Link to="/book-appointment">
-          <Button variant="secondary" style={{ backgroundColor: '#fff' }}>Book Now</Button>
+          <Button variant="secondary" className="cta-btn-light">
+            Book Now <Icon name="arrow-right" size={18} />
+          </Button>
         </Link>
       </section>
 

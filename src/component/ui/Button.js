@@ -13,6 +13,7 @@ const Button = ({ variant = 'primary', size, className = '', children, ...rest }
     'ui-btn',
     VARIANT_CLASS[variant] || VARIANT_CLASS.primary,
     size === 'sm' ? 'ui-btn-sm' : '',
+    size === 'lg' ? 'ui-btn-lg' : '',
     className
   ].filter(Boolean).join(' ');
 

@@ -1,56 +1,133 @@
 .home-hero {
   position: relative;
-  height: 420px;
-  background-size: cover;
-  background-position: center;
+  overflow: hidden;
+  padding: var(--space-24) var(--space-6) var(--space-20);
+  background: var(--gradient-mesh);
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
-.home-hero::before {
-  content: '';
+/* Soft blurred color blobs floating in the hero, in place of a stock photo -
+   gives the section visual depth without needing real photography. */
+.home-hero-blob {
   position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, rgba(15, 118, 110, 0.88), rgba(15, 23, 42, 0.55));
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.home-hero-blob-1 {
+  width: 380px;
+  height: 380px;
+  top: -120px;
+  right: -80px;
+  background: var(--color-warm-light);
+}
+
+.home-hero-blob-2 {
+  width: 320px;
+  height: 320px;
+  bottom: -140px;
+  left: -100px;
+  background: var(--color-primary-light);
 }
 
 .home-hero-content {
   position: relative;
   z-index: 1;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 var(--space-6);
+  max-width: 700px;
+  text-align: center;
   color: #ffffff;
 }
 
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-bottom: var(--space-5);
+  backdrop-filter: blur(4px);
+}
+
 .home-hero-content h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  margin-bottom: var(--space-3);
+  font-size: var(--text-hero);
+  font-weight: 600;
+  line-height: 1.1;
+  margin: 0 0 var(--space-5) 0;
 }
 
 .home-hero-content p {
   font-size: 1.15rem;
-  margin-bottom: var(--space-6);
-  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  margin-bottom: var(--space-8);
+  color: rgba(255, 255, 255, 0.88);
 }
 
-/* The hero's teal gradient overlay is close to var(--color-primary), so the
-   default primary button blends into the background instead of standing out. */
+/* The hero's mesh gradient mixes teal and warm tones, so a solid white
+   button reads clearly against any part of it rather than blending in. */
 .hero-cta-btn.ui-btn-secondary {
+  font-size: 1.05rem;
   background-color: #ffffff;
   color: var(--color-primary-dark);
   border-color: #ffffff;
+  box-shadow: var(--shadow-lg);
 }
 
 .hero-cta-btn.ui-btn-secondary:hover {
   background-color: rgba(255, 255, 255, 0.9);
 }
 
+/* Dark stat strip for visual rhythm/contrast right below the hero. */
+.stat-strip {
+  background-color: var(--color-ink);
+}
+
+.stat-strip-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-6);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  text-align: center;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-icon {
+  color: var(--color-warm-light);
+  margin-bottom: var(--space-2);
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.stat-label {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: var(--space-1);
+}
+
 .home-section {
   max-width: 1100px;
   margin: 0 auto;
-  padding: var(--space-12) var(--space-6);
+  padding: var(--space-16) var(--space-6);
 }
 
 .home-section-alt {
@@ -64,6 +141,56 @@
   max-width: 760px;
 }
 
+.features-section {
+  background-color: var(--color-primary-bg);
+  max-width: 100%;
+}
+
+.features-section > * {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+
+.feature-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+}
+
+.feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary-dark);
+  margin-bottom: var(--space-4);
+}
+
+.feature-card h3 {
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-2) 0;
+}
+
+.feature-card p {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
 .doctor-grid {
   display: flex;
   flex-wrap: wrap;
@@ -74,6 +201,11 @@
 .doctor-card {
   width: 260px;
   text-align: center;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
 }
 
 .doctor-card h4 {
@@ -97,37 +229,61 @@
 }
 
 .cta-section {
-  background-color: var(--color-primary);
+  position: relative;
+  overflow: hidden;
+  background: var(--gradient-warm);
   color: #ffffff;
   text-align: center;
-  padding: var(--space-12) var(--space-6);
+  padding: var(--space-16) var(--space-6);
+}
+
+.cta-section-blob {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  top: -180px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .cta-section h2 {
-  font-size: 1.75rem;
+  position: relative;
+  font-size: var(--text-h1);
   margin-bottom: var(--space-3);
 }
 
 .cta-section p {
-  color: rgba(255, 255, 255, 0.85);
+  position: relative;
+  color: rgba(255, 255, 255, 0.88);
   margin-bottom: var(--space-6);
+}
+
+.cta-btn-light.ui-btn-secondary {
+  position: relative;
+  background-color: #ffffff;
+  color: var(--color-warm-dark);
+  border-color: #ffffff;
+}
+
+.cta-btn-light.ui-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.9);
 }
 
 @media (max-width: 640px) {
   .home-hero {
-    height: auto;
-    padding: var(--space-10) 0;
-  }
-
-  .home-hero-content h1 {
-    font-size: 1.9rem;
-  }
-
-  .home-hero-content p {
-    font-size: 1rem;
+    padding: var(--space-16) var(--space-4);
   }
 
   .home-section {
+    padding: var(--space-10) var(--space-4);
+  }
+
+  .stat-strip-inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
     padding: var(--space-8) var(--space-4);
   }
 
@@ -136,6 +292,6 @@
   }
 
   .cta-section {
-    padding: var(--space-8) var(--space-4);
+    padding: var(--space-10) var(--space-4);
   }
 }
