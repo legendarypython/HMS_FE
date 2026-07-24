@@ -2,7 +2,7 @@ import React from 'react';
 import {
   FileText, Inbox, Calendar, Filter, HeartPulse, ShieldCheck, Star, Phone,
   Mail, MapPin, Clock, Users, Award, Stethoscope, Baby, CheckCircle2,
-  ArrowRight, Menu, X, User, Lock, ChevronRight, Sparkles, Quote,
+  ArrowRight, Menu, X, User, Lock, ChevronRight, Sparkles, Quote, Home, LogOut,
 } from 'lucide-react';
 
 // Keeps the existing <Icon name="..." size={} /> call sites unchanged while
@@ -32,6 +32,8 @@ const ICONS = {
   'chevron-right': ChevronRight,
   sparkles: Sparkles,
   quote: Quote,
+  home: Home,
+  logout: LogOut,
 };
 
 const Icon = ({ name, size = 20, className = '', strokeWidth = 1.8 }) => {

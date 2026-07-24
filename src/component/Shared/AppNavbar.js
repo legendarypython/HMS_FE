@@ -1,25 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useHistory } from 'react-router-dom';
+import Icon from '../ui/Icon';
 import './AppNavbar.css';
 
 const LINKS_BY_ROLE = {
   public: [
-    { to: '/', label: 'Home' },
-    { to: '/book-appointment', label: 'Book Appointment', cta: true },
-    { to: '/login', label: 'Login' }
+    { to: '/', label: 'Home', icon: 'home' },
+    { to: '/book-appointment', label: 'Book Appointment', icon: 'calendar', cta: true },
+    { to: '/login', label: 'Login', icon: 'lock' }
   ],
   owner: [
-    { to: '/dashboard', label: 'Patients' },
-    { to: '/doctors', label: 'Doctors' },
-    { to: '/appointments', label: 'Appointments' }
+    { to: '/dashboard', label: 'Patients', icon: 'users' },
+    { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
+    { to: '/appointments', label: 'Appointments', icon: 'calendar' }
   ],
   manager: [
-    { to: '/dashboard', label: 'Patients' },
-    { to: '/doctors', label: 'Doctors' },
-    { to: '/appointments', label: 'Appointments' }
+    { to: '/dashboard', label: 'Patients', icon: 'users' },
+    { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
+    { to: '/appointments', label: 'Appointments', icon: 'calendar' }
   ],
   patient: [
-    { to: '/patient/my-record', label: 'My Record' }
+    { to: '/patient/my-record', label: 'My Record', icon: 'file' }
   ]
 };
 
@@ -60,16 +61,29 @@ const AppNavbar = ({ role = 'public' }) => {
         Panchkuiyan Hospital
       </Link>
 
-      <button
-        className="app-navbar-toggle"
-        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-        aria-expanded={menuOpen}
-        onClick={() => setMenuOpen(open => !open)}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+      <div className="app-navbar-mobile-actions">
+        {role === 'public' && (
+          <Link to="/login" className="app-navbar-mobile-login" onClick={closeMenu}>
+            <Icon name="user" size={16} /> Login
+          </Link>
+        )}
+        <button
+          className={`app-navbar-toggle ${menuOpen ? 'app-navbar-toggle--open' : ''}`}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen(open => !open)}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
+      </div>
+
+      <div
+        className={`app-navbar-backdrop ${menuOpen ? 'app-navbar-backdrop--open' : ''}`}
+        onClick={closeMenu}
+        aria-hidden="true"
+      />
 
       <div className={`app-navbar-links ${menuOpen ? 'app-navbar-links--open' : ''}`}>
         {links.map(link => (
@@ -79,12 +93,15 @@ const AppNavbar = ({ role = 'public' }) => {
             className={`app-navbar-link ${link.cta ? 'app-navbar-cta' : ''}`}
             onClick={closeMenu}
           >
-            {link.label}
+            <Icon name={link.icon} size={18} className="app-navbar-link-icon" />
+            <span className="app-navbar-link-label">{link.label}</span>
+            {!link.cta && <Icon name="chevron-right" size={16} className="app-navbar-link-chevron" />}
           </Link>
         ))}
         {isAuthenticated && (
           <button className="app-navbar-link app-navbar-logout" onClick={handleLogout}>
-            Log Out
+            <Icon name="logout" size={18} className="app-navbar-link-icon" />
+            <span className="app-navbar-link-label">Log Out</span>
           </button>
         )}
       </div>

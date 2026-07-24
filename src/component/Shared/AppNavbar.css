@@ -37,13 +37,16 @@
 }
 
 .app-navbar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   color: var(--color-text);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.95rem;
   padding: 8px 14px;
   border-radius: var(--radius-md);
-  transition: background-color 0.15s ease;
+  transition: background-color var(--transition-fast);
   border: none;
   background: none;
   cursor: pointer;
@@ -55,6 +58,19 @@
   color: var(--color-primary-dark);
 }
 
+.app-navbar-link-icon {
+  display: none;
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+.app-navbar-link-chevron {
+  display: none;
+  margin-left: auto;
+  color: var(--color-text-muted);
+  opacity: 0.5;
+}
+
 .app-navbar-cta {
   background-color: var(--color-primary);
   color: var(--color-text-inverse) !important;
@@ -62,6 +78,19 @@
 .app-navbar-cta:hover {
   background-color: var(--color-primary-dark) !important;
   color: var(--color-text-inverse) !important;
+}
+.app-navbar-cta .app-navbar-link-icon {
+  color: var(--color-text-inverse);
+}
+
+.app-navbar-mobile-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-navbar-mobile-login {
+  display: none;
 }
 
 .app-navbar-toggle {
@@ -88,6 +117,21 @@
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
+/* Hamburger -> X */
+.app-navbar-toggle--open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.app-navbar-toggle--open span:nth-child(2) {
+  opacity: 0;
+}
+.app-navbar-toggle--open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.app-navbar-backdrop {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .app-navbar {
     padding: 0 var(--space-4);
@@ -95,27 +139,61 @@
 
   .app-navbar-brand {
     font-size: 0.95rem;
-    max-width: 60%;
+    max-width: 55%;
+  }
+
+  .app-navbar-mobile-login {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-primary-dark);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 6px 10px;
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-pill);
   }
 
   .app-navbar-toggle {
     display: flex;
   }
 
+  /* Dims the page behind the drawer and gives it something to close on tap. */
+  .app-navbar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    top: 64px;
+    background-color: rgba(11, 17, 32, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-base);
+    z-index: 99;
+  }
+
+  .app-navbar-backdrop--open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* A proper side-drawer (not a full-bleed panel) sliding in from the right. */
   .app-navbar-links {
     position: fixed;
     top: 64px;
-    left: 0;
     right: 0;
     bottom: 0;
+    width: min(300px, 80vw);
     background-color: var(--color-surface);
     flex-direction: column;
     align-items: stretch;
-    gap: 0;
+    gap: var(--space-1);
     padding: var(--space-4);
+    box-shadow: var(--shadow-xl);
     transform: translateX(100%);
-    transition: transform 0.2s ease;
+    transition: transform var(--transition-base);
     overflow-y: auto;
+    z-index: 100;
   }
 
   .app-navbar-links--open {
@@ -125,21 +203,31 @@
   .app-navbar-link {
     width: 100%;
     text-align: left;
-    font-size: 1.05rem;
-    padding: 14px var(--space-3);
-    border-bottom: 1px solid var(--color-border);
-    border-radius: 0;
+    font-size: 1rem;
+    padding: 12px var(--space-3);
+    border-radius: var(--radius-md);
+  }
+
+  .app-navbar-link-icon,
+  .app-navbar-link-chevron {
+    display: block;
   }
 
   .app-navbar-cta {
     border-radius: var(--radius-md);
-    border-bottom: none;
     text-align: center;
     font-weight: 700;
-    margin: var(--space-3) 0;
+    margin: var(--space-2) 0;
   }
 
   .app-navbar-logout {
+    color: var(--color-danger);
+    margin-top: var(--space-2);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-4);
+  }
+
+  .app-navbar-logout .app-navbar-link-icon {
     color: var(--color-danger);
   }
 }
