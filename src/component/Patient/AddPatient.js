@@ -4,7 +4,7 @@ import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
 import { getAuthHeader } from '../../utils/auth';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
 import './AddPatient.css';
 
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
@@ -58,7 +58,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
     setSaving(true);
     try {
       const { caseType, ...editableFields } = form;
-      const response = await fetch(`${API_BASE}/api/patients/update`, {
+      const response = await apiFetch(`${API_BASE}/api/patients/update`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify({
@@ -96,7 +96,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
       formData.append('caseTypeEnum', CASE_TYPE_ENUM[form.caseType] || '');
       documents.forEach((doc) => formData.append('documents', doc.file));
 
-      const response = await fetch(`${API_BASE}/api/patients/create`, {
+      const response = await apiFetch(`${API_BASE}/api/patients/create`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: formData

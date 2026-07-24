@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
 import '../../styles/caseForms.css';
 import { getAuthHeader } from '../../utils/auth';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
 
 const InfertilityDetailsForm = () => {
   const { patientId } = useParams();
@@ -78,7 +78,7 @@ const InfertilityDetailsForm = () => {
       // Append secondary history investigations details and documents
       appendInvestigationDetails(formData, 'secondaryHistory', infertilityDetails.secondaryHistory);
   
-      const response = await fetch(`${API_BASE}/api/infertility/create`, {
+      const response = await apiFetch(`${API_BASE}/api/infertility/create`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: formData

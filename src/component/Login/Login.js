@@ -25,6 +25,7 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionExpired] = useState(() => new URLSearchParams(window.location.search).get('expired') === '1');
   const confirmationResultRef = useRef(null);
   const recaptchaVerifierRef = useRef(null);
 
@@ -140,6 +141,9 @@ const Login = () => {
             <form onSubmit={handleMobileSubmit}>
               <span className="ui-eyebrow">Welcome Back</span>
               <h2>Log In</h2>
+              {sessionExpired && !error && (
+                <div className="ui-banner ui-banner-error">Your session expired - please log in again.</div>
+              )}
               {error && <div className="ui-banner ui-banner-error">{error}</div>}
               <Field label="Mobile Number" required htmlFor="mobile">
                 <input

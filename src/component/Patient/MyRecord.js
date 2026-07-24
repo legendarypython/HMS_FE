@@ -6,7 +6,7 @@ import Badge from '../ui/Badge';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
 import { getAuthHeader } from '../../utils/auth';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
 import './MyRecord.css';
 const CASE_TYPE_LABEL = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
 
@@ -24,7 +24,7 @@ const MyRecord = () => {
   const [previewDoc, setPreviewDoc] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/patients/me`, { headers: getAuthHeader() })
+    apiFetch(`${API_BASE}/api/patients/me`, { headers: getAuthHeader() })
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) {
@@ -38,7 +38,7 @@ const MyRecord = () => {
   }, []);
 
   const handleDocumentPreview = async (doc) => {
-    const res = await fetch(`${API_BASE}/api/documents/${doc._id}`, { headers: getAuthHeader() });
+    const res = await apiFetch(`${API_BASE}/api/documents/${doc._id}`, { headers: getAuthHeader() });
     if (!res.ok) return;
     const blob = await res.blob();
     setPreviewDoc({ name: doc.filename, url: URL.createObjectURL(blob) });

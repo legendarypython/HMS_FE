@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Button from '../ui/Button';
 import Field from '../ui/Field';
 import { getAuthHeader } from '../../utils/auth';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
 import './AddPatient.css';
 
 // Reusable "attach files to an existing patient" uploader - used from the
@@ -31,7 +31,7 @@ const AddDocumentsUploader = ({ patientId, onUploaded }) => {
       const formData = new FormData();
       files.forEach(file => formData.append('documents', file));
 
-      const response = await fetch(`${API_BASE}/api/patients/${patientId}/documents`, {
+      const response = await apiFetch(`${API_BASE}/api/patients/${patientId}/documents`, {
         method: 'POST',
         headers: getAuthHeader(),
         body: formData

@@ -9,7 +9,7 @@ import Spinner from '../ui/Spinner';
 import { AddPatientForm } from './AddPatient';
 import AddDocumentsUploader from './AddDocumentsUploader';
 import { getAuthHeader } from '../../utils/auth';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
 import './AddPatient.css';
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
 
@@ -30,7 +30,7 @@ const AddPatientPageRoute = () => {
     }
     setChecking(true);
     try {
-      const res = await fetch(`${API_BASE}/api/patients/check-phone?phone=${phone}`, { headers: getAuthHeader() });
+      const res = await apiFetch(`${API_BASE}/api/patients/check-phone?phone=${phone}`, { headers: getAuthHeader() });
       const json = await res.json();
       if (!res.ok) {
         setError(json.message || 'Could not check this number');

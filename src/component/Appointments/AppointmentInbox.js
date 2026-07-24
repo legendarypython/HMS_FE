@@ -5,7 +5,7 @@ import Badge from '../ui/Badge';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
 import { getAuthHeader } from '../../utils/auth';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
 
 const STATUS_VARIANT = { pending: 'warning', confirmed: 'success', rejected: 'danger' };
 
@@ -16,7 +16,7 @@ const AppointmentInbox = () => {
 
   const fetchAppointments = () => {
     setLoading(true);
-    fetch(`${API_BASE}/api/appointments/all`, { headers: getAuthHeader() })
+    apiFetch(`${API_BASE}/api/appointments/all`, { headers: getAuthHeader() })
       .then(res => res.json())
       .then(json => setAppointments(json.data || []))
       .catch(err => console.error('Error fetching appointments:', err))
@@ -26,7 +26,7 @@ const AppointmentInbox = () => {
   useEffect(() => { fetchAppointments(); }, []);
 
   const updateStatus = async (id, status) => {
-    await fetch(`${API_BASE}/api/appointments/${id}/status`, {
+    await apiFetch(`${API_BASE}/api/appointments/${id}/status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ status })

@@ -7,7 +7,7 @@ import Badge from '../ui/Badge';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
 import { getAuthHeader } from '../../utils/auth';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
 
 const SPECIALIZATIONS = [
   'General Physician',
@@ -39,7 +39,7 @@ const DoctorManagement = () => {
 
   const fetchDoctors = () => {
     setLoading(true);
-    fetch(`${API_BASE}/api/doctors/all`, { headers: getAuthHeader() })
+    apiFetch(`${API_BASE}/api/doctors/all`, { headers: getAuthHeader() })
       .then(res => res.json())
       .then(json => setDoctors(json.data || []))
       .catch(err => console.error('Error fetching doctors:', err))
@@ -55,7 +55,7 @@ const DoctorManagement = () => {
       setError('Name and specialization are required');
       return;
     }
-    const res = await fetch(`${API_BASE}/api/doctors/create`, {
+    const res = await apiFetch(`${API_BASE}/api/doctors/create`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ name, specialization })
@@ -71,7 +71,7 @@ const DoctorManagement = () => {
   };
 
   const handleRemove = async (id) => {
-    await fetch(`${API_BASE}/api/doctors/${id}`, {
+    await apiFetch(`${API_BASE}/api/doctors/${id}`, {
       method: 'DELETE',
       headers: getAuthHeader()
     });
@@ -79,7 +79,7 @@ const DoctorManagement = () => {
   };
 
   const handleRestore = async (id) => {
-    await fetch(`${API_BASE}/api/doctors/${id}`, {
+    await apiFetch(`${API_BASE}/api/doctors/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify({ active: true })
