@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import Icon from '../ui/Icon';
 import './AppNavbar.css';
 
@@ -26,6 +26,7 @@ const LINKS_BY_ROLE = {
 
 const AppNavbar = ({ role = 'public' }) => {
   const history = useHistory();
+  const location = useLocation();
   const [hidden, setHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const lastScroll = useRef(0);
@@ -62,7 +63,7 @@ const AppNavbar = ({ role = 'public' }) => {
       </Link>
 
       <div className="app-navbar-mobile-actions">
-        {role === 'public' && (
+        {role === 'public' && location.pathname === '/' && (
           <Link to="/login" className="app-navbar-mobile-login" onClick={closeMenu}>
             <Icon name="user" size={16} /> Login
           </Link>
