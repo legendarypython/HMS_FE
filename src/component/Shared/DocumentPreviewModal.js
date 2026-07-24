@@ -25,6 +25,19 @@ const DocumentPreviewModal = ({ document, documents = [], onSelect, onClose }) =
     onClose();
   };
 
+  // document.url is an already-authenticated blob: URL (the /api/documents/:id
+  // fetch requires a Bearer token, so a plain <a href> pointing at the API
+  // wouldn't work) - reuse it via a programmatic anchor click to trigger a
+  // real save-as download instead of just the inline iframe preview.
+  const handleDownload = () => {
+    const link = window.document.createElement('a');
+    link.href = document.url;
+    link.download = document.name;
+    window.document.body.appendChild(link);
+    link.click();
+    window.document.body.removeChild(link);
+  };
+
   return (
     <div className="doc-modal-overlay">
       <div className={`doc-modal ${fullscreen ? 'doc-modal-fullscreen' : ''}`}>
@@ -37,6 +50,7 @@ const DocumentPreviewModal = ({ document, documents = [], onSelect, onClose }) =
             <button className="doc-modal-nav" onClick={() => goTo(1)} aria-label="Next document">→</button>
           )}
           <div className="doc-modal-actions">
+            <Button size="sm" variant="ghost" onClick={handleDownload}>Download</Button>
             <Button size="sm" variant="ghost" onClick={() => setFullscreen(f => !f)}>
               {fullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             </Button>
