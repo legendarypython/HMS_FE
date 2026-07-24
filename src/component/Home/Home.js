@@ -23,7 +23,7 @@ const Home = () => {
 
       <section className="home-hero" style={{ backgroundImage: `url(${hospitalImage})` }}>
         <div className="home-hero-content">
-          <h1>Panchkuiyan Hospital Pvt. Ltd.</h1>
+          <h1>Panchkuiyan Hospital</h1>
           <p>Compassionate, accessible healthcare for the community.</p>
           <Link to="/book-appointment">
             <Button variant="primary">Book an Appointment</Button>

@@ -79,7 +79,7 @@ const BookAppointment = () => {
         order_id: orderId,
         amount,
         currency,
-        name: 'Panchkuiyan Hospital Pvt. Ltd.',
+        name: 'Panchkuiyan Hospital',
         description: 'Consultation fee',
         prefill: { name: form.patientName, contact: form.patientPhone },
         theme: { color: '#00695c' },

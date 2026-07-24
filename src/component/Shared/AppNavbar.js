@@ -57,7 +57,7 @@ const AppNavbar = ({ role = 'public' }) => {
   return (
     <nav className={`app-navbar ${hidden ? 'app-navbar--hidden' : ''}`}>
       <Link to="/" className="app-navbar-brand" onClick={closeMenu}>
-        Panchkuiyan Hospital Pvt. Ltd.
+        Panchkuiyan Hospital
       </Link>
 
       <button

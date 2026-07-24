@@ -15,7 +15,7 @@ const Footer = () => (
       </div>
     </div>
     <div className="app-footer-copyright">
-      © {new Date().getFullYear()} Panchkuiyan Hospital Pvt. Ltd.
+      © {new Date().getFullYear()} Panchkuiyan Hospital
     </div>
   </footer>
 );
