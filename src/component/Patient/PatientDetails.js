@@ -14,6 +14,29 @@ import { API_BASE } from '../../utils/api';
 import './PatientDetails.css';
 
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
+const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'warning', 3: 'neutral' };
+
+const getInitials = (first, last) => `${(first || '')[0] || ''}${(last || '')[0] || ''}`.toUpperCase();
+
+// Only the "contact-ish" fields get an icon - keeps the grid scannable
+// instead of every single field competing for attention with one.
+const FIELD_ICONS = {
+  phone: 'phone',
+  email: 'mail',
+  address: 'map-pin',
+  dob: 'calendar',
+  admission: 'calendar',
+};
+
+const RecordField = ({ label, value, icon }) => (
+  <div className="record-field">
+    {icon && <Icon name={icon} size={15} className="record-field-icon" />}
+    <div>
+      <div className="record-field-label">{label}</div>
+      <div className="record-field-value">{value}</div>
+    </div>
+  </div>
+);
 
 const PatientDetails = () => {
   const role = sessionStorage.getItem('userRole');
@@ -80,24 +103,32 @@ const PatientDetails = () => {
         {editMode ? (
           <AddPatientForm initialPatientDetails={patientDetails} onSaved={handleSaved} />
         ) : (
-          <Card>
+          <Card variant="elevated">
             <div className="patient-detail-header">
-              <h2 className="section-title" style={{ margin: 0 }}>{patientDetails.firstName} {patientDetails.lastName}</h2>
-              <Badge variant="primary">{CASE_TYPE_LABELS[patientDetails.caseType] || '-'}</Badge>
+              <span className="ui-avatar patient-detail-avatar">
+                {getInitials(patientDetails.firstName, patientDetails.lastName)}
+              </span>
+              <div>
+                <h2 className="section-title" style={{ margin: 0 }}>{patientDetails.firstName} {patientDetails.lastName}</h2>
+                <Badge variant={CASE_TYPE_BADGE_VARIANT[patientDetails.caseType] || 'neutral'}>
+                  {CASE_TYPE_LABELS[patientDetails.caseType] || '-'}
+                </Badge>
+              </div>
             </div>
 
             <div className="record-grid">
-              <div><div className="record-field-label">Husband's Name</div><div className="record-field-value">{patientDetails.husbandFirstName} {patientDetails.husbandLastName}</div></div>
-              <div><div className="record-field-label">Date of Birth</div><div className="record-field-value">{patientDetails.dateOfBirth}</div></div>
-              <div><div className="record-field-label">Address</div><div className="record-field-value">{patientDetails.address}</div></div>
-              <div><div className="record-field-label">Aadhar Number</div><div className="record-field-value">{patientDetails.aadhar}</div></div>
-              <div><div className="record-field-label">Phone Number</div><div className="record-field-value">{patientDetails.phone}</div></div>
-              <div><div className="record-field-label">Email</div><div className="record-field-value">{patientDetails.email || '-'}</div></div>
-              <div><div className="record-field-label">Married For (Years)</div><div className="record-field-value">{patientDetails.marriedFor}</div></div>
-              <div><div className="record-field-label">Date of Admission</div><div className="record-field-value">{new Date(patientDetails.dateOfAdmission).toLocaleDateString()}</div></div>
-              <div><div className="record-field-label">Is New Patient</div><div className="record-field-value">{patientDetails.isNewPatient ? 'Yes' : 'No'}</div></div>
+              <RecordField label="Husband's Name" value={`${patientDetails.husbandFirstName} ${patientDetails.husbandLastName}`} />
+              <RecordField label="Date of Birth" value={patientDetails.dateOfBirth} icon={FIELD_ICONS.dob} />
+              <RecordField label="Address" value={patientDetails.address} icon={FIELD_ICONS.address} />
+              <RecordField label="Aadhar Number" value={patientDetails.aadhar} />
+              <RecordField label="Phone Number" value={patientDetails.phone} icon={FIELD_ICONS.phone} />
+              <RecordField label="Email" value={patientDetails.email || '-'} icon={FIELD_ICONS.email} />
+              <RecordField label="Married For (Years)" value={patientDetails.marriedFor} />
+              <RecordField label="Date of Admission" value={new Date(patientDetails.dateOfAdmission).toLocaleDateString()} icon={FIELD_ICONS.admission} />
+              <RecordField label="Is New Patient" value={patientDetails.isNewPatient ? 'Yes' : 'No'} />
             </div>
-            <div style={{ marginTop: 'var(--space-5)' }}>
+
+            <div className="record-diagnosis-callout">
               <div className="record-field-label">Diagnosis</div>
               <div className="record-field-value">{patientDetails.diagnosis || '-'}</div>
             </div>

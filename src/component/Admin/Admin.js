@@ -9,6 +9,7 @@ import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
 import Badge from '../ui/Badge';
+import PageHeader from '../ui/PageHeader';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
 import './Admin.css';
@@ -98,9 +99,7 @@ const Admin = () => {
       <AppNavbar role={role} />
 
       <div className="page">
-        <div className="dashboard-toolbar">
-          <h2 className="section-title" style={{ margin: 0, flexBasis: '100%' }}>Patients</h2>
-        </div>
+        <PageHeader icon="users" title="Patients" />
 
         <div className="dashboard-toolbar">
           <Link to="/patients/add"><Button>+ Add New Patient</Button></Link>

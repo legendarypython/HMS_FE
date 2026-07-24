@@ -2,8 +2,8 @@ import React from 'react';
 import './ui.css';
 
 // A labeled form field wrapper. Pass the input/select/textarea as children.
-const Field = ({ label, required, error, htmlFor, children }) => (
-  <div className="ui-field">
+const Field = ({ label, required, error, htmlFor, className = '', children }) => (
+  <div className={`ui-field ${className}`}>
     {label && (
       <label className="ui-label" htmlFor={htmlFor}>
         {label}

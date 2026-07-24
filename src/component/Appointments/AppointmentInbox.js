@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 import Badge from '../ui/Badge';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
+import PageHeader from '../ui/PageHeader';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
 
@@ -38,7 +39,7 @@ const AppointmentInbox = () => {
     <div>
       <AppNavbar role={role} />
       <div className="page">
-        <h2 className="section-title">Appointment Requests</h2>
+        <PageHeader icon="calendar" title="Appointment Requests" />
         {loading ? (
           <Spinner label="Loading appointments..." />
         ) : (

@@ -6,6 +6,7 @@ import Field from '../ui/Field';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
 import Spinner from '../ui/Spinner';
+import IconBadge from '../ui/IconBadge';
 import { AddPatientForm } from './AddPatient';
 import AddDocumentsUploader from './AddDocumentsUploader';
 import { getAuthHeader } from '../../utils/auth';
@@ -61,7 +62,8 @@ const AddPatientPageRoute = () => {
       <AppNavbar role={role} />
       <div className="page">
         {step === 'phone' && (
-          <Card style={{ maxWidth: 480, margin: '0 auto' }}>
+          <Card variant="elevated" style={{ maxWidth: 480, margin: '0 auto' }}>
+            <IconBadge name="user" />
             <span className="ui-eyebrow">Patient Records</span>
             <h2 className="section-title">Add New Patient</h2>
             <p className="text-muted" style={{ marginTop: -8, marginBottom: 24 }}>
@@ -91,11 +93,16 @@ const AddPatientPageRoute = () => {
         )}
 
         {step === 'existing' && existingPatient && (
-          <Card style={{ maxWidth: 640, margin: '0 auto' }}>
+          <Card variant="elevated" style={{ maxWidth: 640, margin: '0 auto' }}>
             <span className="ui-eyebrow">Existing Patient Found</span>
             <div className="patient-detail-header">
-              <h2 className="section-title" style={{ margin: 0 }}>{existingPatient.firstName} {existingPatient.lastName}</h2>
-              <Badge variant="primary">{CASE_TYPE_LABELS[existingPatient.caseType] || '-'}</Badge>
+              <span className="ui-avatar patient-detail-avatar">
+                {`${(existingPatient.firstName || '')[0] || ''}${(existingPatient.lastName || '')[0] || ''}`.toUpperCase()}
+              </span>
+              <div>
+                <h2 className="section-title" style={{ margin: 0 }}>{existingPatient.firstName} {existingPatient.lastName}</h2>
+                <Badge variant="primary">{CASE_TYPE_LABELS[existingPatient.caseType] || '-'}</Badge>
+              </div>
             </div>
             <p className="text-muted">
               A patient with this mobile number already exists. You can add documents to their record,

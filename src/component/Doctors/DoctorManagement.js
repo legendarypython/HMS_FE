@@ -6,6 +6,7 @@ import Field from '../ui/Field';
 import Badge from '../ui/Badge';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
+import PageHeader from '../ui/PageHeader';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
 
@@ -97,7 +98,7 @@ const DoctorManagement = () => {
     <div>
       <AppNavbar role={role} />
       <div className="page">
-        <h2 className="section-title">Doctors</h2>
+        <PageHeader icon="stethoscope" title="Doctors" />
 
         <Card style={{ marginBottom: 24 }}>
           <form onSubmit={handleAdd} style={{ display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' }}>

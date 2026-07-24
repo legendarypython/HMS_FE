@@ -3,6 +3,8 @@ import { Link, useHistory } from 'react-router-dom';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
+import IconBadge from '../ui/IconBadge';
+import Icon from '../ui/Icon';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
 import './AddPatient.css';
@@ -130,77 +132,95 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
   };
 
   return (
-    <Card style={{ maxWidth: 640, margin: '0 auto' }}>
+    <Card variant="elevated" style={{ maxWidth: 720, margin: '0 auto' }}>
+      <IconBadge name="user" />
       <span className="ui-eyebrow">Patient Records</span>
       <h2 className="section-title">{isEditMode ? 'Edit Patient' : 'Add New Patient'}</h2>
       {error && <div className="ui-banner ui-banner-error">{error}</div>}
       {success && <div className="ui-banner ui-banner-success">{isEditMode ? 'Patient updated successfully' : 'Patient added successfully'}</div>}
 
       <form onSubmit={isEditMode ? handleEditSubmit : handleCreateSubmit}>
-        <Field label="First Name" required htmlFor="firstName">
-          <input className="ui-input" id="firstName" value={form.firstName} onChange={handleChange('firstName')} required />
-        </Field>
-        <Field label="Last Name" required htmlFor="lastName">
-          <input className="ui-input" id="lastName" value={form.lastName} onChange={handleChange('lastName')} required />
-        </Field>
-        <Field label="Husband's First Name" htmlFor="husbandFirstName">
-          <input className="ui-input" id="husbandFirstName" value={form.husbandFirstName} onChange={handleChange('husbandFirstName')} />
-        </Field>
-        <Field label="Husband's Last Name" htmlFor="husbandLastName">
-          <input className="ui-input" id="husbandLastName" value={form.husbandLastName} onChange={handleChange('husbandLastName')} />
-        </Field>
-        <Field label="Date of Birth" required htmlFor="dateOfBirth">
-          <input className="ui-input" type="date" id="dateOfBirth" value={form.dateOfBirth} onChange={handleChange('dateOfBirth')} required />
-        </Field>
-        <Field label="Address" required htmlFor="address">
-          <input className="ui-input" id="address" value={form.address} onChange={handleChange('address')} required />
-        </Field>
-        <Field label="Aadhar Number" required htmlFor="aadhar">
-          <input className="ui-input" id="aadhar" value={form.aadhar} onChange={handleChange('aadhar')} required />
-        </Field>
-        <Field label="Phone Number" required htmlFor="phone">
-          <input className="ui-input" type="tel" id="phone" pattern="\d{10}" title="10-digit mobile number" value={form.phone} onChange={handleChange('phone')} required />
-        </Field>
-        <Field label="Email" htmlFor="email">
-          <input className="ui-input" type="email" id="email" value={form.email} onChange={handleChange('email')} />
-        </Field>
-        <Field label="Married For (Years)" required htmlFor="marriedFor">
-          <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
-        </Field>
-        <Field label="Diagnosis" htmlFor="diagnosis">
-          <textarea className="ui-textarea" id="diagnosis" rows={4} value={form.diagnosis} onChange={handleChange('diagnosis')} />
-        </Field>
+        <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Personal Details</h3>
+        <div className="patient-form-grid">
+          <Field label="First Name" required htmlFor="firstName">
+            <input className="ui-input" id="firstName" value={form.firstName} onChange={handleChange('firstName')} required />
+          </Field>
+          <Field label="Last Name" required htmlFor="lastName">
+            <input className="ui-input" id="lastName" value={form.lastName} onChange={handleChange('lastName')} required />
+          </Field>
+          <Field label="Date of Birth" required htmlFor="dateOfBirth">
+            <input className="ui-input" type="date" id="dateOfBirth" value={form.dateOfBirth} onChange={handleChange('dateOfBirth')} required />
+          </Field>
+          <Field label="Aadhar Number" required htmlFor="aadhar">
+            <input className="ui-input" id="aadhar" value={form.aadhar} onChange={handleChange('aadhar')} required />
+          </Field>
+          <Field label="Husband's First Name" htmlFor="husbandFirstName">
+            <input className="ui-input" id="husbandFirstName" value={form.husbandFirstName} onChange={handleChange('husbandFirstName')} />
+          </Field>
+          <Field label="Husband's Last Name" htmlFor="husbandLastName">
+            <input className="ui-input" id="husbandLastName" value={form.husbandLastName} onChange={handleChange('husbandLastName')} />
+          </Field>
+          <Field label="Married For (Years)" required htmlFor="marriedFor">
+            <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
+          </Field>
+        </div>
+
+        <h3 className="record-section-title">Contact Details</h3>
+        <div className="patient-form-grid">
+          <Field label="Phone Number" required htmlFor="phone">
+            <input className="ui-input" type="tel" id="phone" pattern="\d{10}" title="10-digit mobile number" value={form.phone} onChange={handleChange('phone')} required />
+          </Field>
+          <Field label="Email" htmlFor="email">
+            <input className="ui-input" type="email" id="email" value={form.email} onChange={handleChange('email')} />
+          </Field>
+          <Field label="Address" required htmlFor="address" className="patient-form-grid-full">
+            <input className="ui-input" id="address" value={form.address} onChange={handleChange('address')} required />
+          </Field>
+        </div>
+
+        <h3 className="record-section-title">Medical &amp; Admission Details</h3>
+        <div className="patient-form-grid">
+          <Field label="Date of Admission" required htmlFor="dateOfAdmission">
+            <input className="ui-input" type="date" id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
+          </Field>
+
+          {isEditMode ? (
+            <Field label="Case Type" htmlFor="caseTypeDisplay">
+              <input className="ui-input" id="caseTypeDisplay" value={CASE_TYPE_LABELS[initialPatientDetails.caseType] || ''} disabled />
+            </Field>
+          ) : (
+            <Field label="Case Type" required htmlFor="caseType">
+              <select className="ui-select" id="caseType" value={form.caseType} onChange={handleChange('caseType')} required>
+                <option value="">Select Case Type</option>
+                <option value="AnteNatal">AnteNatal</option>
+                <option value="Infertility">Infertility</option>
+                <option value="General">General</option>
+              </select>
+            </Field>
+          )}
+
+          <Field label="Diagnosis" htmlFor="diagnosis" className="patient-form-grid-full">
+            <textarea className="ui-textarea" id="diagnosis" rows={4} value={form.diagnosis} onChange={handleChange('diagnosis')} />
+          </Field>
+        </div>
 
         {!isEditMode && (
-          <Field label="Choose Documents" htmlFor="documents">
-            <label htmlFor="documents" className="patient-form-file-label">Choose Documents</label>
-            <input type="file" id="documents" multiple onChange={handleFileChange} className="patient-form-file-input" />
-            {documents.map((doc, index) => (
-              <div key={index} className="patient-form-document-item">
-                <span>{doc.name}</span>
-                <button type="button" onClick={() => removeDocument(index)}>x</button>
-              </div>
-            ))}
-          </Field>
-        )}
-
-        <Field label="Date of Admission" required htmlFor="dateOfAdmission">
-          <input className="ui-input" type="date" id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
-        </Field>
-
-        {isEditMode ? (
-          <Field label="Case Type" htmlFor="caseTypeDisplay">
-            <input className="ui-input" id="caseTypeDisplay" value={CASE_TYPE_LABELS[initialPatientDetails.caseType] || ''} disabled />
-          </Field>
-        ) : (
-          <Field label="Case Type" required htmlFor="caseType">
-            <select className="ui-select" id="caseType" value={form.caseType} onChange={handleChange('caseType')} required>
-              <option value="">Select Case Type</option>
-              <option value="AnteNatal">AnteNatal</option>
-              <option value="Infertility">Infertility</option>
-              <option value="General">General</option>
-            </select>
-          </Field>
+          <>
+            <h3 className="record-section-title">Documents</h3>
+            <Field label="Upload Documents" htmlFor="documents">
+              <label htmlFor="documents" className="patient-form-file-label">
+                <Icon name="file" size={16} /> Choose Documents
+              </label>
+              <input type="file" id="documents" multiple onChange={handleFileChange} className="patient-form-file-input" />
+              {documents.map((doc, index) => (
+                <div key={index} className="patient-form-document-item">
+                  <Icon name="file" size={16} />
+                  <span>{doc.name}</span>
+                  <button type="button" onClick={() => removeDocument(index)}>x</button>
+                </div>
+              ))}
+            </Field>
+          </>
         )}
 
         <label className="ui-checkbox-field" htmlFor="isNewPatient">
