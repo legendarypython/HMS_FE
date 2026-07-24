@@ -153,7 +153,7 @@ const InfertilityDetailsForm = () => {
 
   const handleFileChange = (event) => {
     const { name, files } = event.target;
-    const [category, subCategory, nestedCategory] = name.split('.');
+    const [category, , nestedCategory] = name.split('.');
     const newDocuments = Array.from(files).map((file) => ({ name: file.name, file }));
     setInfertilityDetails((prevState) => ({
       ...prevState,
