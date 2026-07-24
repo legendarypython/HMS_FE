@@ -41,7 +41,7 @@
   --color-ink-surface: #131c31;
 
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-display: 'Playfair Display', 'Georgia', serif;
 
   /* Fluid type scale (clamp: min, viewport-relative, max) so headings scale
      smoothly between mobile and desktop instead of jumping at breakpoints. */
