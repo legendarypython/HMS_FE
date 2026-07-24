@@ -133,7 +133,9 @@
 
   .app-navbar-cta {
     border-radius: var(--radius-md);
+    border-bottom: none;
     text-align: center;
+    font-weight: 700;
     margin: var(--space-3) 0;
   }
 

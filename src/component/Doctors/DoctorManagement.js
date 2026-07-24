@@ -34,6 +34,7 @@ const DoctorManagement = () => {
   const [doctors, setDoctors] = useState([]);
   const [name, setName] = useState('');
   const [specialization, setSpecialization] = useState('');
+  const [photo, setPhoto] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -55,10 +56,14 @@ const DoctorManagement = () => {
       setError('Name and specialization are required');
       return;
     }
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('specialization', specialization);
+    if (photo) formData.append('photo', photo);
     const res = await apiFetch(`${API_BASE}/api/doctors/create`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-      body: JSON.stringify({ name, specialization })
+      headers: getAuthHeader(),
+      body: formData
     });
     if (!res.ok) {
       const json = await res.json();
@@ -67,6 +72,7 @@ const DoctorManagement = () => {
     }
     setName('');
     setSpecialization('');
+    setPhoto(null);
     fetchDoctors();
   };
 
@@ -105,6 +111,14 @@ const DoctorManagement = () => {
                 {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </Field>
+            <Field label="Photo (optional)" htmlFor="docPhoto">
+              <input
+                id="docPhoto"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => setPhoto(e.target.files[0] || null)}
+              />
+            </Field>
             <Button type="submit">Add Doctor</Button>
           </form>
         </Card>
@@ -116,6 +130,7 @@ const DoctorManagement = () => {
             <table className="ui-table">
               <thead>
                 <tr>
+                  <th>Photo</th>
                   <th>Name</th>
                   <th>Specialization</th>
                   <th>Status</th>
@@ -125,6 +140,13 @@ const DoctorManagement = () => {
               <tbody>
                 {doctors.map(doc => (
                   <tr key={doc._id} className={!doc.active ? 'ui-row-inactive' : ''}>
+                    <td data-label="Photo">
+                      {doc.photoKey ? (
+                        <img src={`${API_BASE}/api/doctors/${doc._id}/photo`} alt="" className="doctor-thumb" />
+                      ) : (
+                        <span className="ui-avatar">{(doc.name || '').charAt(0).toUpperCase()}</span>
+                      )}
+                    </td>
                     <td data-label="Name">{doc.name}</td>
                     <td data-label="Specialization">{doc.specialization}</td>
                     <td data-label="Status">

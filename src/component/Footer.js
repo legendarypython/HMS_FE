@@ -6,12 +6,12 @@ const Footer = () => (
     <div className="app-footer-grid">
       <div className="app-footer-col">
         <h5>Contact us</h5>
-        <p>Email: panchkuiyanhospital@gmail.com</p>
+        <p>Email: bhavanarmsk7@gmail.com</p>
         <p>Phone: 7686968650</p>
       </div>
       <div className="app-footer-col">
         <h5>Address</h5>
-        <p>47/77 Banerjee Para, Kolkata-700031</p>
+        <p>1/89, Panchkuian Hospital, Panchkuian, near Mathur Vaishya Bhawan, Agra</p>
       </div>
     </div>
     <div className="app-footer-copyright">

@@ -35,6 +35,18 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* The hero's teal gradient overlay is close to var(--color-primary), so the
+   default primary button blends into the background instead of standing out. */
+.hero-cta-btn.ui-btn-secondary {
+  background-color: #ffffff;
+  color: var(--color-primary-dark);
+  border-color: #ffffff;
+}
+
+.hero-cta-btn.ui-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
 .home-section {
   max-width: 1100px;
   margin: 0 auto;
@@ -67,6 +79,21 @@
 .doctor-card h4 {
   margin: var(--space-3) 0 var(--space-1);
   font-size: 1.1rem;
+}
+
+.doctor-card-photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto;
+}
+
+.doctor-card-avatar.ui-avatar {
+  width: 96px;
+  height: 96px;
+  font-size: 2rem;
+  margin: 0 auto;
 }
 
 .cta-section {

@@ -8,11 +8,16 @@ import Footer from '../Footer';
 import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
+import Badge from '../ui/Badge';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
 import './Admin.css';
 
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
+const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'warning', 3: 'neutral' };
+
+const getInitials = (firstName, lastName) =>
+  `${(firstName || '')[0] || ''}${(lastName || '')[0] || ''}`.toUpperCase();
 const FILTERS = [
   { name: 'CaseType', options: ['AnteNatal', 'Infertility', 'General'] },
   { name: 'DateOfAdmission', type: 'date' },
@@ -107,7 +112,9 @@ const Admin = () => {
             placeholder="Search by name or phone..."
           />
           <Button variant="secondary" onClick={handleSearch}>Search</Button>
-          <Button variant="ghost" onClick={() => setShowFiltersModal(!showFiltersModal)}>Filters</Button>
+          <Button variant="secondary" onClick={() => setShowFiltersModal(!showFiltersModal)}>
+            <Icon name="filter" size={16} /> Filters
+          </Button>
         </div>
 
         {showFiltersModal && (
@@ -187,15 +194,24 @@ const Admin = () => {
               </thead>
               <tbody>
                 {patients.map(patient => (
-                  <tr key={patient.patientId}>
-                    <td data-label="Name">{`${patient.firstName} ${patient.lastName}`}</td>
+                  <tr key={patient.patientId} className="patient-row">
+                    <td data-label="Name" className="patient-name-cell">
+                      <span className="ui-avatar" aria-hidden="true">{getInitials(patient.firstName, patient.lastName)}</span>
+                      {`${patient.firstName} ${patient.lastName}`}
+                    </td>
                     <td data-label="Age">{calculateAge(patient.dateOfBirth)}</td>
-                    <td data-label="Case Type">{CASE_TYPE_LABELS[patient.caseType] || ''}</td>
+                    <td data-label="Case Type">
+                      <Badge variant={CASE_TYPE_BADGE_VARIANT[patient.caseType] || 'neutral'}>
+                        {CASE_TYPE_LABELS[patient.caseType] || ''}
+                      </Badge>
+                    </td>
                     <td data-label="Date of Admission">{formatDate(patient.dateOfAdmission)}</td>
                     <td data-label="New Patient">{patient.isNewPatient ? 'Yes' : 'No'}</td>
                     <td data-label="Phone Number">{patient.phone.replace(/-/g, '')}</td>
                     <td data-label="Actions">
-                      <Link to={`/patients/view/${patient.patientId}`} className="view-button">View</Link>
+                      <Link to={`/patients/view/${patient.patientId}`}>
+                        <Button size="sm" variant="secondary">View</Button>
+                      </Link>
                     </td>
                   </tr>
                 ))}

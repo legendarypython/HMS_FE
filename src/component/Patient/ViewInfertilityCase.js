@@ -5,6 +5,7 @@ import AppNavbar from '../Shared/AppNavbar';
 import DocumentPreviewModal from '../Shared/DocumentPreviewModal';
 import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
+import Icon from '../ui/Icon';
 import '../../styles/caseForms.css';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
@@ -45,21 +46,17 @@ const ViewInfertilityForm = () => {
       }
     }, infertilityDetails).documents;
 
-    return (
-      <div className="documents-preview">
-        <h4>Documents</h4>
-        {infertilityDetails && docs.length > 0 ? (
-          <ul className="document-list">
-            {docs.map((doc, index) => (
-              <li key={index} onClick={() => handleDocumentPreview(doc)}>
-                {doc.filename}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-muted">No documents uploaded</p>
-        )}
+    return docs.length > 0 ? (
+      <div className="record-documents">
+        {docs.map((doc) => (
+          <button key={doc._id} className="record-document-item" onClick={() => handleDocumentPreview(doc)}>
+            <Icon name="file" size={18} />
+            {doc.filename}
+          </button>
+        ))}
       </div>
+    ) : (
+      <p className="text-muted">No documents uploaded</p>
     );
   };
 
@@ -108,32 +105,34 @@ const ViewInfertilityForm = () => {
       <div className="infertility-details-form-container">
         <h2>Infertility Details</h2>
 
-        <div className="form-group">
-          <label>Obstetric History:</label>
-          <span>{infertilityDetails.secondaryHistory.obstetricHistory}</span>
+        <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
+        <div style={{ marginBottom: 'var(--space-5)' }}>
+          <div className="record-field-label">Obstetric History</div>
+          <div className="record-field-value">{infertilityDetails.secondaryHistory.obstetricHistory || '-'}</div>
         </div>
 
-        <div className="form-group">
-          <label>Blood Investigation:</label>
-          <span>{infertilityDetails.primaryHistory.investigations.bloodInvestigation.details}</span>
+        <h3 className="record-section-title">Investigations</h3>
+        <div style={{ marginBottom: 'var(--space-5)' }}>
+          <div className="record-field-label">Blood Investigation</div>
+          <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.bloodInvestigation.details || '-'}</div>
           {renderInvestigationDocuments('primaryHistory.investigations.bloodInvestigation')}
         </div>
 
-        <div className="form-group">
-          <label>Urine Investigation:</label>
-          <span>{infertilityDetails.primaryHistory.investigations.urineInvestigation.details}</span>
+        <div style={{ marginBottom: 'var(--space-5)' }}>
+          <div className="record-field-label">Urine Investigation</div>
+          <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.urineInvestigation.details || '-'}</div>
           {renderInvestigationDocuments('primaryHistory.investigations.urineInvestigation')}
         </div>
 
-        <div className="form-group">
-          <label>Ultrasound Investigation:</label>
-          <span>{infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.details}</span>
+        <div style={{ marginBottom: 'var(--space-5)' }}>
+          <div className="record-field-label">Ultrasound Investigation</div>
+          <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.details || '-'}</div>
           {renderInvestigationDocuments('primaryHistory.investigations.ultrasoundInvestigation')}
         </div>
 
-        <div className="form-group">
-          <label>X-ray Investigation:</label>
-          <span>{infertilityDetails.primaryHistory.investigations.xrayInvestigation.details}</span>
+        <div style={{ marginBottom: 'var(--space-5)' }}>
+          <div className="record-field-label">X-ray Investigation</div>
+          <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.xrayInvestigation.details || '-'}</div>
           {renderInvestigationDocuments('primaryHistory.investigations.xrayInvestigation')}
         </div>
 
