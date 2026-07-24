@@ -113,9 +113,13 @@ const DoctorManagement = () => {
               </select>
             </Field>
             <Field label="Photo (optional)" htmlFor="docPhoto">
+              <label htmlFor="docPhoto" className="ui-file-upload-label">
+                <Icon name="file" size={16} /> {photo ? photo.name : 'Choose Photo'}
+              </label>
               <input
                 id="docPhoto"
                 type="file"
+                className="ui-file-upload-input"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => setPhoto(e.target.files[0] || null)}
               />

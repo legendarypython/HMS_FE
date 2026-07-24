@@ -70,7 +70,7 @@ const AppointmentInbox = () => {
                     <td data-label="Actions">
                       {appt.status === 'pending' && (
                         <div className="ui-action-group">
-                          <Button size="sm" variant="primary" onClick={() => updateStatus(appt._id, 'confirmed')}>Confirm</Button>
+                          <Button size="sm" variant="success" onClick={() => updateStatus(appt._id, 'confirmed')}>Confirm</Button>
                           <Button size="sm" variant="danger" onClick={() => updateStatus(appt._id, 'rejected')}>Reject</Button>
                         </div>
                       )}

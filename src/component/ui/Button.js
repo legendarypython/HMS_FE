@@ -5,6 +5,7 @@ const VARIANT_CLASS = {
   primary: 'ui-btn-primary',
   secondary: 'ui-btn-secondary',
   danger: 'ui-btn-danger',
+  success: 'ui-btn-success',
   ghost: 'ui-btn-ghost'
 };
 
