@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#0f766e" />
+<meta name="description" content="Clinic Sathi - clinic website and patient system for solo doctors, built and supported locally." />
+<title>Clinic Sathi — Clinic software, built locally</title>
+<style>
+  :root {
+    --paper: #efe7d8;
+    --paper-raised: #f6f0e4;
+    --ink: #1b2e29;
+    --ink-soft: #3f5650;
+    --teal: #0f766e;
+    --teal-deep: #0b4a44;
+    --rose: #c81e45;
+    --rose-deep: #911433;
+    --rule: #cdbe9c;
+    --rule-strong: #a99872;
+    --stamp: #0f766e;
+    --focus: #0b4a44;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #10201c;
+      --paper-raised: #16281f;
+      --ink: #ece2cc;
+      --ink-soft: #b9ab8c;
+      --teal: #4fb3a6;
+      --teal-deep: #7dcfc3;
+      --rose: #f0577c;
+      --rose-deep: #ff86a3;
+      --rule: #3a4d43;
+      --rule-strong: #52685c;
+      --stamp: #4fb3a6;
+      --focus: #7dcfc3;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #10201c;
+    --paper-raised: #16281f;
+    --ink: #ece2cc;
+    --ink-soft: #b9ab8c;
+    --teal: #4fb3a6;
+    --teal-deep: #7dcfc3;
+    --rose: #f0577c;
+    --rose-deep: #ff86a3;
+    --rule: #3a4d43;
+    --rule-strong: #52685c;
+    --stamp: #4fb3a6;
+    --focus: #7dcfc3;
+  }
+  :root[data-theme="light"] {
+    --paper: #efe7d8;
+    --paper-raised: #f6f0e4;
+    --ink: #1b2e29;
+    --ink-soft: #3f5650;
+    --teal: #0f766e;
+    --teal-deep: #0b4a44;
+    --rose: #c81e45;
+    --rose-deep: #911433;
+    --rule: #cdbe9c;
+    --rule-strong: #a99872;
+    --stamp: #0f766e;
+    --focus: #0b4a44;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", "Noto Sans", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 56px 28px 90px;
+  }
+
+  .masthead {
+    text-align: center;
+    padding-bottom: 36px;
+    border-bottom: 2px solid var(--rule-strong);
+  }
+
+  .masthead-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal-deep);
+  }
+
+  .masthead h1 {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: clamp(2.4rem, 2rem + 2vw, 3.4rem);
+    font-weight: 700;
+    margin: 10px 0 6px;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .masthead .tagline {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0 auto;
+    text-wrap: balance;
+  }
+
+  .entry {
+    padding: 34px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .entry:last-of-type { border-bottom: none; }
+
+  .entry-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--rose-deep);
+    margin-bottom: 12px;
+  }
+
+  .pitch p {
+    font-size: 1.08rem;
+    max-width: 62ch;
+    color: var(--ink);
+  }
+
+  .pitch strong { color: var(--teal-deep); }
+
+  .checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .checklist li {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 12px 0;
+    border-top: 1px dashed var(--rule);
+    font-size: 1.02rem;
+  }
+
+  .checklist li:first-child { border-top: none; }
+
+  .checklist .tick {
+    font-family: Georgia, serif;
+    color: var(--teal);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .checklist .not-included {
+    color: var(--ink-soft);
+  }
+
+  .checklist .not-included .tick {
+    color: var(--rule-strong);
+  }
+
+  .proof {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+
+  .stamp {
+    flex-shrink: 0;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    border: 3px solid var(--stamp);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transform: rotate(-9deg);
+    color: var(--stamp);
+    font-family: Georgia, serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.35;
+    opacity: 0.92;
+  }
+
+  .proof-text p {
+    margin: 0 0 10px;
+    font-size: 1.02rem;
+    max-width: 44ch;
+  }
+
+  .proof-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: Georgia, serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--rose);
+    text-decoration: none;
+    border-bottom: 2px solid var(--rose);
+    padding-bottom: 2px;
+  }
+
+  .proof-link:hover { color: var(--rose-deep); border-color: var(--rose-deep); }
+  .proof-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+
+  .price-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--rule-strong);
+  }
+
+  .price-col {
+    padding: 26px 22px;
+  }
+
+  .price-col + .price-col {
+    border-left: 1px solid var(--rule-strong);
+  }
+
+  .price-col.pro {
+    background: var(--paper-raised);
+  }
+
+  .price-tier {
+    font-family: Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .price-amount {
+    font-variant-numeric: tabular-nums;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--teal-deep);
+    margin: 0 0 16px;
+  }
+
+  .price-amount span {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--ink-soft);
+  }
+
+  .price-col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.94rem;
+  }
+
+  .price-col li {
+    padding: 7px 0;
+    color: var(--ink-soft);
+  }
+
+  .price-col li.own { color: var(--ink); }
+
+  .addons {
+    margin-top: 22px;
+    font-size: 0.94rem;
+  }
+
+  .addons-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+
+  .addons table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .addons td {
+    padding: 8px 0;
+    border-top: 1px dashed var(--rule);
+    vertical-align: baseline;
+  }
+
+  .addons tr:first-child td { border-top: none; }
+
+  .addons td.amt {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--teal-deep);
+    white-space: nowrap;
+    padding-left: 16px;
+  }
+
+  .close {
+    text-align: center;
+    padding-top: 40px;
+  }
+
+  .close p {
+    font-family: Georgia, serif;
+    font-style: italic;
+    font-size: 1.2rem;
+    margin: 0 0 6px;
+  }
+
+  .close .fine {
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    font-style: normal;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 560px) {
+    .price-grid { grid-template-columns: 1fr; }
+    .price-col + .price-col { border-left: none; border-top: 1px solid var(--rule-strong); }
+    .proof { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="masthead-label">Clinic Software — Built in Agra</div>
+    <h1>Clinic Sathi</h1>
+    <p class="tagline">A website and patient system for your practice — not a marketplace listing, not a rented template.</p>
+  </div>
+
+  <div class="entry pitch">
+    <div class="entry-label">The Pitch</div>
+    <p>Most clinic software is either built for hospital chains, or puts your practice on a marketplace where you're one listing among hundreds. Clinic Sathi started as a real system for one solo gynaecology practice — <strong>patient records, appointment booking, online payments</strong> — and it's now open to a few more doctors in Agra who want the same thing, without the marketplace fees or the call-centre support.</p>
+  </div>
+
+  <div class="entry">
+    <div class="entry-label">What You Get</div>
+    <ul class="checklist">
+      <li><span class="tick">✓</span> Online appointment booking with real payments</li>
+      <li><span class="tick">✓</span> Digital patient records, searchable, with document uploads</li>
+      <li><span class="tick">✓</span> Built and supported by someone who answers the phone</li>
+      <li class="not-included"><span class="tick">✕</span> No marketplace listing fees</li>
+      <li class="not-included"><span class="tick">✕</span> No per-appointment charges</li>
+    </ul>
+  </div>
+
+  <div class="entry">
+    <div class="entry-label">See It Running</div>
+    <div class="proof">
+      <div class="stamp">Live &amp;<br>Verified</div>
+      <div class="proof-text">
+        <p>This isn't a mockup. It's been running for a real gynaecology practice, handling real bookings and real payments.</p>
+        <a class="proof-link" href="https://panchkuiyan-hospital.pages.dev" target="_blank" rel="noopener">panchkuiyan-hospital.pages.dev →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="entry">
+    <div class="entry-label">Pricing</div>
+    <div class="price-grid">
+      <div class="price-col">
+        <div class="price-tier">Starter</div>
+        <div class="price-amount">₹999<span>–1,499 / month</span></div>
+        <ul>
+          <li class="own">Patient records &amp; documents</li>
+          <li class="own">Appointment requests</li>
+          <li class="own">Single doctor login</li>
+        </ul>
+      </div>
+      <div class="price-col pro">
+        <div class="price-tier">Pro</div>
+        <div class="price-amount">₹2,499<span>–3,499 / month</span></div>
+        <ul>
+          <li class="own">Everything in Starter</li>
+          <li class="own">Online payments</li>
+          <li class="own">Analytics dashboard</li>
+          <li class="own">Multi-staff accounts</li>
+          <li class="own">Custom branding</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="addons">
+      <div class="addons-title">Add-ons</div>
+      <table>
+        <tr><td>WhatsApp appointment reminders</td><td class="amt">₹500–1,000 / mo</td></tr>
+        <tr><td>Digital queue &amp; token display</td><td class="amt">₹1,500–2,500 once</td></tr>
+        <tr><td>Hindi–English toggle</td><td class="amt">₹2,000–5,000 once</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="close">
+    <p>Interested? Let's talk.</p>
+    <div class="fine">Pricing is still settling in for the first few practices — happy to work it out together.</div>
+  </div>
+
+</div>
+</body>
+</html>
