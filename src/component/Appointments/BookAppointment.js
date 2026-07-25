@@ -5,6 +5,7 @@ import Field from '../ui/Field';
 import Button from '../ui/Button';
 import IconBadge from '../ui/IconBadge';
 import { API_BASE } from '../../utils/api';
+import { TENANT_CONFIG } from '../../config/tenant';
 import './BookAppointment.css';
 
 const CONSULTATION_FEE_DISPLAY = '₹500';
@@ -81,7 +82,7 @@ const BookAppointment = () => {
         order_id: orderId,
         amount,
         currency,
-        name: 'Panchkuiyan Hospital',
+        name: TENANT_CONFIG.name,
         description: 'Consultation fee',
         prefill: { name: form.patientName, contact: form.patientPhone },
         theme: { color: '#00695c' },

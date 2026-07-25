@@ -7,13 +7,14 @@ import Card from '../ui/Card';
 import Icon from '../ui/Icon';
 import IconBadge from '../ui/IconBadge';
 import { API_BASE } from '../../utils/api';
+import { TENANT_CONFIG } from '../../config/tenant';
 import './Home.css';
 
 const FEATURES = [
   {
     icon: 'heart',
     title: 'Continuity of Care',
-    body: 'You see the same doctor every visit - Dr. Bhavana Gupta - not a rotating cast of unfamiliar faces.',
+    body: `You see the same doctor every visit - ${TENANT_CONFIG.doctorName} - not a rotating cast of unfamiliar faces.`,
   },
   {
     icon: 'calendar',
@@ -49,7 +50,7 @@ const Home = () => {
             <Icon name="stethoscope" size={15} /> MBBS, MS &middot; Gynaecology &amp; Antenatal Care
           </span>
           <h1>Care that stays with you, from first visit to delivery.</h1>
-          <p>Panchkuiyan Hospital is a focused gynaecology practice built around one thing: knowing your name and your history, every time you walk in.</p>
+          <p>{TENANT_CONFIG.name} is a focused gynaecology practice built around one thing: knowing your name and your history, every time you walk in.</p>
           <Link to="/book-appointment">
             <Button variant="secondary" size="lg" className="hero-cta-btn">
               Book an Appointment <Icon name="arrow-right" size={18} />
@@ -83,15 +84,15 @@ const Home = () => {
           <span className="ui-eyebrow">About Us</span>
           <h2 className="section-title">A Gynaecology Hospital, Built Around Our Patients</h2>
           <p>
-            Panchkuiyan Hospital is a small, dedicated gynaecology and antenatal care practice
-            led by Dr. Bhavana Gupta (MBBS, MS). We focus on giving every patient the time,
+            {TENANT_CONFIG.name} is a small, dedicated gynaecology and antenatal care practice
+            led by {TENANT_CONFIG.doctorName} (MBBS, MS). We focus on giving every patient the time,
             attention, and continuity of care that comes from seeing the same trusted doctor
             throughout your pregnancy or treatment - not a rotating cast of unfamiliar faces.
           </p>
         </div>
         <img
-          src="/images/clinic-entrance.webp"
-          alt="Panchkuiyan Hospital entrance"
+          src={TENANT_CONFIG.heroImage1}
+          alt={`${TENANT_CONFIG.name} entrance`}
           className="about-section-photo"
         />
       </section>
@@ -138,14 +139,14 @@ const Home = () => {
 
       <section className="home-section visit-section">
         <img
-          src="/images/clinic-courtyard.webp"
-          alt="Panchkuiyan Hospital courtyard"
+          src={TENANT_CONFIG.heroImage2}
+          alt={`${TENANT_CONFIG.name} courtyard`}
           className="visit-section-photo"
         />
         <div className="visit-section-text">
           <span className="ui-eyebrow">Visit Us</span>
           <h2 className="section-title">Find Us in Agra</h2>
-          <p>1/89, Panchkuian Hospital, Panchkuian, near Mathur Vaishya Bhawan, Agra</p>
+          <p>{TENANT_CONFIG.address}</p>
         </div>
       </section>
 

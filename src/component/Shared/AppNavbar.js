@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import Icon from '../ui/Icon';
+import { TENANT_CONFIG } from '../../config/tenant';
 import './AppNavbar.css';
 
 const LINKS_BY_ROLE = {
@@ -59,7 +60,7 @@ const AppNavbar = ({ role = 'public' }) => {
   return (
     <nav className={`app-navbar ${hidden ? 'app-navbar--hidden' : ''}`}>
       <Link to="/" className="app-navbar-brand" onClick={closeMenu}>
-        Panchkuiyan Hospital
+        {TENANT_CONFIG.name}
       </Link>
 
       <div className="app-navbar-mobile-actions">
