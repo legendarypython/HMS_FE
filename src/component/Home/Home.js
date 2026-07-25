@@ -6,7 +6,7 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Icon from '../ui/Icon';
 import IconBadge from '../ui/IconBadge';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
 import { TENANT_CONFIG } from '../../config/tenant';
 import './Home.css';
 
@@ -32,7 +32,7 @@ const Home = () => {
   const [doctors, setDoctors] = useState([]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/doctors/public`)
+    apiFetch(`${API_BASE}/api/doctors/public`)
       .then(res => res.json())
       .then(json => setDoctors(json.data || []))
       .catch(err => console.error('Error fetching doctors:', err));

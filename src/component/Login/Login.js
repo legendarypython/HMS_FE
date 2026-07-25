@@ -6,6 +6,7 @@ import Field from '../ui/Field';
 import Button from '../ui/Button';
 import IconBadge from '../ui/IconBadge';
 import { API_BASE } from '../../utils/api';
+import { TENANT_ID } from '../../config/tenant';
 import { auth } from '../../utils/firebase';
 import './Login.css';
 
@@ -41,7 +42,7 @@ const Login = () => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/check-mobile`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Tenant-Id': TENANT_ID },
         body: JSON.stringify({ mobile })
       });
       const json = await res.json();
@@ -84,7 +85,7 @@ const Login = () => {
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Tenant-Id': TENANT_ID },
         body: JSON.stringify({ mobile, password })
       });
       const json = await res.json();
@@ -115,7 +116,7 @@ const Login = () => {
       // usual JWT so every other route keeps working exactly as before.
       const res = await fetch(`${API_BASE}/api/auth/patient/firebase-verify`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Tenant-Id': TENANT_ID },
         body: JSON.stringify({ idToken })
       });
       const json = await res.json();

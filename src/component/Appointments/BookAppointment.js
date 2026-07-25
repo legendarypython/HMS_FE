@@ -4,7 +4,7 @@ import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
 import IconBadge from '../ui/IconBadge';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
 import { TENANT_CONFIG } from '../../config/tenant';
 import './BookAppointment.css';
 
@@ -32,7 +32,7 @@ const BookAppointment = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/doctors/public`)
+    apiFetch(`${API_BASE}/api/doctors/public`)
       .then(res => res.json())
       .then(json => {
         const list = json.data || [];
@@ -65,7 +65,7 @@ const BookAppointment = () => {
         return;
       }
 
-      const orderRes = await fetch(`${API_BASE}/api/appointments/create-order`, {
+      const orderRes = await apiFetch(`${API_BASE}/api/appointments/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ doctorId: form.doctorId })
@@ -88,7 +88,7 @@ const BookAppointment = () => {
         theme: { color: '#00695c' },
         handler: async (response) => {
           try {
-            const verifyRes = await fetch(`${API_BASE}/api/appointments/verify-payment`, {
+            const verifyRes = await apiFetch(`${API_BASE}/api/appointments/verify-payment`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
