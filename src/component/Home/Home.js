@@ -152,6 +152,11 @@ const Home = () => {
 
       <section className="cta-section">
         <div className="cta-section-blob" aria-hidden="true" />
+        <img
+          src={TENANT_CONFIG.ctaImage}
+          alt={TENANT_CONFIG.doctorName}
+          className="cta-section-photo"
+        />
         <span className="ui-eyebrow" style={{ color: 'rgba(255,255,255,0.85)' }}>Get Started</span>
         <h2>Ready to see a doctor?</h2>
         <p>Book an appointment online in a few seconds - no account required.</p>

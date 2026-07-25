@@ -272,6 +272,17 @@
   pointer-events: none;
 }
 
+.cta-section-photo {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: var(--space-4);
+}
+
 .cta-section h2 {
   position: relative;
   font-size: var(--text-h1);
