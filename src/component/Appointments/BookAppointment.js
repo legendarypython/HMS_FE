@@ -3,6 +3,7 @@ import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
+import Icon from '../ui/Icon';
 import IconBadge from '../ui/IconBadge';
 import { API_BASE, apiFetch } from '../../utils/api';
 import { TENANT_CONFIG } from '../../config/tenant';
@@ -125,6 +126,21 @@ const BookAppointment = () => {
   return (
     <div>
       <AppNavbar role="public" />
+
+      <div className="booking-hero">
+        <div
+          className="booking-hero-photo"
+          style={{ backgroundImage: `url(${TENANT_CONFIG.bookingBgImage})` }}
+          aria-hidden="true"
+        />
+        <div className="booking-hero-scrim" aria-hidden="true" />
+        <div className="booking-hero-content">
+          <span className="hero-badge">
+            <Icon name="stethoscope" size={15} /> {TENANT_CONFIG.doctorName} &middot; MBBS, MS
+          </span>
+        </div>
+      </div>
+
       <div className="booking-page-bg">
         <div className="page page-narrow">
           <Card variant="elevated">

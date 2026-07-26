@@ -17,4 +17,5 @@ export const TENANT_CONFIG = {
   heroImage2: process.env.REACT_APP_TENANT_HERO_IMG_2 || '/images/clinic-signboard.jpg',
   ctaImage: process.env.REACT_APP_TENANT_CTA_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
   ctaBgImage: process.env.REACT_APP_TENANT_CTA_BG_IMG || '/images/clinic-ward.jpg',
+  bookingBgImage: process.env.REACT_APP_TENANT_BOOKING_BG_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
 };
