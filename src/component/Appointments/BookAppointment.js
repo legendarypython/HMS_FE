@@ -7,10 +7,14 @@ import Icon from '../ui/Icon';
 import IconBadge from '../ui/IconBadge';
 import { API_BASE, apiFetch } from '../../utils/api';
 import { TENANT_CONFIG } from '../../config/tenant';
+import { generateTimeSlots, isClinicClosed, formatWindowsSummary } from '../../utils/timeSlots';
 import './BookAppointment.css';
 
 const CONSULTATION_FEE_DISPLAY = '₹500';
 const RAZORPAY_SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
+const TIME_SLOTS = generateTimeSlots(TENANT_CONFIG.opdWindows);
+const OPD_HOURS_SUMMARY = formatWindowsSummary(TENANT_CONFIG.opdWindows);
+const TODAY = new Date().toLocaleDateString('en-CA'); // yyyy-mm-dd, local timezone
 
 // Loads the Razorpay Checkout script once and reuses it on subsequent opens,
 // rather than re-injecting a <script> tag every time the form is submitted.
@@ -27,7 +31,7 @@ function loadRazorpayScript() {
 
 const BookAppointment = () => {
   const [doctors, setDoctors] = useState([]);
-  const [form, setForm] = useState({ patientName: '', patientPhone: '', doctorId: '', preferredDate: '', reason: '' });
+  const [form, setForm] = useState({ patientName: '', patientPhone: '', doctorId: '', preferredDate: '', preferredTimeSlot: '', reason: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,6 +51,17 @@ const BookAppointment = () => {
 
   const handleChange = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
+  const handleDateChange = (e) => {
+    const value = e.target.value;
+    if (isClinicClosed(value, TENANT_CONFIG.closedDays)) {
+      setError('The clinic is closed on this day - please choose another date.');
+      setForm({ ...form, preferredDate: '' });
+      return;
+    }
+    setError('');
+    setForm({ ...form, preferredDate: value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -56,6 +71,10 @@ const BookAppointment = () => {
     }
     if (!form.doctorId) {
       setError('Please select a doctor');
+      return;
+    }
+    if (!form.preferredDate || !form.preferredTimeSlot) {
+      setError('Please select a preferred date and time');
       return;
     }
     setLoading(true);
@@ -157,8 +176,11 @@ const BookAppointment = () => {
             <form onSubmit={handleSubmit}>
               <IconBadge name="calendar" />
               <h2 className="section-title">Book an Appointment</h2>
-              <p className="text-muted" style={{ marginTop: '-12px', marginBottom: '20px' }}>
+              <p className="text-muted" style={{ marginTop: '-12px', marginBottom: '8px' }}>
                 A consultation fee of {CONSULTATION_FEE_DISPLAY} is collected online to confirm your slot.
+              </p>
+              <p className="text-muted" style={{ marginTop: 0, marginBottom: '20px', fontSize: '0.88rem' }}>
+                OPD hours: {OPD_HOURS_SUMMARY} &middot; Closed Sundays
               </p>
               {error && <div className="ui-banner ui-banner-error">{error}</div>}
 
@@ -185,7 +207,16 @@ const BookAppointment = () => {
               )}
 
               <Field label="Preferred Date" required htmlFor="preferredDate">
-                <input id="preferredDate" className="ui-input" type="date" value={form.preferredDate} onChange={handleChange('preferredDate')} />
+                <input id="preferredDate" className="ui-input" type="date" min={TODAY} value={form.preferredDate} onChange={handleDateChange} />
+              </Field>
+
+              <Field label="Preferred Time" required htmlFor="preferredTimeSlot">
+                <select id="preferredTimeSlot" className="ui-select" value={form.preferredTimeSlot} onChange={handleChange('preferredTimeSlot')}>
+                  <option value="">Select a time slot</option>
+                  {TIME_SLOTS.map(slot => (
+                    <option key={slot.value} value={slot.value}>{slot.label}</option>
+                  ))}
+                </select>
               </Field>
 
               <Field label="Reason for visit" htmlFor="reason">
