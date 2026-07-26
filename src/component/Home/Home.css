@@ -8,13 +8,29 @@
   justify-content: center;
 }
 
-/* Soft blurred color blobs floating in the hero, in place of a stock photo -
-   gives the section visual depth without needing real photography. */
+.home-hero-photo {
+  position: absolute;
+  inset: -10px;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.8) saturate(0.9) blur(1px);
+}
+
+/* Warm gradient scrim over the photo so the hero keeps its brand tint and
+   the headline/badge text stays legible against a busy real photo. */
+.home-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(225, 29, 72, 0.72) 0%, rgba(11, 17, 32, 0.72) 100%);
+}
+
+/* Soft blurred color blobs floating over the hero photo/scrim - keeps the
+   original layered depth effect even with a real photo underneath. */
 .home-hero-blob {
   position: absolute;
   border-radius: 50%;
   filter: blur(60px);
-  opacity: 0.55;
+  opacity: 0.4;
   pointer-events: none;
 }
 
@@ -189,6 +205,15 @@
   min-width: 280px;
 }
 
+/* The signboard photo is portrait-shaped (unlike the standard 4:3 hero
+   photos), so it gets its own aspect ratio matching the source exactly -
+   avoids cropping any of the text/credentials printed on the sign itself. */
+.visit-section-photo-tall {
+  max-width: 340px;
+  aspect-ratio: 960 / 1280;
+  object-position: top;
+}
+
 .features-section {
   background-color: var(--color-primary-bg);
   max-width: 100%;
@@ -258,6 +283,22 @@
   color: #ffffff;
   text-align: center;
   padding: var(--space-16) var(--space-6);
+}
+
+.cta-section-photo-bg {
+  position: absolute;
+  inset: -10px;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.6) saturate(0.9) blur(2px);
+}
+
+/* Teal scrim matching the CTA section's existing warm-gradient tint, so the
+   photo reads as this section's background rather than a foreign insert. */
+.cta-section-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(15, 118, 110, 0.8) 0%, rgba(19, 78, 74, 0.85) 100%);
 }
 
 .cta-section-blob {

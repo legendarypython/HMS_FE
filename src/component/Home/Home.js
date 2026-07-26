@@ -43,6 +43,12 @@ const Home = () => {
       <AppNavbar role="public" />
 
       <section className="home-hero">
+        <div
+          className="home-hero-photo"
+          style={{ backgroundImage: `url(${TENANT_CONFIG.heroBgImage})` }}
+          aria-hidden="true"
+        />
+        <div className="home-hero-scrim" aria-hidden="true" />
         <div className="home-hero-blob home-hero-blob-1" aria-hidden="true" />
         <div className="home-hero-blob home-hero-blob-2" aria-hidden="true" />
         <div className="home-hero-content">
@@ -140,8 +146,8 @@ const Home = () => {
       <section className="home-section visit-section">
         <img
           src={TENANT_CONFIG.heroImage2}
-          alt={`${TENANT_CONFIG.name} courtyard`}
-          className="visit-section-photo"
+          alt={`${TENANT_CONFIG.name} signboard`}
+          className="visit-section-photo visit-section-photo-tall"
         />
         <div className="visit-section-text">
           <span className="ui-eyebrow">Visit Us</span>
@@ -151,6 +157,12 @@ const Home = () => {
       </section>
 
       <section className="cta-section">
+        <div
+          className="cta-section-photo-bg"
+          style={{ backgroundImage: `url(${TENANT_CONFIG.ctaBgImage})` }}
+          aria-hidden="true"
+        />
+        <div className="cta-section-scrim" aria-hidden="true" />
         <div className="cta-section-blob" aria-hidden="true" />
         <img
           src={TENANT_CONFIG.ctaImage}
