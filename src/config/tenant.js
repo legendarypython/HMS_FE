@@ -12,7 +12,7 @@ export const TENANT_CONFIG = {
   email: process.env.REACT_APP_TENANT_EMAIL || 'bhavanarmsk7@gmail.com',
   phone: process.env.REACT_APP_TENANT_PHONE || '9412426818',
   address: process.env.REACT_APP_TENANT_ADDRESS || '1/89, Panchkuian Hospital, Panchkuian, near Mathur Vaishya Bhawan, Agra',
-  heroImage1: process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-entrance.webp',
-  heroImage2: process.env.REACT_APP_TENANT_HERO_IMG_2 || '/images/clinic-courtyard.webp',
-  ctaImage: process.env.REACT_APP_TENANT_CTA_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-entrance.webp',
+  heroImage1: process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
+  heroImage2: process.env.REACT_APP_TENANT_HERO_IMG_2 || '/images/clinic-ot.jpg',
+  ctaImage: process.env.REACT_APP_TENANT_CTA_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
 };
