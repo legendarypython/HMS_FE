@@ -98,7 +98,7 @@ const Home = () => {
         </div>
         <img
           src={TENANT_CONFIG.heroImage1}
-          alt={`${TENANT_CONFIG.name} entrance`}
+          alt={TENANT_CONFIG.doctorName}
           className="about-section-photo"
         />
       </section>
