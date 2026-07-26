@@ -7,6 +7,7 @@ import Icon from '../ui/Icon';
 import PageHeader from '../ui/PageHeader';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
+import { formatSlotLabel } from '../../utils/timeSlots';
 
 const STATUS_VARIANT = { pending: 'warning', confirmed: 'success', rejected: 'danger' };
 
@@ -51,6 +52,7 @@ const AppointmentInbox = () => {
                   <th>Phone</th>
                   <th>Doctor</th>
                   <th>Preferred Date</th>
+                  <th>Time</th>
                   <th>Reason</th>
                   <th>Payment</th>
                   <th>Status</th>
@@ -64,6 +66,7 @@ const AppointmentInbox = () => {
                     <td data-label="Phone">{appt.patientPhone}</td>
                     <td data-label="Doctor">{appt.doctorId ? `${appt.doctorId.name}` : '-'}</td>
                     <td data-label="Preferred Date">{new Date(appt.preferredDate).toLocaleDateString()}</td>
+                    <td data-label="Time">{formatSlotLabel(appt.preferredTimeSlot)}</td>
                     <td data-label="Reason">{appt.reason || '-'}</td>
                     <td data-label="Payment"><Badge variant={appt.paymentStatus === 'paid' ? 'success' : 'neutral'}>{appt.paymentStatus}</Badge></td>
                     <td data-label="Status"><Badge variant={STATUS_VARIANT[appt.status]}>{appt.status}</Badge></td>

@@ -5,6 +5,20 @@
 // build needs zero new env vars to keep working unchanged.
 export const TENANT_ID = process.env.REACT_APP_TENANT_ID || 'panchkuiyan';
 
+// OPD (outpatient) hours vary per clinic - windows are [startHour, endHour)
+// in 24h time, closedDays are JS Date.getDay() values (0 = Sunday).
+const DEFAULT_OPD_WINDOWS = [[11, 15], [18, 20]];
+const DEFAULT_CLOSED_DAYS = [0];
+
+const parseJsonEnv = (value, fallback) => {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+};
+
 export const TENANT_CONFIG = {
   name: process.env.REACT_APP_TENANT_NAME || 'Panchkuiyan Hospital',
   shortName: process.env.REACT_APP_TENANT_SHORT_NAME || 'Panchkuiyan',
@@ -18,4 +32,6 @@ export const TENANT_CONFIG = {
   ctaImage: process.env.REACT_APP_TENANT_CTA_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
   ctaBgImage: process.env.REACT_APP_TENANT_CTA_BG_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-ward.jpg',
   bookingBgImage: process.env.REACT_APP_TENANT_BOOKING_BG_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
+  opdWindows: parseJsonEnv(process.env.REACT_APP_TENANT_OPD_WINDOWS, DEFAULT_OPD_WINDOWS),
+  closedDays: parseJsonEnv(process.env.REACT_APP_TENANT_CLOSED_DAYS, DEFAULT_CLOSED_DAYS),
 };
