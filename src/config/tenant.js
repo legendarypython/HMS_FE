@@ -12,10 +12,10 @@ export const TENANT_CONFIG = {
   email: process.env.REACT_APP_TENANT_EMAIL || 'bhavanarmsk7@gmail.com',
   phone: process.env.REACT_APP_TENANT_PHONE || '9412426818',
   address: process.env.REACT_APP_TENANT_ADDRESS || '1/89, Panchkuian Hospital, Panchkuian, near Mathur Vaishya Bhawan, Agra',
-  heroBgImage: process.env.REACT_APP_TENANT_HERO_BG_IMG || '/images/clinic-ot.jpg',
+  heroBgImage: process.env.REACT_APP_TENANT_HERO_BG_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-ot.jpg',
   heroImage1: process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
   heroImage2: process.env.REACT_APP_TENANT_HERO_IMG_2 || '/images/clinic-signboard.jpg',
   ctaImage: process.env.REACT_APP_TENANT_CTA_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
-  ctaBgImage: process.env.REACT_APP_TENANT_CTA_BG_IMG || '/images/clinic-ward.jpg',
+  ctaBgImage: process.env.REACT_APP_TENANT_CTA_BG_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-ward.jpg',
   bookingBgImage: process.env.REACT_APP_TENANT_BOOKING_BG_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
 };
