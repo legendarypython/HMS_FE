@@ -249,7 +249,7 @@ const AddPatientPageRoute = () => {
       const res = await apiFetch(`${API_BASE}/api/abha/enrol/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-        body: JSON.stringify({ transactionId: createTxnId, otp: createOtp }),
+        body: JSON.stringify({ transactionId: createTxnId, otp: createOtp, mobile: phone }),
       });
       const json = await res.json();
       if (!res.ok) {
