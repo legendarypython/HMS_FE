@@ -360,7 +360,9 @@ const AddPatientPageRoute = () => {
         )}
 
         {step === 'new' && (
-          checking ? <Spinner fullPage label="Checking..." /> : <AddPatientForm initialPhone={phone} initialAbhaProfile={abhaProfile} />
+          checking ? <Spinner fullPage label="Checking..." /> : (
+            <AddPatientForm initialPhone={phone} initialAbhaProfile={abhaProfile} initialAbhaIdentifier={abhaIdentifier} />
+          )
         )}
       </div>
     </div>
