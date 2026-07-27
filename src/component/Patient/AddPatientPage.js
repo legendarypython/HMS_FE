@@ -228,11 +228,17 @@ const AddPatientPageRoute = () => {
         setAbhaError(json.message || 'Could not send OTP');
         return;
       }
-      setCreateTxnId(json.data?.txnId || '');
+      const aadhaarTxnId = json.data?.txnId || '';
+      setCreateTxnId(aadhaarTxnId);
       setResendCount(0);
       setResendSecondsLeft(60);
       if (mobileNeedsOwnVerification(json.data?.message)) {
-        await requestMobileOtp();
+        // Pass the just-fetched txnId directly rather than relying on
+        // createTxnId from state - setCreateTxnId above doesn't apply
+        // synchronously, so reading state here would still see the stale
+        // (empty) value from before this render. Bug found live: the
+        // backend correctly rejected the resulting empty enrollmentTxnId.
+        await requestMobileOtp(aadhaarTxnId);
       } else {
         setCreateSubStep('otp');
       }
@@ -243,11 +249,11 @@ const AddPatientPageRoute = () => {
     }
   };
 
-  const requestMobileOtp = async () => {
+  const requestMobileOtp = async (enrollmentTxnId = createTxnId) => {
     const res = await apiFetch(`${API_BASE}/api/abha/enrol/mobile/request-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-      body: JSON.stringify({ mobile: phone }),
+      body: JSON.stringify({ mobile: phone, enrollmentTxnId }),
     });
     const json = await res.json();
     if (!res.ok) {
@@ -681,7 +687,7 @@ const AddPatientPageRoute = () => {
                 </Field>
                 <div className="patient-form-actions">
                   <Button type="submit" disabled={abhaLoading}>{abhaLoading ? 'Verifying...' : 'Verify Mobile'}</Button>
-                  <Button type="button" variant="ghost" disabled={abhaLoading} onClick={requestMobileOtp}>Resend OTP</Button>
+                  <Button type="button" variant="ghost" disabled={abhaLoading} onClick={() => requestMobileOtp()}>Resend OTP</Button>
                   <Button type="button" variant="ghost" onClick={handleAbhaSkip}>Skip - Enter Manually</Button>
                 </div>
               </form>
