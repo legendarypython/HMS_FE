@@ -16,11 +16,19 @@ const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
 
 const AddPatientPageRoute = () => {
   const role = sessionStorage.getItem('userRole');
-  const [step, setStep] = useState('phone'); // phone | existing | new
+  const [step, setStep] = useState('phone'); // phone | existing | abha | new
   const [phone, setPhone] = useState('');
   const [existingPatient, setExistingPatient] = useState(null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
+
+  const [abhaSubStep, setAbhaSubStep] = useState('input'); // input | otp
+  const [abhaIdentifier, setAbhaIdentifier] = useState('');
+  const [abhaOtp, setAbhaOtp] = useState('');
+  const [abhaTxnId, setAbhaTxnId] = useState('');
+  const [abhaProfile, setAbhaProfile] = useState(null);
+  const [abhaError, setAbhaError] = useState('');
+  const [abhaLoading, setAbhaLoading] = useState(false);
 
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
@@ -41,7 +49,8 @@ const AddPatientPageRoute = () => {
         setExistingPatient(json.data.patient);
         setStep('existing');
       } else {
-        setStep('new');
+        setAbhaIdentifier(phone);
+        setStep('abha');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -50,11 +59,70 @@ const AddPatientPageRoute = () => {
     }
   };
 
+  const handleAbhaRequestOtp = async (e) => {
+    e.preventDefault();
+    setAbhaError('');
+    setAbhaLoading(true);
+    try {
+      const res = await apiFetch(`${API_BASE}/api/abha/request-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ abhaNumberOrMobile: abhaIdentifier }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setAbhaError(json.message || 'Could not send OTP');
+        return;
+      }
+      setAbhaTxnId(json.data?.txnId || '');
+      setAbhaSubStep('otp');
+    } catch (err) {
+      setAbhaError('Network error. Please try again.');
+    } finally {
+      setAbhaLoading(false);
+    }
+  };
+
+  const handleAbhaVerifyOtp = async (e) => {
+    e.preventDefault();
+    setAbhaError('');
+    setAbhaLoading(true);
+    try {
+      const res = await apiFetch(`${API_BASE}/api/abha/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ transactionId: abhaTxnId, otp: abhaOtp }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setAbhaError(json.message || 'OTP verification failed');
+        return;
+      }
+      setAbhaProfile(json.data || null);
+      setStep('new');
+    } catch (err) {
+      setAbhaError('Network error. Please try again.');
+    } finally {
+      setAbhaLoading(false);
+    }
+  };
+
+  const handleAbhaSkip = () => {
+    setAbhaProfile(null);
+    setStep('new');
+  };
+
   const handleStartOver = () => {
     setStep('phone');
     setPhone('');
     setExistingPatient(null);
     setError('');
+    setAbhaSubStep('input');
+    setAbhaIdentifier('');
+    setAbhaOtp('');
+    setAbhaTxnId('');
+    setAbhaProfile(null);
+    setAbhaError('');
   };
 
   return (
@@ -128,8 +196,61 @@ const AddPatientPageRoute = () => {
           </Card>
         )}
 
+        {step === 'abha' && (
+          <Card variant="elevated" style={{ maxWidth: 480, margin: '0 auto' }}>
+            <IconBadge name="shield" />
+            <span className="ui-eyebrow">Patient Records</span>
+            <h2 className="section-title">Verify ABHA ID (Optional)</h2>
+            <p className="text-muted" style={{ marginTop: -8, marginBottom: 24 }}>
+              No record found for this number. Verify the patient's ABHA number or mobile to auto-fill their
+              details, or skip and enter them manually.
+            </p>
+
+            {abhaSubStep === 'input' && (
+              <form onSubmit={handleAbhaRequestOtp}>
+                {abhaError && <div className="ui-banner ui-banner-error">{abhaError}</div>}
+                <Field label="ABHA Number or Mobile" required htmlFor="abhaIdentifier">
+                  <input
+                    id="abhaIdentifier"
+                    className="ui-input"
+                    value={abhaIdentifier}
+                    onChange={(e) => setAbhaIdentifier(e.target.value)}
+                    autoFocus
+                  />
+                </Field>
+                <div className="patient-form-actions">
+                  <Button type="submit" disabled={abhaLoading}>{abhaLoading ? 'Sending...' : 'Send OTP'}</Button>
+                  <Button type="button" variant="ghost" onClick={handleAbhaSkip}>Skip - Enter Manually</Button>
+                </div>
+              </form>
+            )}
+
+            {abhaSubStep === 'otp' && (
+              <form onSubmit={handleAbhaVerifyOtp}>
+                <p className="login-hint">An OTP was sent to {abhaIdentifier}.</p>
+                {abhaError && <div className="ui-banner ui-banner-error">{abhaError}</div>}
+                <Field label="One-Time Password" required htmlFor="abhaOtp">
+                  <input
+                    id="abhaOtp"
+                    className="ui-input"
+                    type="text"
+                    placeholder="OTP"
+                    value={abhaOtp}
+                    onChange={(e) => setAbhaOtp(e.target.value)}
+                    autoFocus
+                  />
+                </Field>
+                <div className="patient-form-actions">
+                  <Button type="submit" disabled={abhaLoading}>{abhaLoading ? 'Verifying...' : 'Verify'}</Button>
+                  <Button type="button" variant="ghost" onClick={handleAbhaSkip}>Skip - Enter Manually</Button>
+                </div>
+              </form>
+            )}
+          </Card>
+        )}
+
         {step === 'new' && (
-          checking ? <Spinner fullPage label="Checking..." /> : <AddPatientForm initialPhone={phone} />
+          checking ? <Spinner fullPage label="Checking..." /> : <AddPatientForm initialPhone={phone} initialAbhaProfile={abhaProfile} />
         )}
       </div>
     </div>

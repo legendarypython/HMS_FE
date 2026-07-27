@@ -12,17 +12,17 @@ import './AddPatient.css';
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
 const CASE_TYPE_ENUM = { AnteNatal: 1, Infertility: 2, General: 3 };
 
-const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
+const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfile, onSaved }) => {
   const isEditMode = Boolean(initialPatientDetails);
   const history = useHistory();
 
   const [form, setForm] = useState(() => ({
-    firstName: initialPatientDetails?.firstName || '',
-    lastName: initialPatientDetails?.lastName || '',
+    firstName: initialPatientDetails?.firstName || initialAbhaProfile?.firstName || '',
+    lastName: initialPatientDetails?.lastName || initialAbhaProfile?.lastName || '',
     husbandFirstName: initialPatientDetails?.husbandFirstName || '',
     husbandLastName: initialPatientDetails?.husbandLastName || '',
-    dateOfBirth: initialPatientDetails?.dateOfBirth || '',
-    address: initialPatientDetails?.address || '',
+    dateOfBirth: initialPatientDetails?.dateOfBirth || initialAbhaProfile?.dateOfBirth || '',
+    address: initialPatientDetails?.address || initialAbhaProfile?.address || '',
     aadhar: initialPatientDetails?.aadhar || '',
     phone: initialPatientDetails?.phone || initialPhone || '',
     email: initialPatientDetails?.email || '',
@@ -30,7 +30,8 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
     diagnosis: initialPatientDetails?.diagnosis || '',
     dateOfAdmission: initialPatientDetails?.dateOfAdmission ? initialPatientDetails.dateOfAdmission.slice(0, 10) : '',
     caseType: initialPatientDetails ? '' : '',
-    isNewPatient: initialPatientDetails ? initialPatientDetails.isNewPatient : true
+    isNewPatient: initialPatientDetails ? initialPatientDetails.isNewPatient : true,
+    abhaNumber: initialPatientDetails?.abhaNumber || initialAbhaProfile?.abhaNumber || ''
   }));
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState(null);
@@ -163,6 +164,11 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
           <Field label="Married For (Years)" required htmlFor="marriedFor">
             <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
           </Field>
+          {form.abhaNumber && (
+            <Field label="ABHA Number (Verified)" htmlFor="abhaNumber">
+              <input className="ui-input" id="abhaNumber" value={form.abhaNumber} disabled />
+            </Field>
+          )}
         </div>
 
         <h3 className="record-section-title">Contact Details</h3>
