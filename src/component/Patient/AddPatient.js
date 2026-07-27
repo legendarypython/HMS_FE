@@ -62,10 +62,20 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
         return;
       }
       const blob = await response.blob();
+      // Real bug found live: this used to hardcode ".pdf" regardless of
+      // the actual file type - the backend serves image/png, so the saved
+      // file had the wrong extension and the OS tried to open it with a
+      // PDF viewer, which failed. Use the filename the backend already
+      // computed correctly (Content-Disposition), falling back to
+      // deriving one from the blob's real MIME type if that's ever missing.
+      const disposition = response.headers.get('content-disposition') || '';
+      const filenameMatch = /filename="([^"]+)"/.exec(disposition);
+      const extension = blob.type.includes('png') ? 'png' : blob.type.includes('svg') ? 'svg' : 'pdf';
+      const filename = filenameMatch ? filenameMatch[1] : `abha-card.${extension}`;
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'abha-card.pdf';
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
