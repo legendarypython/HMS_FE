@@ -35,6 +35,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
   }));
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState(null);
+  const [abhaConflict, setAbhaConflict] = useState(null);
   const [success, setSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -88,6 +89,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
   const handleCreateSubmit = async (event) => {
     event.preventDefault();
     setError(null);
+    setAbhaConflict(null);
     setSaving(true);
     try {
       const formData = new FormData();
@@ -123,7 +125,11 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
         }
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to add patient');
+        if (response.status === 409 && errorData.data?.existingPatient) {
+          setAbhaConflict(errorData.data.existingPatient);
+        } else {
+          setError(errorData.message || 'Failed to add patient');
+        }
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -138,6 +144,12 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
       <span className="ui-eyebrow">Patient Records</span>
       <h2 className="section-title">{isEditMode ? 'Edit Patient' : 'Add New Patient'}</h2>
       {error && <div className="ui-banner ui-banner-error">{error}</div>}
+      {abhaConflict && (
+        <div className="ui-banner ui-banner-error">
+          This ABHA number is already linked to {abhaConflict.firstName} {abhaConflict.lastName} -{' '}
+          <Link to={`/patients/view/${abhaConflict.patientId}`}>view their record</Link> instead of creating a duplicate.
+        </div>
+      )}
       {success && <div className="ui-banner ui-banner-success">{isEditMode ? 'Patient updated successfully' : 'Patient added successfully'}</div>}
 
       <form onSubmit={isEditMode ? handleEditSubmit : handleCreateSubmit}>

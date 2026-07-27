@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
@@ -22,13 +22,27 @@ const AddPatientPageRoute = () => {
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
 
-  const [abhaSubStep, setAbhaSubStep] = useState('input'); // input | otp
+  const [abhaSubStep, setAbhaSubStep] = useState('input'); // input | otp | select-account
   const [abhaIdentifier, setAbhaIdentifier] = useState('');
   const [abhaOtp, setAbhaOtp] = useState('');
   const [abhaTxnId, setAbhaTxnId] = useState('');
   const [abhaProfile, setAbhaProfile] = useState(null);
   const [abhaError, setAbhaError] = useState('');
   const [abhaLoading, setAbhaLoading] = useState(false);
+  const [abhaAccounts, setAbhaAccounts] = useState([]);
+  const [abhaTransferToken, setAbhaTransferToken] = useState('');
+  const [resendCount, setResendCount] = useState(0);
+  const [resendSecondsLeft, setResendSecondsLeft] = useState(0);
+
+  // Per ABDM's resend requirement: at most 2 resends, each gated by a
+  // 60-second cooldown after the previous send.
+  useEffect(() => {
+    if (resendSecondsLeft <= 0) return undefined;
+    const timer = setInterval(() => {
+      setResendSecondsLeft((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendSecondsLeft]);
 
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
@@ -76,6 +90,32 @@ const AddPatientPageRoute = () => {
       }
       setAbhaTxnId(json.data?.txnId || '');
       setAbhaSubStep('otp');
+      setResendCount(0);
+      setResendSecondsLeft(60);
+    } catch (err) {
+      setAbhaError('Network error. Please try again.');
+    } finally {
+      setAbhaLoading(false);
+    }
+  };
+
+  const handleAbhaResendOtp = async () => {
+    setAbhaError('');
+    setAbhaLoading(true);
+    try {
+      const res = await apiFetch(`${API_BASE}/api/abha/request-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ abhaNumberOrMobile: abhaIdentifier }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setAbhaError(json.message || 'Could not resend OTP');
+        return;
+      }
+      setAbhaTxnId(json.data?.txnId || '');
+      setResendCount((c) => c + 1);
+      setResendSecondsLeft(60);
     } catch (err) {
       setAbhaError('Network error. Please try again.');
     } finally {
@@ -91,11 +131,41 @@ const AddPatientPageRoute = () => {
       const res = await apiFetch(`${API_BASE}/api/abha/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-        body: JSON.stringify({ transactionId: abhaTxnId, otp: abhaOtp }),
+        body: JSON.stringify({ abhaNumberOrMobile: abhaIdentifier, transactionId: abhaTxnId, otp: abhaOtp }),
       });
       const json = await res.json();
       if (!res.ok) {
         setAbhaError(json.message || 'OTP verification failed');
+        return;
+      }
+      if (json.data?.multipleAccounts) {
+        setAbhaAccounts(json.data.accounts || []);
+        setAbhaTransferToken(json.data.transferToken || '');
+        setAbhaTxnId(json.data.txnId || abhaTxnId);
+        setAbhaSubStep('select-account');
+        return;
+      }
+      setAbhaProfile(json.data || null);
+      setStep('new');
+    } catch (err) {
+      setAbhaError('Network error. Please try again.');
+    } finally {
+      setAbhaLoading(false);
+    }
+  };
+
+  const handleSelectAccount = async (account) => {
+    setAbhaError('');
+    setAbhaLoading(true);
+    try {
+      const res = await apiFetch(`${API_BASE}/api/abha/verify-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ transferToken: abhaTransferToken, txnId: abhaTxnId, account }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setAbhaError(json.message || 'Could not confirm ABHA selection');
         return;
       }
       setAbhaProfile(json.data || null);
@@ -123,6 +193,10 @@ const AddPatientPageRoute = () => {
     setAbhaTxnId('');
     setAbhaProfile(null);
     setAbhaError('');
+    setResendCount(0);
+    setResendSecondsLeft(0);
+    setAbhaAccounts([]);
+    setAbhaTransferToken('');
   };
 
   return (
@@ -202,14 +276,14 @@ const AddPatientPageRoute = () => {
             <span className="ui-eyebrow">Patient Records</span>
             <h2 className="section-title">Verify ABHA ID (Optional)</h2>
             <p className="text-muted" style={{ marginTop: -8, marginBottom: 24 }}>
-              No record found for this number. Verify the patient's ABHA number or mobile to auto-fill their
-              details, or skip and enter them manually.
+              No record found for this number. Verify the patient's ABHA number, ABHA address, mobile, or
+              Aadhaar number to auto-fill their details, or skip and enter them manually.
             </p>
 
             {abhaSubStep === 'input' && (
               <form onSubmit={handleAbhaRequestOtp}>
                 {abhaError && <div className="ui-banner ui-banner-error">{abhaError}</div>}
-                <Field label="ABHA Number or Mobile" required htmlFor="abhaIdentifier">
+                <Field label="ABHA Number, ABHA Address, Mobile, or Aadhaar Number" required htmlFor="abhaIdentifier">
                   <input
                     id="abhaIdentifier"
                     className="ui-input"
@@ -242,9 +316,45 @@ const AddPatientPageRoute = () => {
                 </Field>
                 <div className="patient-form-actions">
                   <Button type="submit" disabled={abhaLoading}>{abhaLoading ? 'Verifying...' : 'Verify'}</Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={abhaLoading || resendSecondsLeft > 0 || resendCount >= 2}
+                    onClick={handleAbhaResendOtp}
+                  >
+                    {resendSecondsLeft > 0 ? `Resend OTP (${resendSecondsLeft}s)` : 'Resend OTP'}
+                  </Button>
                   <Button type="button" variant="ghost" onClick={handleAbhaSkip}>Skip - Enter Manually</Button>
                 </div>
               </form>
+            )}
+
+            {abhaSubStep === 'select-account' && (
+              <div>
+                <p className="login-hint">This mobile number has {abhaAccounts.length} linked ABHA accounts - select the patient's.</p>
+                {abhaError && <div className="ui-banner ui-banner-error">{abhaError}</div>}
+                {abhaAccounts.map((account) => (
+                  <Card
+                    key={account.ABHANumber}
+                    variant="interactive"
+                    style={{ marginBottom: 12, cursor: abhaLoading ? 'default' : 'pointer', opacity: abhaLoading ? 0.6 : 1 }}
+                    onClick={() => !abhaLoading && handleSelectAccount(account)}
+                  >
+                    <div className="patient-detail-header" style={{ marginBottom: 0 }}>
+                      <span className="ui-avatar">
+                        {`${(account.name || '')[0] || ''}`.toUpperCase()}
+                      </span>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{account.name}</div>
+                        <div className="text-muted" style={{ fontSize: '0.85em' }}>{account.ABHANumber}</div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                <div className="patient-form-actions">
+                  <Button type="button" variant="ghost" onClick={handleAbhaSkip}>Skip - Enter Manually</Button>
+                </div>
+              </div>
             )}
           </Card>
         )}
