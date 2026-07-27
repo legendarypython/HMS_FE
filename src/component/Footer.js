@@ -1,5 +1,5 @@
 import React from 'react';
-import { TENANT_CONFIG } from '../config/tenant';
+import { TENANT_CONFIG, TENANT_ID } from '../config/tenant';
 import './Footer.css';
 
 const Footer = () => (
@@ -17,6 +17,7 @@ const Footer = () => (
     </div>
     <div className="app-footer-copyright">
       © {new Date().getFullYear()} {TENANT_CONFIG.name}
+      {TENANT_ID === 'demo' && <> · Powered by Clinic Sathi</>}
     </div>
   </footer>
 );

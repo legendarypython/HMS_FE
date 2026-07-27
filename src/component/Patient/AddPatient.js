@@ -12,30 +12,80 @@ import './AddPatient.css';
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
 const CASE_TYPE_ENUM = { AnteNatal: 1, Infertility: 2, General: 3 };
 
-const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
+const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfile, initialAbhaIdentifier, onSaved }) => {
   const isEditMode = Boolean(initialPatientDetails);
   const history = useHistory();
 
   const [form, setForm] = useState(() => ({
-    firstName: initialPatientDetails?.firstName || '',
-    lastName: initialPatientDetails?.lastName || '',
+    firstName: initialPatientDetails?.firstName || initialAbhaProfile?.firstName || '',
+    lastName: initialPatientDetails?.lastName || initialAbhaProfile?.lastName || '',
     husbandFirstName: initialPatientDetails?.husbandFirstName || '',
     husbandLastName: initialPatientDetails?.husbandLastName || '',
-    dateOfBirth: initialPatientDetails?.dateOfBirth || '',
-    address: initialPatientDetails?.address || '',
-    aadhar: initialPatientDetails?.aadhar || '',
+    dateOfBirth: initialPatientDetails?.dateOfBirth || initialAbhaProfile?.dateOfBirth || '',
+    address: initialPatientDetails?.address || initialAbhaProfile?.address || '',
+    aadhar: initialPatientDetails?.aadhar || initialAbhaProfile?.aadhar || '',
     phone: initialPatientDetails?.phone || initialPhone || '',
     email: initialPatientDetails?.email || '',
     marriedFor: initialPatientDetails?.marriedFor || '',
     diagnosis: initialPatientDetails?.diagnosis || '',
     dateOfAdmission: initialPatientDetails?.dateOfAdmission ? initialPatientDetails.dateOfAdmission.slice(0, 10) : '',
     caseType: initialPatientDetails ? '' : '',
-    isNewPatient: initialPatientDetails ? initialPatientDetails.isNewPatient : true
+    isNewPatient: initialPatientDetails ? initialPatientDetails.isNewPatient : true,
+    abhaNumber: initialPatientDetails?.abhaNumber || initialAbhaProfile?.abhaNumber || '',
+    abhaAddress: initialPatientDetails?.abhaAddress || initialAbhaProfile?.abhaAddress || ''
   }));
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState(null);
+  const [abhaConflict, setAbhaConflict] = useState(null);
   const [success, setSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [cardDownloading, setCardDownloading] = useState(false);
+  const [cardError, setCardError] = useState(null);
+
+  // Mandatory-for-Private M1 requirement: "View and Download ABHA details."
+  // Only available right after a fresh verification (initialAbhaProfile
+  // carries the refreshToken from that verify, exchanged backend-side for
+  // a real access token) - re-verifying is needed to download again later,
+  // since ABDM doesn't offer a persistent "fetch anytime" credential.
+  const handleDownloadAbhaCard = async () => {
+    setCardError(null);
+    setCardDownloading(true);
+    try {
+      const response = await apiFetch(`${API_BASE}/api/abha/card`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ abhaNumberOrMobile: initialAbhaIdentifier, refreshToken: initialAbhaProfile?.refreshToken })
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        setCardError(errorData.message || 'Could not download ABHA card');
+        return;
+      }
+      const blob = await response.blob();
+      // Real bug found live: this used to hardcode ".pdf" regardless of
+      // the actual file type - the backend serves image/png, so the saved
+      // file had the wrong extension and the OS tried to open it with a
+      // PDF viewer, which failed. Use the filename the backend already
+      // computed correctly (Content-Disposition), falling back to
+      // deriving one from the blob's real MIME type if that's ever missing.
+      const disposition = response.headers.get('content-disposition') || '';
+      const filenameMatch = /filename="([^"]+)"/.exec(disposition);
+      const extension = blob.type.includes('png') ? 'png' : blob.type.includes('svg') ? 'svg' : 'pdf';
+      const filename = filenameMatch ? filenameMatch[1] : `abha-card.${extension}`;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setCardError('Network error. Please try again.');
+    } finally {
+      setCardDownloading(false);
+    }
+  };
 
   const handleChange = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -87,6 +137,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
   const handleCreateSubmit = async (event) => {
     event.preventDefault();
     setError(null);
+    setAbhaConflict(null);
     setSaving(true);
     try {
       const formData = new FormData();
@@ -122,7 +173,11 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
         }
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to add patient');
+        if (response.status === 409 && errorData.data?.existingPatient) {
+          setAbhaConflict(errorData.data.existingPatient);
+        } else {
+          setError(errorData.message || 'Failed to add patient');
+        }
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -137,6 +192,12 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
       <span className="ui-eyebrow">Patient Records</span>
       <h2 className="section-title">{isEditMode ? 'Edit Patient' : 'Add New Patient'}</h2>
       {error && <div className="ui-banner ui-banner-error">{error}</div>}
+      {abhaConflict && (
+        <div className="ui-banner ui-banner-error">
+          This ABHA number is already linked to {abhaConflict.firstName} {abhaConflict.lastName} -{' '}
+          <Link to={`/patients/view/${abhaConflict.patientId}`}>view their record</Link> instead of creating a duplicate.
+        </div>
+      )}
       {success && <div className="ui-banner ui-banner-success">{isEditMode ? 'Patient updated successfully' : 'Patient added successfully'}</div>}
 
       <form onSubmit={isEditMode ? handleEditSubmit : handleCreateSubmit}>
@@ -163,7 +224,26 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, onSaved }) => {
           <Field label="Married For (Years)" required htmlFor="marriedFor">
             <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
           </Field>
+          {form.abhaNumber && (
+            <Field label="ABHA Number (Verified)" htmlFor="abhaNumber">
+              <input className="ui-input" id="abhaNumber" value={form.abhaNumber} disabled />
+            </Field>
+          )}
+          {form.abhaAddress && (
+            <Field label="ABHA Address" htmlFor="abhaAddress">
+              <input className="ui-input" id="abhaAddress" value={form.abhaAddress} disabled />
+            </Field>
+          )}
         </div>
+
+        {initialAbhaProfile?.refreshToken && (
+          <div style={{ marginBottom: 16 }}>
+            {cardError && <div className="ui-banner ui-banner-error">{cardError}</div>}
+            <Button type="button" variant="secondary" disabled={cardDownloading} onClick={handleDownloadAbhaCard}>
+              {cardDownloading ? 'Downloading...' : 'Download ABHA Card'}
+            </Button>
+          </div>
+        )}
 
         <h3 className="record-section-title">Contact Details</h3>
         <div className="patient-form-grid">
