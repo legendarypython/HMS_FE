@@ -44,9 +44,9 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
 
   // Mandatory-for-Private M1 requirement: "View and Download ABHA details."
   // Only available right after a fresh verification (initialAbhaProfile
-  // carries the short-lived xToken from that verify) - re-verifying is
-  // needed to download again later, since ABDM doesn't offer a persistent
-  // "fetch anytime" credential for this.
+  // carries the refreshToken from that verify, exchanged backend-side for
+  // a real access token) - re-verifying is needed to download again later,
+  // since ABDM doesn't offer a persistent "fetch anytime" credential.
   const handleDownloadAbhaCard = async () => {
     setCardError(null);
     setCardDownloading(true);
@@ -54,7 +54,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
       const response = await apiFetch(`${API_BASE}/api/abha/card`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-        body: JSON.stringify({ abhaNumberOrMobile: initialAbhaIdentifier, xToken: initialAbhaProfile?.xToken })
+        body: JSON.stringify({ abhaNumberOrMobile: initialAbhaIdentifier, refreshToken: initialAbhaProfile?.refreshToken })
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -221,7 +221,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
           )}
         </div>
 
-        {initialAbhaProfile?.xToken && (
+        {initialAbhaProfile?.refreshToken && (
           <div style={{ marginBottom: 16 }}>
             {cardError && <div className="ui-banner ui-banner-error">{cardError}</div>}
             <Button type="button" variant="secondary" disabled={cardDownloading} onClick={handleDownloadAbhaCard}>
