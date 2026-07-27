@@ -575,12 +575,24 @@ const AddPatientPageRoute = () => {
                     onClick={() => !abhaLoading && handleSelectAccount(account)}
                   >
                     <div className="patient-detail-header" style={{ marginBottom: 0 }}>
-                      <span className="ui-avatar">
-                        {`${(account.name || '')[0] || ''}`.toUpperCase()}
-                      </span>
+                      {account.profilePhoto ? (
+                        <img
+                          src={`data:image/jpeg;base64,${account.profilePhoto}`}
+                          alt={account.name}
+                          className="ui-avatar"
+                          style={{ objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <span className="ui-avatar">
+                          {`${(account.name || '')[0] || ''}`.toUpperCase()}
+                        </span>
+                      )}
                       <div>
                         <div style={{ fontWeight: 600 }}>{account.name}</div>
                         <div className="text-muted" style={{ fontSize: '0.85em' }}>{account.ABHANumber}</div>
+                        {account.preferredAbhaAddress && (
+                          <div className="text-muted" style={{ fontSize: '0.85em' }}>{account.preferredAbhaAddress}</div>
+                        )}
                       </div>
                     </div>
                   </Card>
