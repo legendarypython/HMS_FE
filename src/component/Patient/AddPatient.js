@@ -229,6 +229,11 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
               <input className="ui-input" id="abhaNumber" value={form.abhaNumber} disabled />
             </Field>
           )}
+          {form.abhaAddress && (
+            <Field label="ABHA Address" htmlFor="abhaAddress">
+              <input className="ui-input" id="abhaAddress" value={form.abhaAddress} disabled />
+            </Field>
+          )}
         </div>
 
         {initialAbhaProfile?.refreshToken && (

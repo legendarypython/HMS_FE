@@ -256,7 +256,12 @@ const AddPatientPageRoute = () => {
         setAbhaError(json.message || 'ABHA creation failed');
         return;
       }
-      setAbhaProfile(json.data || null);
+      // ABDM never echoes the raw Aadhaar number back in any response (by
+      // design - it's masked/withheld for privacy) - the only place it
+      // exists is what staff already typed in to start this flow, so
+      // carry it through here rather than leaving the patient form's
+      // Aadhar field empty after an otherwise fully auto-filled profile.
+      setAbhaProfile(json.data ? { ...json.data, aadhar: createAadhaar } : null);
       setStep('new');
     } catch (err) {
       setAbhaError('Network error. Please try again.');
