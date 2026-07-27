@@ -23,7 +23,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
     husbandLastName: initialPatientDetails?.husbandLastName || '',
     dateOfBirth: initialPatientDetails?.dateOfBirth || initialAbhaProfile?.dateOfBirth || '',
     address: initialPatientDetails?.address || initialAbhaProfile?.address || '',
-    aadhar: initialPatientDetails?.aadhar || '',
+    aadhar: initialPatientDetails?.aadhar || initialAbhaProfile?.aadhar || '',
     phone: initialPatientDetails?.phone || initialPhone || '',
     email: initialPatientDetails?.email || '',
     marriedFor: initialPatientDetails?.marriedFor || '',
