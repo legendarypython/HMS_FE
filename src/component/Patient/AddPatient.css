@@ -14,6 +14,21 @@
   margin-top: var(--space-6);
 }
 
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: var(--color-primary-dark);
+}
+
 @media (max-width: 640px) {
   .patient-form-grid {
     grid-template-columns: 1fr;

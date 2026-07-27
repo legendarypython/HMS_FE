@@ -34,6 +34,15 @@ const AddPatientPageRoute = () => {
   const [resendCount, setResendCount] = useState(0);
   const [resendSecondsLeft, setResendSecondsLeft] = useState(0);
 
+  // Creating a brand-new ABHA (patient doesn't have one yet) is a separate
+  // flow from verifying an existing one above - own mode/sub-step/state so
+  // the two don't interfere with each other.
+  const [abhaMode, setAbhaMode] = useState('verify'); // verify | create
+  const [createAadhaar, setCreateAadhaar] = useState('');
+  const [createSubStep, setCreateSubStep] = useState('input'); // input | otp
+  const [createOtp, setCreateOtp] = useState('');
+  const [createTxnId, setCreateTxnId] = useState('');
+
   // Per ABDM's resend requirement: at most 2 resends, each gated by a
   // 60-second cooldown after the previous send.
   useEffect(() => {
@@ -182,6 +191,80 @@ const AddPatientPageRoute = () => {
     setStep('new');
   };
 
+  const handleCreateRequestOtp = async (e) => {
+    e.preventDefault();
+    setAbhaError('');
+    setAbhaLoading(true);
+    try {
+      const res = await apiFetch(`${API_BASE}/api/abha/enrol/request-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ aadhaarNumber: createAadhaar }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setAbhaError(json.message || 'Could not send OTP');
+        return;
+      }
+      setCreateTxnId(json.data?.txnId || '');
+      setCreateSubStep('otp');
+      setResendCount(0);
+      setResendSecondsLeft(60);
+    } catch (err) {
+      setAbhaError('Network error. Please try again.');
+    } finally {
+      setAbhaLoading(false);
+    }
+  };
+
+  const handleCreateResendOtp = async () => {
+    setAbhaError('');
+    setAbhaLoading(true);
+    try {
+      const res = await apiFetch(`${API_BASE}/api/abha/enrol/request-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ aadhaarNumber: createAadhaar }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setAbhaError(json.message || 'Could not resend OTP');
+        return;
+      }
+      setCreateTxnId(json.data?.txnId || '');
+      setResendCount((c) => c + 1);
+      setResendSecondsLeft(60);
+    } catch (err) {
+      setAbhaError('Network error. Please try again.');
+    } finally {
+      setAbhaLoading(false);
+    }
+  };
+
+  const handleCreateVerifyOtp = async (e) => {
+    e.preventDefault();
+    setAbhaError('');
+    setAbhaLoading(true);
+    try {
+      const res = await apiFetch(`${API_BASE}/api/abha/enrol/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ transactionId: createTxnId, otp: createOtp }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setAbhaError(json.message || 'ABHA creation failed');
+        return;
+      }
+      setAbhaProfile(json.data || null);
+      setStep('new');
+    } catch (err) {
+      setAbhaError('Network error. Please try again.');
+    } finally {
+      setAbhaLoading(false);
+    }
+  };
+
   const handleStartOver = () => {
     setStep('phone');
     setPhone('');
@@ -197,6 +280,11 @@ const AddPatientPageRoute = () => {
     setResendSecondsLeft(0);
     setAbhaAccounts([]);
     setAbhaTransferToken('');
+    setAbhaMode('verify');
+    setCreateAadhaar('');
+    setCreateSubStep('input');
+    setCreateOtp('');
+    setCreateTxnId('');
   };
 
   return (
@@ -274,13 +362,14 @@ const AddPatientPageRoute = () => {
           <Card variant="elevated" style={{ maxWidth: 480, margin: '0 auto' }}>
             <IconBadge name="shield" />
             <span className="ui-eyebrow">Patient Records</span>
-            <h2 className="section-title">Verify ABHA ID (Optional)</h2>
+            <h2 className="section-title">{abhaMode === 'create' ? 'Create ABHA ID (Optional)' : 'Verify ABHA ID (Optional)'}</h2>
             <p className="text-muted" style={{ marginTop: -8, marginBottom: 24 }}>
-              No record found for this number. Verify the patient's ABHA number, ABHA address, mobile, or
-              Aadhaar number to auto-fill their details, or skip and enter them manually.
+              {abhaMode === 'create'
+                ? "Create a new ABHA using the patient's Aadhaar number - an OTP goes to whatever mobile is linked to that Aadhaar."
+                : "No record found for this number. Verify the patient's ABHA number, ABHA address, mobile, or Aadhaar number to auto-fill their details, or skip and enter them manually."}
             </p>
 
-            {abhaSubStep === 'input' && (
+            {abhaMode === 'verify' && abhaSubStep === 'input' && (
               <form onSubmit={handleAbhaRequestOtp}>
                 {abhaError && <div className="ui-banner ui-banner-error">{abhaError}</div>}
                 <Field label="ABHA Number, ABHA Address, Mobile, or Aadhaar Number" required htmlFor="abhaIdentifier">
@@ -296,10 +385,16 @@ const AddPatientPageRoute = () => {
                   <Button type="submit" disabled={abhaLoading}>{abhaLoading ? 'Sending...' : 'Send OTP'}</Button>
                   <Button type="button" variant="ghost" onClick={handleAbhaSkip}>Skip - Enter Manually</Button>
                 </div>
+                <p className="text-muted" style={{ fontSize: '0.85em', marginTop: 12 }}>
+                  Patient doesn't have an ABHA yet?{' '}
+                  <button type="button" className="link-button" onClick={() => { setAbhaError(''); setAbhaMode('create'); }}>
+                    Create one using Aadhaar
+                  </button>
+                </p>
               </form>
             )}
 
-            {abhaSubStep === 'otp' && (
+            {abhaMode === 'verify' && abhaSubStep === 'otp' && (
               <form onSubmit={handleAbhaVerifyOtp}>
                 <p className="login-hint">An OTP was sent to {abhaIdentifier}.</p>
                 {abhaError && <div className="ui-banner ui-banner-error">{abhaError}</div>}
@@ -329,7 +424,7 @@ const AddPatientPageRoute = () => {
               </form>
             )}
 
-            {abhaSubStep === 'select-account' && (
+            {abhaMode === 'verify' && abhaSubStep === 'select-account' && (
               <div>
                 <p className="login-hint">This mobile number has {abhaAccounts.length} linked ABHA accounts - select the patient's.</p>
                 {abhaError && <div className="ui-banner ui-banner-error">{abhaError}</div>}
@@ -355,6 +450,64 @@ const AddPatientPageRoute = () => {
                   <Button type="button" variant="ghost" onClick={handleAbhaSkip}>Skip - Enter Manually</Button>
                 </div>
               </div>
+            )}
+
+            {abhaMode === 'create' && createSubStep === 'input' && (
+              <form onSubmit={handleCreateRequestOtp}>
+                {abhaError && <div className="ui-banner ui-banner-error">{abhaError}</div>}
+                <Field label="Aadhaar Number" required htmlFor="createAadhaar">
+                  <input
+                    id="createAadhaar"
+                    className="ui-input"
+                    inputMode="numeric"
+                    pattern="\d{12}"
+                    title="12-digit Aadhaar number"
+                    value={createAadhaar}
+                    onChange={(e) => setCreateAadhaar(e.target.value)}
+                    autoFocus
+                  />
+                </Field>
+                <div className="patient-form-actions">
+                  <Button type="submit" disabled={abhaLoading}>{abhaLoading ? 'Sending...' : 'Send OTP'}</Button>
+                  <Button type="button" variant="ghost" onClick={handleAbhaSkip}>Skip - Enter Manually</Button>
+                </div>
+                <p className="text-muted" style={{ fontSize: '0.85em', marginTop: 12 }}>
+                  Patient already has an ABHA?{' '}
+                  <button type="button" className="link-button" onClick={() => { setAbhaError(''); setAbhaMode('verify'); }}>
+                    Verify it instead
+                  </button>
+                </p>
+              </form>
+            )}
+
+            {abhaMode === 'create' && createSubStep === 'otp' && (
+              <form onSubmit={handleCreateVerifyOtp}>
+                <p className="login-hint">An OTP was sent to the Aadhaar-linked mobile number.</p>
+                {abhaError && <div className="ui-banner ui-banner-error">{abhaError}</div>}
+                <Field label="One-Time Password" required htmlFor="createOtp">
+                  <input
+                    id="createOtp"
+                    className="ui-input"
+                    type="text"
+                    placeholder="OTP"
+                    value={createOtp}
+                    onChange={(e) => setCreateOtp(e.target.value)}
+                    autoFocus
+                  />
+                </Field>
+                <div className="patient-form-actions">
+                  <Button type="submit" disabled={abhaLoading}>{abhaLoading ? 'Creating...' : 'Create ABHA'}</Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    disabled={abhaLoading || resendSecondsLeft > 0 || resendCount >= 2}
+                    onClick={handleCreateResendOtp}
+                  >
+                    {resendSecondsLeft > 0 ? `Resend OTP (${resendSecondsLeft}s)` : 'Resend OTP'}
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={handleAbhaSkip}>Skip - Enter Manually</Button>
+                </div>
+              </form>
             )}
           </Card>
         )}
