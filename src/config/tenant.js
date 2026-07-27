@@ -34,4 +34,7 @@ export const TENANT_CONFIG = {
   bookingBgImage: process.env.REACT_APP_TENANT_BOOKING_BG_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-reception.jpg',
   opdWindows: parseJsonEnv(process.env.REACT_APP_TENANT_OPD_WINDOWS, DEFAULT_OPD_WINDOWS),
   closedDays: parseJsonEnv(process.env.REACT_APP_TENANT_CLOSED_DAYS, DEFAULT_CLOSED_DAYS),
+  // Real HFR ID from the facility's ABDM registration (see PROGRESS.md) - the
+  // "hip-id" the Scan & Share QR encodes, per ABDM's documented QR URL format.
+  abdmHfrId: process.env.REACT_APP_TENANT_ABDM_HFR_ID || 'IN0911573004',
 };
