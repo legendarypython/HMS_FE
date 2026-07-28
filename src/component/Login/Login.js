@@ -1,5 +1,4 @@
-import React, { useState, useRef } from 'react';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import React, { useState } from 'react';
 import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
@@ -7,29 +6,16 @@ import Button from '../ui/Button';
 import IconBadge from '../ui/IconBadge';
 import { API_BASE } from '../../utils/api';
 import { TENANT_ID } from '../../config/tenant';
-import { auth } from '../../utils/firebase';
 import './Login.css';
 
-// Firebase error codes -> user-facing messages. Anything not listed falls
-// back to a generic message rather than showing Firebase's raw error text.
-const FIREBASE_ERROR_MESSAGES = {
-  'auth/invalid-phone-number': 'Enter a valid 10-digit mobile number',
-  'auth/too-many-requests': 'Too many attempts. Please try again later.',
-  'auth/invalid-verification-code': 'Invalid OTP',
-  'auth/code-expired': 'OTP expired - please request a new one',
-};
-
 const Login = () => {
-  const [step, setStep] = useState('mobile'); // mobile | password | otp | not_found
+  const [step, setStep] = useState('mobile'); // mobile | password | otp_unavailable | not_found
   const [mobile, setMobile] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionExpired] = useState(() => new URLSearchParams(window.location.search).get('expired') === '1');
-  const confirmationResultRef = useRef(null);
-  const recaptchaVerifierRef = useRef(null);
 
   const handleMobileSubmit = async (e) => {
     e.preventDefault();
@@ -50,7 +36,9 @@ const Login = () => {
       if (json.type === 'staff') {
         setStep('password');
       } else if (json.type === 'patient') {
-        await requestOtp();
+        // Patient OTP login (previously Firebase Phone Auth) is removed -
+        // WhatsApp-based OTP is planned to replace it, not yet built.
+        setStep('otp_unavailable');
       } else {
         setStep('not_found');
       }
@@ -58,23 +46,6 @@ const Login = () => {
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const requestOtp = async () => {
-    try {
-      if (!recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
-      }
-      confirmationResultRef.current = await signInWithPhoneNumber(auth, `+91${mobile}`, recaptchaVerifierRef.current);
-      setStep('otp');
-    } catch (err) {
-      setError(FIREBASE_ERROR_MESSAGES[err.code] || 'Could not send OTP. Please try again.');
-      // A failed send can leave the reCAPTCHA in a used state - reset so the next attempt gets a fresh one.
-      if (recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.clear();
-        recaptchaVerifierRef.current = null;
-      }
     }
   };
 
@@ -98,37 +69,6 @@ const Login = () => {
       window.location.href = '/dashboard';
     } catch (err) {
       setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      const userCredential = await confirmationResultRef.current.confirm(otp);
-      const idToken = await userCredential.user.getIdToken();
-
-      // Firebase confirms the phone number is real, but our own backend still
-      // owns the app's session model - exchange the Firebase ID token for our
-      // usual JWT so every other route keeps working exactly as before.
-      const res = await fetch(`${API_BASE}/api/auth/patient/firebase-verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Tenant-Id': TENANT_ID },
-        body: JSON.stringify({ idToken })
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.message || 'Login failed');
-        return;
-      }
-      sessionStorage.setItem('usertoken', json.token);
-      sessionStorage.setItem('userRole', json.role);
-      window.location.href = '/patient/my-record';
-    } catch (err) {
-      setError(FIREBASE_ERROR_MESSAGES[err.code] || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -186,27 +126,18 @@ const Login = () => {
             </form>
           )}
 
-          {step === 'otp' && (
-            <form onSubmit={handleOtpSubmit}>
-              <span className="ui-eyebrow">{name ? `Welcome, ${name}` : 'Welcome'}</span>
-              <h2>Enter OTP</h2>
-              <p className="login-hint">An OTP was sent to {mobile}.</p>
-              {error && <div className="ui-banner ui-banner-error">{error}</div>}
-              <Field label="One-Time Password" required htmlFor="otp">
-                <input
-                  id="otp"
-                  className="ui-input"
-                  type="text"
-                  placeholder="6-digit OTP"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  autoFocus
-                />
-              </Field>
-              <Button type="submit" disabled={loading} style={{ width: '100%' }}>
-                {loading ? 'Verifying...' : 'Verify & Log In'}
+          {step === 'otp_unavailable' && (
+            <div>
+              <span className="ui-eyebrow">{name ? `Hi, ${name}` : 'Welcome'}</span>
+              <h2>Patient Login Unavailable</h2>
+              <p className="text-muted">
+                OTP login for patients is temporarily unavailable while we switch providers.
+                Please contact the hospital directly for assistance.
+              </p>
+              <Button variant="secondary" onClick={() => { setStep('mobile'); setName(''); }} style={{ width: '100%' }}>
+                Back
               </Button>
-            </form>
+            </div>
           )}
 
           {step === 'not_found' && (
@@ -222,7 +153,6 @@ const Login = () => {
             </div>
           )}
         </Card>
-        <div id="recaptcha-container" />
       </div>
     </div>
   );
