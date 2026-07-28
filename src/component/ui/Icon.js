@@ -3,6 +3,7 @@ import {
   FileText, Inbox, Calendar, Filter, HeartPulse, ShieldCheck, Star, Phone,
   Mail, MapPin, Clock, Users, Award, Stethoscope, Baby, CheckCircle2,
   ArrowRight, Menu, X, User, Lock, ChevronRight, Sparkles, Quote, Home, LogOut,
+  QrCode,
 } from 'lucide-react';
 
 // Keeps the existing <Icon name="..." size={} /> call sites unchanged while
@@ -34,6 +35,7 @@ const ICONS = {
   quote: Quote,
   home: Home,
   logout: LogOut,
+  'qr-code': QrCode,
 };
 
 const Icon = ({ name, size = 20, className = '', strokeWidth = 1.8 }) => {

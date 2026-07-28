@@ -13,16 +13,28 @@ const LINKS_BY_ROLE = {
   owner: [
     { to: '/dashboard', label: 'Patients', icon: 'users' },
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
-    { to: '/appointments', label: 'Appointments', icon: 'calendar' }
+    { to: '/appointments', label: 'Appointments', icon: 'calendar' },
+    { to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }
   ],
   manager: [
     { to: '/dashboard', label: 'Patients', icon: 'users' },
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
-    { to: '/appointments', label: 'Appointments', icon: 'calendar' }
+    { to: '/appointments', label: 'Appointments', icon: 'calendar' },
+    { to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }
   ],
   patient: [
     { to: '/patient/my-record', label: 'My Record', icon: 'file' }
   ]
+};
+
+// The brand link previously always pointed to "/" - for a logged-in staff
+// member that meant clicking the hospital name kicked them out to the
+// public homepage instead of staying in their dashboard.
+const BRAND_LINK_BY_ROLE = {
+  public: '/',
+  owner: '/dashboard',
+  manager: '/dashboard',
+  patient: '/patient/my-record'
 };
 
 const AppNavbar = ({ role = 'public' }) => {
@@ -59,7 +71,7 @@ const AppNavbar = ({ role = 'public' }) => {
 
   return (
     <nav className={`app-navbar ${hidden ? 'app-navbar--hidden' : ''}`}>
-      <Link to="/" className="app-navbar-brand" onClick={closeMenu}>
+      <Link to={BRAND_LINK_BY_ROLE[role] || '/'} className="app-navbar-brand" onClick={closeMenu}>
         {TENANT_CONFIG.name}
       </Link>
 
