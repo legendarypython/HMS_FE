@@ -35,9 +35,12 @@ const DoctorManagement = () => {
   const [doctors, setDoctors] = useState([]);
   const [name, setName] = useState('');
   const [specialization, setSpecialization] = useState('');
+  const [phone, setPhone] = useState('');
   const [photo, setPhoto] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const [editPhone, setEditPhone] = useState('');
 
   const fetchDoctors = () => {
     setLoading(true);
@@ -60,6 +63,7 @@ const DoctorManagement = () => {
     const formData = new FormData();
     formData.append('name', name);
     formData.append('specialization', specialization);
+    if (phone) formData.append('phone', phone);
     if (photo) formData.append('photo', photo);
     const res = await apiFetch(`${API_BASE}/api/doctors/create`, {
       method: 'POST',
@@ -73,8 +77,26 @@ const DoctorManagement = () => {
     }
     setName('');
     setSpecialization('');
+    setPhone('');
     setPhoto(null);
     fetchDoctors();
+  };
+
+  const startEditPhone = (doc) => {
+    setEditingId(doc._id);
+    setEditPhone(doc.phone || '');
+  };
+
+  const saveEditPhone = async (id) => {
+    const res = await apiFetch(`${API_BASE}/api/doctors/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+      body: JSON.stringify({ phone: editPhone })
+    });
+    if (res.ok) {
+      setEditingId(null);
+      fetchDoctors();
+    }
   };
 
   const handleRemove = async (id) => {
@@ -112,6 +134,16 @@ const DoctorManagement = () => {
                 {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </Field>
+            <Field label="WhatsApp Number (optional)" htmlFor="docPhone">
+              <input
+                id="docPhone"
+                type="tel"
+                className="ui-input"
+                placeholder="10-digit mobile number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </Field>
             <Field label="Photo (optional)" htmlFor="docPhoto">
               <label htmlFor="docPhoto" className="ui-file-upload-label">
                 <Icon name="file" size={16} /> {photo ? photo.name : 'Choose Photo'}
@@ -138,6 +170,7 @@ const DoctorManagement = () => {
                   <th>Photo</th>
                   <th>Name</th>
                   <th>Specialization</th>
+                  <th>WhatsApp Number</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -154,6 +187,27 @@ const DoctorManagement = () => {
                     </td>
                     <td data-label="Name">{doc.name}</td>
                     <td data-label="Specialization">{doc.specialization}</td>
+                    <td data-label="WhatsApp Number">
+                      {editingId === doc._id ? (
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          <input
+                            type="tel"
+                            className="ui-input"
+                            style={{ width: 140 }}
+                            value={editPhone}
+                            onChange={(e) => setEditPhone(e.target.value)}
+                            autoFocus
+                          />
+                          <Button size="sm" onClick={() => saveEditPhone(doc._id)}>Save</Button>
+                          <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>Cancel</Button>
+                        </div>
+                      ) : (
+                        <span onClick={() => role === 'owner' && startEditPhone(doc)} style={{ cursor: role === 'owner' ? 'pointer' : 'default' }}>
+                          {doc.phone || <span className="text-muted">Not set</span>}
+                          {role === 'owner' && <Icon name="edit" size={14} style={{ marginLeft: 6, opacity: 0.6 }} />}
+                        </span>
+                      )}
+                    </td>
                     <td data-label="Status">
                       <Badge variant={doc.active ? 'success' : 'neutral'}>{doc.active ? 'Active' : 'Inactive'}</Badge>
                     </td>
