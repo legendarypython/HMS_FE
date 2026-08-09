@@ -19,6 +19,8 @@ import PatientDetails from './component/Patient/PatientDetails';
 import ViewAntenatalForm from './component/Patient/ViewAnteNatal';
 import ViewInfertilityForm from './component/Patient/ViewInfertilityCase';
 import MyRecord from './component/Patient/MyRecord';
+import Terms from './component/Legal/Terms';
+import RefundPolicy from './component/Legal/RefundPolicy';
 import NotFound from './component/Shared/NotFound';
 
 const STAFF_ROLES = ['owner', 'manager'];
@@ -31,6 +33,8 @@ function App() {
           <Route exact path="/" component={Home} />
           <Route exact path="/login" component={Login} />
           <Route exact path="/book-appointment" component={BookAppointment} />
+          <Route exact path="/terms" component={Terms} />
+          <Route exact path="/refund-policy" component={RefundPolicy} />
 
           <PrivateRoute exact path="/dashboard" roles={STAFF_ROLES} component={Admin} />
           <PrivateRoute exact path="/doctors" roles={STAFF_ROLES} component={DoctorManagement} />
