@@ -226,6 +226,12 @@ const BookAppointment = () => {
               <Button type="submit" disabled={loading} style={{ width: '100%' }}>
                 {loading ? 'Processing...' : `Pay ${CONSULTATION_FEE_DISPLAY} & Request Appointment`}
               </Button>
+              <p className="text-muted" style={{ fontSize: '0.8rem', textAlign: 'center', marginTop: 12, marginBottom: 0 }}>
+                By paying, you agree to our{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer">Terms & Conditions</a>{' '}
+                and{' '}
+                <a href="/refund-policy" target="_blank" rel="noopener noreferrer">Refund Policy</a>.
+              </p>
             </form>
           )}
           </Card>
