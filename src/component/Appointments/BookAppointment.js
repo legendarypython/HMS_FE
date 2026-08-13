@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
@@ -11,23 +11,15 @@ import { generateTimeSlots, isClinicClosed, formatWindowsSummary } from '../../u
 import './BookAppointment.css';
 
 const CONSULTATION_FEE_DISPLAY = '₹500';
-const RAZORPAY_SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
 const TIME_SLOTS = generateTimeSlots(TENANT_CONFIG.opdWindows);
 const OPD_HOURS_SUMMARY = formatWindowsSummary(TENANT_CONFIG.opdWindows);
 const TODAY = new Date().toLocaleDateString('en-CA'); // yyyy-mm-dd, local timezone
 
-// Loads the Razorpay Checkout script once and reuses it on subsequent opens,
-// rather than re-injecting a <script> tag every time the form is submitted.
-function loadRazorpayScript() {
-  if (window.Razorpay) return Promise.resolve(true);
-  return new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src = RAZORPAY_SCRIPT_SRC;
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-}
+// How long to keep polling payment-status after the checkout modal closes
+// before giving up and falling back to "we'll confirm by phone" copy -
+// generous, since Instamojo's webhook can occasionally lag a few seconds.
+const POLL_INTERVAL_MS = 3000;
+const POLL_MAX_ATTEMPTS = 100; // ~5 minutes
 
 const BookAppointment = () => {
   const [doctors, setDoctors] = useState([]);
@@ -35,6 +27,10 @@ const BookAppointment = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Set once checkout opens - drives the "confirming your payment..." state
+  // while polling waits for Instamojo's webhook to land server-side.
+  const [confirming, setConfirming] = useState(false);
+  const pollRef = useRef(null);
 
   useEffect(() => {
     apiFetch(`${API_BASE}/api/doctors/public`)
@@ -49,6 +45,10 @@ const BookAppointment = () => {
       .catch(err => console.error('Error fetching doctors:', err));
   }, []);
 
+  // Don't leave a polling interval running after the component unmounts
+  // (e.g. patient navigates away mid-payment).
+  useEffect(() => () => clearInterval(pollRef.current), []);
+
   const handleChange = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   const handleDateChange = (e) => {
@@ -60,6 +60,37 @@ const BookAppointment = () => {
     }
     setError('');
     setForm({ ...form, preferredDate: value });
+  };
+
+  // Polls the backend for whether Instamojo's webhook has confirmed payment
+  // yet - this, not anything the Instamojo checkout modal reports client-side,
+  // is what actually reveals whether the Appointment was created. Mirrors the
+  // same never-trust-the-client principle the backend's webhook handler uses.
+  const pollPaymentStatus = (paymentRequestId) => {
+    let attempts = 0;
+    pollRef.current = setInterval(async () => {
+      attempts += 1;
+      try {
+        const res = await apiFetch(`${API_BASE}/api/appointments/payment-status/${paymentRequestId}`);
+        const json = await res.json();
+        if (json.data?.status === 'paid') {
+          clearInterval(pollRef.current);
+          setConfirming(false);
+          setSuccess(true);
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking payment status:', err);
+      }
+      if (attempts >= POLL_MAX_ATTEMPTS) {
+        clearInterval(pollRef.current);
+        setConfirming(false);
+        // Payment may still be processing on Instamojo's side even though we
+        // gave up polling - don't tell the patient it failed when we simply
+        // don't know yet.
+        setError("We're still confirming your payment - if it went through, the hospital will reach out to confirm your appointment. If you're unsure, please call us.");
+      }
+    }, POLL_INTERVAL_MS);
   };
 
   const handleSubmit = async (e) => {
@@ -79,65 +110,38 @@ const BookAppointment = () => {
     }
     setLoading(true);
     try {
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        setError('Could not load the payment gateway. Please check your connection and try again.');
-        return;
-      }
-
-      const orderRes = await apiFetch(`${API_BASE}/api/appointments/create-order`, {
+      const res = await apiFetch(`${API_BASE}/api/appointments/create-payment-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ doctorId: form.doctorId })
+        body: JSON.stringify(form)
       });
-      const orderJson = await orderRes.json();
-      if (!orderRes.ok) {
-        setError(orderJson.message || 'Could not start payment');
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json.message || 'Could not start payment');
         return;
       }
-      const { orderId, amount, currency, keyId } = orderJson.data;
 
-      const razorpay = new window.Razorpay({
-        key: keyId,
-        order_id: orderId,
-        amount,
-        currency,
-        name: TENANT_CONFIG.name,
-        description: 'Consultation fee',
-        prefill: { name: form.patientName, contact: form.patientPhone },
-        theme: { color: '#00695c' },
-        handler: async (response) => {
-          try {
-            const verifyRes = await apiFetch(`${API_BASE}/api/appointments/verify-payment`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                ...form
-              })
-            });
-            const verifyJson = await verifyRes.json();
-            if (!verifyRes.ok) {
-              setError(verifyJson.message || 'Payment succeeded but booking failed - please contact the hospital.');
-              return;
-            }
-            setSuccess(true);
-          } catch (err) {
-            setError('Payment succeeded but booking failed - please contact the hospital.');
-          } finally {
-            setLoading(false);
-          }
+      const { longurl, paymentRequestId } = json.data;
+      if (!window.Instamojo) {
+        setError('Payment could not load. Please refresh and try again.');
+        return;
+      }
+
+      // Best-effort UX hook - Instamojo's checkout.js fires this when the
+      // modal closes (whether paid, failed, or just dismissed). The actual
+      // source of truth is still the poll below regardless of what this
+      // reports, same reasoning as not trusting a client-side redirect.
+      window.Instamojo.configure({
+        handlers: {
+          onClose: () => setConfirming(true),
         },
-        modal: {
-          // User closed the checkout without paying - not an error, just let them retry.
-          ondismiss: () => setLoading(false)
-        }
       });
-      razorpay.open();
+      window.Instamojo.open(longurl);
+      setConfirming(true);
+      pollPaymentStatus(paymentRequestId);
     } catch (err) {
       setError('Something went wrong. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -171,6 +175,13 @@ const BookAppointment = () => {
                 Thanks, {form.patientName}. Your payment was received and your appointment request has been
                 sent to the hospital - they'll confirm it shortly by phone.
               </p>
+            </>
+          ) : confirming ? (
+            <>
+              <IconBadge name="calendar" />
+              <h2 className="section-title">Confirming your payment&hellip;</h2>
+              <p className="text-muted">This usually takes just a few seconds. Please don't close this page.</p>
+              {error && <div className="ui-banner ui-banner-error" style={{ marginTop: '16px' }}>{error}</div>}
             </>
           ) : (
             <form onSubmit={handleSubmit}>
@@ -226,11 +237,8 @@ const BookAppointment = () => {
               <Button type="submit" disabled={loading} style={{ width: '100%' }}>
                 {loading ? 'Processing...' : `Pay ${CONSULTATION_FEE_DISPLAY} & Request Appointment`}
               </Button>
-              <p className="text-muted" style={{ fontSize: '0.8rem', textAlign: 'center', marginTop: 12, marginBottom: 0 }}>
-                By paying, you agree to our{' '}
-                <a href="/terms" target="_blank" rel="noopener noreferrer">Terms & Conditions</a>{' '}
-                and{' '}
-                <a href="/refund-policy" target="_blank" rel="noopener noreferrer">Refund Policy</a>.
+              <p className="text-muted" style={{ fontSize: '0.8rem', marginTop: '10px', textAlign: 'center' }}>
+                By paying, you agree to our <a href="/terms">Terms & Conditions</a> and <a href="/refund-policy">Refund Policy</a>.
               </p>
             </form>
           )}
