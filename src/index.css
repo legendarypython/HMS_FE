@@ -5,6 +5,21 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Static text (headings, paragraphs) otherwise shows the browser's
+     text-selection I-beam cursor by default, which reads as unfinished on
+     an app-like page. `cursor` is inherited, so restore the correct cursor
+     explicitly below for anything actually interactive - most buttons/links
+     already set their own via component CSS, but plain <a> tags (e.g. the
+     inline Terms/Refund Policy links) and form inputs don't. */
+  cursor: default;
+}
+
+a, button, select, [role="button"], label[for] {
+  cursor: pointer;
+}
+
+input, textarea {
+  cursor: text;
 }
 
 code {
