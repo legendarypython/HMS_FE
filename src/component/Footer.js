@@ -19,6 +19,9 @@ const Footer = () => (
       © {new Date().getFullYear()} {TENANT_CONFIG.name}
       {TENANT_ID === 'demo' && <> · Powered by Clinic Sathi</>}
     </div>
+    <div className="app-footer-copyright">
+      {TENANT_CONFIG.name} is operated by {TENANT_CONFIG.legalName}.
+    </div>
   </footer>
 );
 

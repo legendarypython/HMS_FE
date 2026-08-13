@@ -22,6 +22,11 @@ const parseJsonEnv = (value, fallback) => {
 export const TENANT_CONFIG = {
   name: process.env.REACT_APP_TENANT_NAME || 'Panchkuiyan Hospital',
   shortName: process.env.REACT_APP_TENANT_SHORT_NAME || 'Panchkuiyan',
+  // Legal name of the individual/entity operating this business (as on the
+  // PAN/GST used for payment-gateway KYC) - distinct from the trade name
+  // above. Payment gateways (Instamojo, 2026-08-11) require this to be
+  // publicly visible on the site, matching what was submitted for KYC.
+  legalName: process.env.REACT_APP_TENANT_LEGAL_NAME || 'Rishabh Agarwal',
   doctorName: process.env.REACT_APP_TENANT_DOCTOR_NAME || 'Dr. Bhavana Gupta',
   email: process.env.REACT_APP_TENANT_EMAIL || 'bhavanarmsk7@gmail.com',
   phone: process.env.REACT_APP_TENANT_PHONE || '9412426818',
