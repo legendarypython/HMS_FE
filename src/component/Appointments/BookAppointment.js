@@ -30,6 +30,10 @@ const BookAppointment = () => {
   // Set once checkout opens - drives the "confirming your payment..." state
   // while polling waits for Instamojo's webhook to land server-side.
   const [confirming, setConfirming] = useState(false);
+  // Instamojo's redirect_url is only reachable after a full page reload (see
+  // effect below), which wipes form state - captured separately from
+  // payment-status so the success message still has a name to show.
+  const [confirmedName, setConfirmedName] = useState('');
   const pollRef = useRef(null);
 
   useEffect(() => {
@@ -76,6 +80,7 @@ const BookAppointment = () => {
         if (json.data?.status === 'paid') {
           clearInterval(pollRef.current);
           setConfirming(false);
+          setConfirmedName(json.data.patientName || '');
           setSuccess(true);
           return;
         }
@@ -92,6 +97,32 @@ const BookAppointment = () => {
       }
     }, POLL_INTERVAL_MS);
   };
+
+  // Instamojo's checkout does a real top-level redirect back to redirect_url
+  // once payment completes - not just closing an in-page overlay - appending
+  // payment_id/payment_status/payment_request_id as query params. That
+  // reloads the whole page (React state is gone), so this is the *primary*
+  // way completion is detected, not just a fallback to the in-memory polling
+  // above (which only helps if the modal is somehow dismissed without a
+  // redirect, e.g. the patient closes it manually).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentRequestId = params.get('payment_request_id');
+    const paymentStatus = params.get('payment_status');
+    if (!paymentRequestId) return;
+
+    // Strip the query params immediately - a refresh/back shouldn't re-run
+    // this, and the URL shouldn't carry a payment ID around indefinitely.
+    window.history.replaceState({}, '', window.location.pathname);
+
+    if (paymentStatus !== 'Credit') {
+      setError('Your payment did not go through. Please try again.');
+      return;
+    }
+    setConfirming(true);
+    pollPaymentStatus(paymentRequestId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -172,7 +203,7 @@ const BookAppointment = () => {
               <IconBadge name="check-circle" variant="success" />
               <h2 className="section-title">Request Sent</h2>
               <p>
-                Thanks, {form.patientName}. Your payment was received and your appointment request has been
+                Thanks, {confirmedName || form.patientName}. Your payment was received and your appointment request has been
                 sent to the hospital - they'll confirm it shortly by phone.
               </p>
             </>
