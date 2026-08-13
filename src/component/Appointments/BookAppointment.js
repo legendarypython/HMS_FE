@@ -23,7 +23,7 @@ const POLL_MAX_ATTEMPTS = 100; // ~5 minutes
 
 const BookAppointment = () => {
   const [doctors, setDoctors] = useState([]);
-  const [form, setForm] = useState({ patientName: '', patientPhone: '', doctorId: '', preferredDate: '', preferredTimeSlot: '', reason: '' });
+  const [form, setForm] = useState({ patientName: '', patientPhone: '', email: '', doctorId: '', preferredDate: '', preferredTimeSlot: '', reason: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -232,6 +232,10 @@ const BookAppointment = () => {
 
               <Field label="Phone Number" required htmlFor="patientPhone">
                 <input id="patientPhone" className="ui-input" type="tel" value={form.patientPhone} onChange={handleChange('patientPhone')} />
+              </Field>
+
+              <Field label="Email" htmlFor="email">
+                <input id="email" className="ui-input" type="email" value={form.email} onChange={handleChange('email')} />
               </Field>
 
               {doctors.length > 1 && (
