@@ -8,6 +8,7 @@ import PrivateRoute from './component/Shared/PrivateRoute';
 
 import Admin from './component/Admin/Admin';
 import DoctorManagement from './component/Doctors/DoctorManagement';
+import DoctorAvailability from './component/Doctors/DoctorAvailability';
 import AppointmentInbox from './component/Appointments/AppointmentInbox';
 import BookAppointment from './component/Appointments/BookAppointment';
 
@@ -38,6 +39,7 @@ function App() {
 
           <PrivateRoute exact path="/dashboard" roles={STAFF_ROLES} component={Admin} />
           <PrivateRoute exact path="/doctors" roles={STAFF_ROLES} component={DoctorManagement} />
+          <PrivateRoute exact path="/availability" roles={STAFF_ROLES} component={DoctorAvailability} />
           <PrivateRoute exact path="/appointments" roles={STAFF_ROLES} component={AppointmentInbox} />
 
           <PrivateRoute exact path="/patients/add" roles={STAFF_ROLES} component={AddPatientPage} />

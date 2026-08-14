@@ -34,6 +34,10 @@ const BookAppointment = () => {
   // effect below), which wipes form state - captured separately from
   // payment-status so the success message still has a name to show.
   const [confirmedName, setConfirmedName] = useState('');
+  // null = not yet fetched for the current date (show the full static list
+  // so the dropdown isn't empty before a date is picked); array = the real,
+  // doctor-availability-filtered set for that specific date.
+  const [availableSlots, setAvailableSlots] = useState(null);
   const pollRef = useRef(null);
 
   useEffect(() => {
@@ -53,6 +57,40 @@ const BookAppointment = () => {
   // (e.g. patient navigates away mid-payment).
   useEffect(() => () => clearInterval(pollRef.current), []);
 
+  // Once both a doctor and a date are known, ask the backend which slots are
+  // actually bookable that day (OPD hours minus whatever the doctor's
+  // blocked via the Availability grid) - narrows the dropdown to real
+  // options instead of letting a patient pick a slot that only fails later,
+  // at payment time.
+  useEffect(() => {
+    if (!form.doctorId || !form.preferredDate) {
+      setAvailableSlots(null);
+      return;
+    }
+    let cancelled = false;
+    apiFetch(`${API_BASE}/api/doctors/${form.doctorId}/available-slots?date=${form.preferredDate}`)
+      .then(res => res.json())
+      .then(json => {
+        if (cancelled) return;
+        setAvailableSlots(json.data?.availableSlots || []);
+      })
+      .catch(err => {
+        console.error('Error fetching available slots:', err);
+        if (!cancelled) setAvailableSlots(null);
+      });
+    return () => { cancelled = true; };
+  }, [form.doctorId, form.preferredDate]);
+
+  // If the previously-picked slot is no longer in the freshly-fetched
+  // available list (e.g. someone just blocked it, or it changed with the
+  // date), clear the stale selection rather than silently submit it.
+  useEffect(() => {
+    if (availableSlots && form.preferredTimeSlot && !availableSlots.includes(form.preferredTimeSlot)) {
+      setForm(f => ({ ...f, preferredTimeSlot: '' }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableSlots]);
+
   const handleChange = (field) => (e) => setForm({ ...form, [field]: e.target.value });
 
   const handleDateChange = (e) => {
@@ -63,8 +101,12 @@ const BookAppointment = () => {
       return;
     }
     setError('');
-    setForm({ ...form, preferredDate: value });
+    setForm({ ...form, preferredDate: value, preferredTimeSlot: '' });
   };
+
+  const visibleSlots = availableSlots === null
+    ? TIME_SLOTS
+    : TIME_SLOTS.filter(slot => availableSlots.includes(slot.value));
 
   // Polls the backend for whether Instamojo's webhook has confirmed payment
   // yet - this, not anything the Instamojo checkout modal reports client-side,
@@ -257,12 +299,17 @@ const BookAppointment = () => {
               </Field>
 
               <Field label="Preferred Time" required htmlFor="preferredTimeSlot">
-                <select id="preferredTimeSlot" className="ui-select" value={form.preferredTimeSlot} onChange={handleChange('preferredTimeSlot')}>
-                  <option value="">Select a time slot</option>
-                  {TIME_SLOTS.map(slot => (
+                <select id="preferredTimeSlot" className="ui-select" value={form.preferredTimeSlot} onChange={handleChange('preferredTimeSlot')} disabled={!form.preferredDate}>
+                  <option value="">{form.preferredDate ? 'Select a time slot' : 'Pick a date first'}</option>
+                  {visibleSlots.map(slot => (
                     <option key={slot.value} value={slot.value}>{slot.label}</option>
                   ))}
                 </select>
+                {form.preferredDate && availableSlots !== null && visibleSlots.length === 0 && (
+                  <p className="text-muted" style={{ fontSize: '0.82rem', marginTop: '6px' }}>
+                    No slots available this day - please pick another date.
+                  </p>
+                )}
               </Field>
 
               <Field label="Reason for visit" htmlFor="reason">

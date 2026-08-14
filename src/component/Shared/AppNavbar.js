@@ -14,12 +14,14 @@ const LINKS_BY_ROLE = {
     { to: '/dashboard', label: 'Patients', icon: 'users' },
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
     { to: '/appointments', label: 'Appointments', icon: 'calendar' },
+    { to: '/availability', label: 'Availability', icon: 'calendar-off' },
     { to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }
   ],
   manager: [
     { to: '/dashboard', label: 'Patients', icon: 'users' },
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
     { to: '/appointments', label: 'Appointments', icon: 'calendar' },
+    { to: '/availability', label: 'Availability', icon: 'calendar-off' },
     { to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }
   ],
   patient: [
