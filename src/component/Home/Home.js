@@ -11,21 +11,27 @@ import { TENANT_CONFIG } from '../../config/tenant';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import './Home.css';
 
+// Each card states the industry norm a patient is used to (struck through)
+// next to what this practice does instead - a rebuttal to a specific bounce
+// trigger, not just a feature description.
 const FEATURES = [
   {
     icon: 'heart',
     title: 'Continuity of Care',
-    body: `You see the same doctor every visit - ${TENANT_CONFIG.doctorName} - not a rotating cast of unfamiliar faces.`,
+    norm: 'Rotating doctors',
+    benefit: `Instead, you see ${TENANT_CONFIG.doctorName} - every single visit.`,
   },
   {
     icon: 'calendar',
     title: 'Simple Online Booking',
-    body: 'Book an appointment in a few seconds, no account or app download required.',
+    norm: 'App downloads & account walls',
+    benefit: 'Instead, book online in under a minute - no login needed.',
   },
   {
     icon: 'shield',
     title: 'Personal Attention',
-    body: 'A small, focused practice means real time with your doctor, not a rushed 5-minute slot.',
+    norm: 'Rushed 5-minute slots',
+    benefit: 'Instead, you get real, unhurried time with your doctor.',
   },
 ];
 
@@ -71,17 +77,22 @@ const Home = () => {
         <div className="home-hero-scrim" aria-hidden="true" />
         <div className="home-hero-blob home-hero-blob-1" aria-hidden="true" />
         <div className="home-hero-blob home-hero-blob-2" aria-hidden="true" />
-        <div className="home-hero-content">
-          <span className="hero-badge">
-            <Icon name="stethoscope" size={15} /> MBBS, MS &middot; Gynaecology &amp; Antenatal Care
-          </span>
-          <h1>Care that stays with you, from first visit to delivery.</h1>
-          <p>{TENANT_CONFIG.name} is a focused gynaecology practice built around one thing: knowing your name and your history, every time you walk in.</p>
-          <Link to="/book-appointment">
-            <Button variant="secondary" size="lg" className="hero-cta-btn">
-              Book an Appointment <Icon name="arrow-right" size={18} />
-            </Button>
-          </Link>
+        <div className="home-hero-content home-hero-content-split">
+          <div className="home-hero-promise">
+            <span className="hero-badge">
+              <Icon name="stethoscope" size={15} /> MBBS, MS &middot; Gynaecology &amp; Antenatal Care
+            </span>
+            <h1>{TENANT_CONFIG.doctorName}, with you from first visit to delivery.</h1>
+            <p>{TENANT_CONFIG.name} is a focused gynaecology practice built around one thing: knowing your name and your history, every time you walk in.</p>
+          </div>
+          <div className="home-hero-cta-card">
+            <Link to="/book-appointment">
+              <Button variant="primary" size="lg" style={{ width: '100%' }}>
+                Book with {TENANT_CONFIG.doctorName} <Icon name="arrow-right" size={18} />
+              </Button>
+            </Link>
+            <p className="hero-cta-microline">No app. No account. Under a minute.</p>
+          </div>
         </div>
       </section>
 
@@ -134,9 +145,17 @@ const Home = () => {
             <Card className="feature-card" variant="interactive" key={f.title}>
               <IconBadge name={f.icon} />
               <h3>{f.title}</h3>
-              <p>{f.body}</p>
+              <p className="feature-card-norm">{f.norm}</p>
+              <p className="feature-card-benefit">{f.benefit}</p>
             </Card>
           ))}
+        </div>
+        <div className="features-section-cta">
+          <Link to="/book-appointment">
+            <Button size="lg">
+              Book with {TENANT_CONFIG.doctorName} <Icon name="arrow-right" size={18} />
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -193,13 +212,17 @@ const Home = () => {
           className="cta-section-photo"
         />
         <span className="ui-eyebrow" style={{ color: 'rgba(255,255,255,0.85)' }}>Get Started</span>
-        <h2>Ready to see a doctor?</h2>
-        <p>Book an appointment online in a few seconds - no account required.</p>
+        <span className="cta-time-chip">
+          <Icon name="clock" size={13} /> ~30 seconds
+        </span>
+        <h2>Book with {TENANT_CONFIG.doctorName} in about 30 seconds.</h2>
+        <p>Trusted gynaecology &amp; antenatal care in Agra - no paperwork, no phone tag.</p>
         <Link to="/book-appointment">
-          <Button variant="secondary" className="cta-btn-light">
-            Book Now <Icon name="arrow-right" size={18} />
+          <Button variant="secondary" className="cta-btn-light" size="lg">
+            Book My Appointment <Icon name="arrow-right" size={18} />
           </Button>
         </Link>
+        <p className="cta-microline">No account. No app. No wait.</p>
       </section>
 
       <Footer />

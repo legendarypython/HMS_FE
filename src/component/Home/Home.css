@@ -13,15 +13,18 @@
   inset: -10px;
   background-size: cover;
   background-position: center;
-  filter: brightness(0.8) saturate(0.9) blur(1px);
+  filter: brightness(0.7) saturate(0.9) blur(1px);
 }
 
 /* Warm gradient scrim over the photo so the hero keeps its brand tint and
-   the headline/badge text stays legible against a busy real photo. */
+   the headline/badge text stays legible against a busy real photo. Darker
+   than the original 0.72 - the promise column no longer sits on a solid
+   white card like the CTA half does, so it needs more help from the scrim
+   alone to stay readable. */
 .home-hero-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(225, 29, 72, 0.72) 0%, rgba(11, 17, 32, 0.72) 100%);
+  background: linear-gradient(160deg, rgba(225, 29, 72, 0.8) 0%, rgba(11, 17, 32, 0.85) 100%);
 }
 
 /* Soft blurred color blobs floating over the hero photo/scrim - keeps the
@@ -58,6 +61,46 @@
   color: #ffffff;
 }
 
+/* Left promise column + right high-contrast CTA card, instead of one
+   centered stack - surfaces the booking friction-killer (no account, no
+   app) right next to the button rather than leaving it implicit. */
+.home-hero-content-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-10);
+  max-width: 1080px;
+  text-align: left;
+}
+
+.home-hero-promise {
+  flex: 1.3;
+  min-width: 280px;
+}
+
+.home-hero-cta-card {
+  flex: 1;
+  min-width: 260px;
+  max-width: 340px;
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: var(--space-8) var(--space-6);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  /* This project has no global border-box reset (checked), so the mobile
+     rule's width:100% below would otherwise add this card's own padding on
+     top of 100%, overflowing its container by exactly 2x the horizontal
+     padding - confirmed and hit this live while verifying at 375px. */
+  box-sizing: border-box;
+}
+
+.home-hero-content .hero-cta-microline {
+  margin: var(--space-3) 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
 .hero-badge {
   display: inline-flex;
   align-items: center;
@@ -85,20 +128,6 @@
   line-height: 1.6;
   margin-bottom: var(--space-8);
   color: rgba(255, 255, 255, 0.88);
-}
-
-/* The hero's mesh gradient mixes teal and warm tones, so a solid white
-   button reads clearly against any part of it rather than blending in. */
-.hero-cta-btn.ui-btn-secondary {
-  font-size: 1.05rem;
-  background-color: #ffffff;
-  color: var(--color-primary-dark);
-  border-color: #ffffff;
-  box-shadow: var(--shadow-lg);
-}
-
-.hero-cta-btn.ui-btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.9);
 }
 
 /* Dark stat strip for visual rhythm/contrast right below the hero. */
@@ -249,6 +278,31 @@
   margin: 0;
 }
 
+/* The struck-through "norm" line sits visually muted/defeated so the
+   affirmative benefit line below reads as the clear winner in the
+   comparison, not just two lines of equal-weight body text. */
+.feature-card .feature-card-norm {
+  text-decoration: line-through;
+  text-decoration-color: var(--color-text-muted);
+  color: var(--color-text-muted);
+  opacity: 0.7;
+  font-size: 0.88rem;
+  margin: 0 0 var(--space-1) 0;
+}
+
+.feature-card .feature-card-benefit {
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.features-section-cta {
+  text-align: center;
+  margin-top: var(--space-8);
+}
+
 .doctor-grid {
   display: flex;
   flex-wrap: wrap;
@@ -329,6 +383,27 @@
   margin-bottom: var(--space-4);
 }
 
+/* Quantifies the friction cost before the click - "~30 seconds" answers
+   "how long will this take" before the patient has to wonder. Same
+   position:relative treatment as the other text below - without it this
+   would paint underneath the absolutely-positioned photo/scrim/blob layers
+   above and never be visible. */
+.cta-time-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: var(--space-3) 0 var(--space-1);
+}
+
 .cta-section h2 {
   position: relative;
   font-size: var(--text-h1);
@@ -339,6 +414,14 @@
   position: relative;
   color: rgba(255, 255, 255, 0.88);
   margin-bottom: var(--space-6);
+}
+
+.cta-section .cta-microline {
+  position: relative;
+  margin: var(--space-3) 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .cta-btn-light.ui-btn-secondary {
@@ -390,6 +473,21 @@
 
   .home-hero {
     padding: var(--space-16) var(--space-4);
+  }
+
+  .home-hero-content-split {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-6);
+  }
+
+  .home-hero-promise {
+    text-align: center;
+  }
+
+  .home-hero-cta-card {
+    width: 100%;
+    max-width: 360px;
   }
 
   .home-section {
