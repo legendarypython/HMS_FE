@@ -1,3 +1,24 @@
+.patient-name-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.patient-name-cell-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.patient-name-cell-name {
+  font-weight: 600;
+}
+
+.patient-name-cell-id {
+  font-size: 0.78rem;
+}
+
 .dashboard-toolbar {
   display: flex;
   align-items: center;

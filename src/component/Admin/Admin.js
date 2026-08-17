@@ -186,7 +186,7 @@ const Admin = () => {
                   <th>Age</th>
                   <th>Case Type</th>
                   <th>Date of Admission</th>
-                  <th>New Patient</th>
+                  <th>Status</th>
                   <th>Phone Number</th>
                   <th>Actions</th>
                 </tr>
@@ -196,7 +196,10 @@ const Admin = () => {
                   <tr key={patient.patientId} className="patient-row">
                     <td data-label="Name" className="patient-name-cell">
                       <span className="ui-avatar" aria-hidden="true">{getInitials(patient.firstName, patient.lastName)}</span>
-                      {`${patient.firstName} ${patient.lastName}`}
+                      <span className="patient-name-cell-text">
+                        <span className="patient-name-cell-name">{`${patient.firstName} ${patient.lastName}`}</span>
+                        <span className="patient-name-cell-id text-muted">#{patient.patientId}</span>
+                      </span>
                     </td>
                     <td data-label="Age">{calculateAge(patient.dateOfBirth)}</td>
                     <td data-label="Case Type">
@@ -205,7 +208,11 @@ const Admin = () => {
                       </Badge>
                     </td>
                     <td data-label="Date of Admission">{formatDate(patient.dateOfAdmission)}</td>
-                    <td data-label="New Patient">{patient.isNewPatient ? 'Yes' : 'No'}</td>
+                    <td data-label="Status">
+                      <Badge variant={patient.isNewPatient ? 'success' : 'neutral'}>
+                        {patient.isNewPatient ? 'New' : 'Returning'}
+                      </Badge>
+                    </td>
                     <td data-label="Phone Number">{patient.phone.replace(/-/g, '')}</td>
                     <td data-label="Actions">
                       <Link to={`/patients/view/${patient.patientId}`}>
