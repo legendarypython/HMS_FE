@@ -19,6 +19,65 @@
   font-size: 0.78rem;
 }
 
+.patient-quick-view-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.patient-quick-view-avatar.ui-avatar {
+  width: 52px;
+  height: 52px;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.patient-quick-view-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.patient-quick-view-badges {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.patient-quick-view-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin: var(--space-5) 0 var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.patient-quick-view-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.92rem;
+  margin-bottom: var(--space-2);
+}
+
+.patient-quick-view-row svg {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.patient-quick-view-diagnosis {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: var(--space-2);
+}
+
+.patient-quick-view-actions {
+  margin-top: var(--space-6);
+}
+
 /* Honestly-scaled overview strip - real counts, not a stock-trading-terminal
    dashboard. Keeps the same card/border language as the rest of the app
    rather than introducing a new visual style just for this block. */

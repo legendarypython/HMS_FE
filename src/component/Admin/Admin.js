@@ -10,7 +10,9 @@ import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
 import Badge from '../ui/Badge';
 import PageHeader from '../ui/PageHeader';
+import Drawer from '../ui/Drawer';
 import WeekSummary from './WeekSummary';
+import PatientQuickView from './PatientQuickView';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
 import './Admin.css';
@@ -50,6 +52,7 @@ const Admin = () => {
   const [filterValues, setFilterValues] = useState({});
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [quickViewPatientId, setQuickViewPatientId] = useState(null);
 
   const fetchPatients = useCallback(async () => {
     setLoading(true);
@@ -231,9 +234,9 @@ const Admin = () => {
                     </td>
                     <td data-label="Phone Number">{patient.phone.replace(/-/g, '')}</td>
                     <td data-label="Actions">
-                      <Link to={`/patients/view/${patient.patientId}`}>
-                        <Button size="sm" variant="secondary">View</Button>
-                      </Link>
+                      <Button size="sm" variant="secondary" onClick={() => setQuickViewPatientId(patient.patientId)}>
+                        View
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -256,6 +259,12 @@ const Admin = () => {
           </div>
         )}
       </div>
+
+      <Drawer open={!!quickViewPatientId} onClose={() => setQuickViewPatientId(null)} title="Patient">
+        {quickViewPatientId && (
+          <PatientQuickView patientId={quickViewPatientId} onClose={() => setQuickViewPatientId(null)} />
+        )}
+      </Drawer>
 
       <Footer />
     </div>

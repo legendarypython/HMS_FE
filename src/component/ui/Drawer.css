@@ -1,0 +1,83 @@
+.ui-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 33, 61, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+  z-index: 60;
+}
+
+.ui-drawer-backdrop.ui-drawer-backdrop-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ui-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 92vw;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xl);
+  transform: translateX(100%);
+  transition: transform var(--transition-base);
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Two classes rather than relying on this rule simply coming after .ui-drawer
+   in source order - webpack dev server injects each CSS-imported file as
+   its own <style> tag, and hit a real case where injection order didn't
+   match import order, so the base .ui-drawer rule was winning the cascade
+   and the drawer stayed permanently off-screen. This selector's higher
+   specificity wins regardless of injection order. */
+.ui-drawer.ui-drawer-open {
+  transform: translateX(0);
+}
+
+.ui-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.ui-drawer-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.ui-drawer-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.ui-drawer-close:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.ui-drawer-body {
+  padding: var(--space-6);
+  overflow-y: auto;
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .ui-drawer {
+    width: 100%;
+    max-width: 100%;
+  }
+}
