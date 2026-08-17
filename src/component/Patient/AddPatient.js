@@ -309,7 +309,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
         </label>
 
         <div className="patient-form-actions">
-          <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Next')}</Button>
+          <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Save Patient')}</Button>
           <Link to="/dashboard"><Button type="button" variant="ghost">Cancel</Button></Link>
         </div>
       </form>
