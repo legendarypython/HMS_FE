@@ -143,7 +143,12 @@
 .home-section {
   max-width: 1100px;
   margin: 0 auto;
-  padding: var(--space-16) var(--space-6);
+  /* Was --space-16 (64px) top/bottom - four of these back-to-back plus the
+     hero and CTA section made the homepage ~3460px tall on desktop, a lot
+     of scroll distance before a single-doctor clinic site has said
+     everything it needs to. Trimmed one step; mobile's own tighter
+     --space-10 override below is untouched. */
+  padding: var(--space-12) var(--space-6);
 }
 
 .home-section-alt {
@@ -282,7 +287,7 @@
   background: var(--gradient-warm);
   color: #ffffff;
   text-align: center;
-  padding: var(--space-16) var(--space-6);
+  padding: var(--space-12) var(--space-6);
 }
 
 .cta-section-photo-bg {

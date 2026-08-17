@@ -327,10 +327,18 @@ const BookAppointment = () => {
                 <textarea id="reason" className="ui-textarea" rows={3} value={form.reason} onChange={handleChange('reason')} />
               </Field>
 
-              <Button type="submit" disabled={loading} style={{ width: '100%' }}>
+              <Button type="submit" size="lg" disabled={loading} style={{ width: '100%' }}>
                 {loading ? 'Processing...' : `Pay ${CONSULTATION_FEE_DISPLAY} & Request Appointment`}
               </Button>
-              <p className="text-muted" style={{ fontSize: '0.8rem', marginTop: '10px', textAlign: 'center' }}>
+              {/* Reassurance right at the point of payment - a first-time patient
+                  paying a small clinic online has no prior trust signal to lean
+                  on, and the actual mechanics (webhook-verified, auto-confirmed,
+                  WhatsApp notified) already happen instantly - just not stated
+                  anywhere before this. */}
+              <p className="text-muted" style={{ fontSize: '0.82rem', marginTop: '10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <Icon name="lock" size={13} /> Secure payment &middot; Instant confirmation on WhatsApp
+              </p>
+              <p className="text-muted" style={{ fontSize: '0.8rem', marginTop: '4px', textAlign: 'center' }}>
                 By paying, you agree to our <a href="/terms">Terms & Conditions</a> and <a href="/refund-policy">Refund Policy</a>.
               </p>
             </form>

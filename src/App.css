@@ -1,3 +1,5 @@
 .App{
-  font-family: 'Ubuntu', sans-serif;
+  /* Leftover from before the theme.css design-system rebuild - body's real
+     font-family (Inter, via --font-family) already covers this and should
+     be the only one, not fighting Ubuntu for the cascade on every page. */
 }

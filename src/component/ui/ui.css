@@ -40,6 +40,10 @@
   font-weight: 600;
   font-size: 0.95rem;
   padding: 10px 20px;
+  /* Default padding alone only works out to ~40px tall - under the ~44px
+     baseline comfortable tap target (matches this site's own nav links).
+     Every button gets the floor; ui-btn-lg still sits taller than this. */
+  min-height: 44px;
   border-radius: var(--radius-md);
   border: 1px solid transparent;
   cursor: pointer;
@@ -122,6 +126,11 @@
 .ui-btn-sm {
   padding: 6px 14px;
   font-size: 0.85rem;
+  /* Deliberately opts out of the 44px floor - these are dense internal
+     admin-table actions (View/Confirm/Reject), not patient-facing CTAs,
+     and inflating every table row to fit a 44px button would hurt more
+     than it helps there. */
+  min-height: 32px;
 }
 
 .ui-btn-lg {
