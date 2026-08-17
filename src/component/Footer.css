@@ -1,5 +1,11 @@
 .app-footer {
-  background-color: var(--color-primary-dark);
+  /* Was --color-primary-dark - harmless while primary was rose (a distinct
+     hue from the teal CTA section above it), but the rebrand made primary
+     teal too, so this and the CTA section above became the exact same
+     color with zero visible seam between them. --color-ink (navy) keeps
+     this as its own clearly separate dark surface, matching the role it
+     already plays for the stat-strip section higher up the page. */
+  background-color: var(--color-ink);
   color: rgba(255, 255, 255, 0.85);
   padding: var(--space-10) var(--space-6) var(--space-4);
 }

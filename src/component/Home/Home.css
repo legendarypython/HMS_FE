@@ -16,41 +16,14 @@
   filter: brightness(0.7) saturate(0.9) blur(1px);
 }
 
-/* Warm gradient scrim over the photo so the hero keeps its brand tint and
-   the headline/badge text stays legible against a busy real photo. Darker
-   than the original 0.72 - the promise column no longer sits on a solid
-   white card like the CTA half does, so it needs more help from the scrim
-   alone to stay readable. */
+/* Flat single-tone navy scrim over the photo, not a two-color blend - the
+   calm/clinical brief explicitly avoids gradients outside small highlights.
+   A slight top-to-bottom depth shift (0.72 -> 0.82) is the only variation,
+   not a hue change. */
 .home-hero-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(225, 29, 72, 0.8) 0%, rgba(11, 17, 32, 0.85) 100%);
-}
-
-/* Soft blurred color blobs floating over the hero photo/scrim - keeps the
-   original layered depth effect even with a real photo underneath. */
-.home-hero-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.home-hero-blob-1 {
-  width: 380px;
-  height: 380px;
-  top: -120px;
-  right: -80px;
-  background: var(--color-warm-light);
-}
-
-.home-hero-blob-2 {
-  width: 320px;
-  height: 320px;
-  bottom: -140px;
-  left: -100px;
-  background: var(--color-primary-light);
+  background: linear-gradient(180deg, rgba(20, 33, 61, 0.72) 0%, rgba(20, 33, 61, 0.82) 100%);
 }
 
 .home-hero-content {
@@ -352,24 +325,12 @@
   filter: brightness(0.6) saturate(0.9) blur(2px);
 }
 
-/* Teal scrim matching the CTA section's existing warm-gradient tint, so the
-   photo reads as this section's background rather than a foreign insert. */
+/* Flat single-tone teal scrim, matching the hero's own flat-navy treatment -
+   same brand accent as everywhere else on the page, not a separate blend. */
 .cta-section-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(160deg, rgba(15, 118, 110, 0.8) 0%, rgba(19, 78, 74, 0.85) 100%);
-}
-
-.cta-section-blob {
-  position: absolute;
-  width: 420px;
-  height: 420px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  top: -180px;
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none;
+  background: linear-gradient(180deg, rgba(10, 120, 118, 0.82) 0%, rgba(10, 120, 118, 0.9) 100%);
 }
 
 .cta-section-photo {

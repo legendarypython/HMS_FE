@@ -7,22 +7,26 @@
 */
 
 :root {
-  /* Warm-forward palette trial: rose/blush is primary (fits a maternity/gynae
-     practice better than generic clinic teal), teal demoted to secondary
-     accent. Swap these two blocks back to revert. */
-  --color-primary: #e11d48;
-  --color-primary-light: #fb7185;
-  --color-primary-dark: #9f1239;
-  --color-primary-bg: #fff1f2;
+  /* 2026-08-18 rebrand: calm/clinical/premium (Linear+Stripe-influenced)
+     replacing the earlier warm rose/blush maternity-boutique palette. One
+     strong accent (teal) instead of two competing brand colors, deep navy
+     for text/dark surfaces instead of near-black, off-white instead of
+     pale blue-grey. */
+  --color-primary: #0ea5a4;
+  --color-primary-light: #34d1cf;
+  --color-primary-dark: #0a7876;
+  --color-primary-bg: #eafbfa;
   --color-accent: #2563eb;
 
-  /* Secondary accent (teal) - used for highlights and anything that needs to
-     stand apart from the primary rose, e.g. on dark sections where
-     rose-on-rose would disappear. */
-  --color-warm: #0f766e;
-  --color-warm-light: #14b8a6;
-  --color-warm-dark: #115e59;
-  --color-warm-bg: #f0fdfa;
+  /* Kept as an alias of primary rather than removed outright - this project
+     has no global find/replace for every call site that reads --color-warm*
+     (stat-strip icons, the CTA section gradient, etc.), and a one-accent
+     system means "secondary contrast color" and "primary" are now the same
+     color anyway. Cheaper and safer than touching every call site. */
+  --color-warm: #0ea5a4;
+  --color-warm-light: #34d1cf;
+  --color-warm-dark: #0a7876;
+  --color-warm-bg: #eafbfa;
 
   --color-success: #15803d;
   --color-success-dark: #14532d;
@@ -33,20 +37,25 @@
   --color-warning: #d97706;
   --color-warning-bg: #fffbeb;
 
-  --color-bg: #f8fafc;
+  --color-bg: #f7f8fa;
   --color-surface: #ffffff;
   --color-border: #e2e8f0;
-  --color-text: #1e293b;
+  --color-text: #14213d;
   --color-text-muted: #64748b;
   --color-text-inverse: #ffffff;
 
-  /* Dark surface for high-contrast sections (stat strips, CTA bands) so pages
-     aren't uniformly white/pale-grey top to bottom. */
-  --color-ink: #0b1120;
-  --color-ink-surface: #131c31;
+  /* Dark surface for high-contrast sections (stat strips, CTA bands) - now
+     the same navy as body text rather than a separate near-black, so the
+     whole site reads as one deliberate ink color, not two. */
+  --color-ink: #14213d;
+  --color-ink-surface: #1b2b4d;
 
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Playfair Display', 'Georgia', serif;
+  /* Was Playfair Display (serif) - a calm/clinical SaaS aesthetic doesn't
+     pair well with an editorial display serif, so headings now share the
+     same Inter family as body text (weight/tracking carry the hierarchy
+     instead, same approach Linear/Stripe use). */
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   /* Fluid type scale (clamp: min, viewport-relative, max) so headings scale
      smoothly between mobile and desktop instead of jumping at breakpoints. */
@@ -55,10 +64,10 @@
   --text-h2: clamp(1.4rem, 1.2rem + 0.9vw, 1.75rem);
   --text-h3: clamp(1.15rem, 1.05rem + 0.4vw, 1.3rem);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-xl: 20px;
   --radius-pill: 999px;
 
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
@@ -66,14 +75,16 @@
   --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.12);
   --shadow-xl: 0 20px 50px rgba(15, 23, 42, 0.16);
   /* Tinted shadow for primary CTAs - reads as "glowing" rather than a flat grey drop shadow. */
-  --shadow-primary: 0 12px 24px -8px rgba(225, 29, 72, 0.45);
+  --shadow-primary: 0 12px 24px -8px rgba(14, 165, 164, 0.4);
 
-  --gradient-primary: linear-gradient(135deg, #e11d48 0%, #9f1239 100%);
-  --gradient-warm: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
-  --gradient-mesh: radial-gradient(circle at 15% 20%, rgba(225, 29, 72, 0.55) 0%, transparent 45%),
-    radial-gradient(circle at 85% 15%, rgba(20, 184, 166, 0.35) 0%, transparent 40%),
-    radial-gradient(circle at 50% 100%, rgba(159, 18, 57, 0.4) 0%, transparent 50%),
-    var(--gradient-primary);
+  /* Gradients kept to a minimum per the calm/clinical brief - flat teal
+     rather than the old two-stop rose blend, and gradient-mesh (the hero's
+     background wash) collapsed from three layered rose/teal/dark radials
+     down to one quiet highlight instead of a busy multi-color mesh. */
+  --gradient-primary: linear-gradient(135deg, #0ea5a4 0%, #0a7876 100%);
+  --gradient-warm: linear-gradient(135deg, #0ea5a4 0%, #0a7876 100%);
+  --gradient-mesh: radial-gradient(circle at 20% 20%, rgba(14, 165, 164, 0.16) 0%, transparent 50%),
+    var(--color-ink);
 
   --transition-fast: 0.15s ease;
   --transition-base: 0.25s cubic-bezier(0.16, 1, 0.3, 1);

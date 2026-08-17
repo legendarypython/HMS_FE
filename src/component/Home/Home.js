@@ -75,8 +75,6 @@ const Home = () => {
           aria-hidden="true"
         />
         <div className="home-hero-scrim" aria-hidden="true" />
-        <div className="home-hero-blob home-hero-blob-1" aria-hidden="true" />
-        <div className="home-hero-blob home-hero-blob-2" aria-hidden="true" />
         <div className="home-hero-content home-hero-content-split">
           <div className="home-hero-promise">
             <span className="hero-badge">
@@ -205,7 +203,6 @@ const Home = () => {
           aria-hidden="true"
         />
         <div className="cta-section-scrim" aria-hidden="true" />
-        <div className="cta-section-blob" aria-hidden="true" />
         <img
           src={TENANT_CONFIG.ctaImage}
           alt={TENANT_CONFIG.doctorName}
