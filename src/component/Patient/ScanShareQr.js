@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { Redirect } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import AppNavbar from '../Shared/AppNavbar';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
 import PageHeader from '../ui/PageHeader';
-import { TENANT_CONFIG } from '../../config/tenant';
+import { TENANT_CONFIG, TENANT_ID } from '../../config/tenant';
 
 // M1 "Scan Health Facility QR" (Mandatory for Private): a static QR the
 // facility displays at registration, letting a patient share their ABHA
@@ -24,6 +25,18 @@ const buildShareUrl = (hipId, counterId) =>
 const ScanShareQr = () => {
   const role = sessionStorage.getItem('userRole');
   const [counterId, setCounterId] = useState('reception');
+
+  // ABDM Section 17 certification was never actually completed (the
+  // on-share acknowledgment call had unresolved issues, per PROGRESS.md) -
+  // real ABDM testing during that work was deliberately done against the
+  // real Panchkuiyan facility ID, which is correct for certification but
+  // means this incomplete/experimental feature was also reachable on the
+  // real production dashboard. Now that real patients are live, restrict it
+  // to the demo tenant only - blocks the route itself (not just hiding the
+  // nav link), so it's not reachable by direct URL either.
+  if (TENANT_ID !== 'demo') {
+    return <Redirect to="/dashboard" />;
+  }
 
   const shareUrl = buildShareUrl(TENANT_CONFIG.abdmHfrId, counterId || 'reception');
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import Icon from '../ui/Icon';
-import { TENANT_CONFIG } from '../../config/tenant';
+import { TENANT_CONFIG, TENANT_ID } from '../../config/tenant';
 import './AppNavbar.css';
 
 const LINKS_BY_ROLE = {
@@ -15,14 +15,18 @@ const LINKS_BY_ROLE = {
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
     { to: '/appointments', label: 'Appointments', icon: 'calendar' },
     { to: '/availability', label: 'Availability', icon: 'calendar-off' },
-    { to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }
+    // ABDM Section 17 certification was never actually completed - demo
+    // tenant only (see the same restriction on the /scan-qr route itself,
+    // ScanShareQr.js, which is the real enforcement; this just keeps the
+    // link from pointing anywhere real staff would follow it).
+    ...(TENANT_ID === 'demo' ? [{ to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }] : [])
   ],
   manager: [
     { to: '/dashboard', label: 'Patients', icon: 'users' },
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
     { to: '/appointments', label: 'Appointments', icon: 'calendar' },
     { to: '/availability', label: 'Availability', icon: 'calendar-off' },
-    { to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }
+    ...(TENANT_ID === 'demo' ? [{ to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }] : [])
   ],
   patient: [
     { to: '/patient/my-record', label: 'My Record', icon: 'file' }

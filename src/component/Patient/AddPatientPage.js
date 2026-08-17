@@ -11,6 +11,7 @@ import { AddPatientForm } from './AddPatient';
 import AddDocumentsUploader from './AddDocumentsUploader';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
+import { TENANT_ID } from '../../config/tenant';
 import './AddPatient.css';
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
 
@@ -80,9 +81,17 @@ const AddPatientPageRoute = () => {
       if (json.data.exists) {
         setExistingPatient(json.data.patient);
         setStep('existing');
-      } else {
+      } else if (TENANT_ID === 'demo') {
         setAbhaIdentifier(phone);
         setStep('abha');
+      } else {
+        // ABDM/ABHA verify-or-create hasn't cleared M1 certification (see
+        // PROGRESS.md) - demo tenant only, same reasoning as /scan-qr. Real
+        // patient registration must keep working regardless, so skip
+        // straight to the manual form instead of blocking this page - the
+        // backend route guard (requireDemoTenant on abhaRoutes) is the real
+        // enforcement if this is ever bypassed.
+        setStep('new');
       }
     } catch (err) {
       setError('Network error. Please try again.');
