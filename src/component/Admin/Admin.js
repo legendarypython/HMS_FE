@@ -10,6 +10,7 @@ import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
 import Badge from '../ui/Badge';
 import PageHeader from '../ui/PageHeader';
+import WeekSummary from './WeekSummary';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
 import './Admin.css';
@@ -44,6 +45,7 @@ const Admin = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalPatientCount, setTotalPatientCount] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValues, setFilterValues] = useState({});
   const [showFiltersModal, setShowFiltersModal] = useState(false);
@@ -73,6 +75,18 @@ const Admin = () => {
 
   useEffect(() => { fetchPatients(); }, [fetchPatients]);
 
+  // Separate, unfiltered, fetch-once count for the overview strip - the
+  // paginated/filtered totalPages above reflects whatever search/filter is
+  // currently active in the table below, which isn't the same thing as "how
+  // many patients do we actually have".
+  useEffect(() => {
+    axios.post(`${API_BASE}/api/patients/search`, {
+      name: '', sortBy: 'firstName', order: 'asc', page: 1, limit: 1, filters: {}
+    }, { headers: getAuthHeader() })
+      .then(response => setTotalPatientCount(response.data.pagination.total))
+      .catch(() => setTotalPatientCount(null));
+  }, []);
+
   const handleSearch = () => {
     setPage(1);
     fetchPatients();
@@ -100,6 +114,8 @@ const Admin = () => {
 
       <div className="page">
         <PageHeader icon="users" title="Patients" />
+
+        {totalPatientCount !== null && <WeekSummary totalPatients={totalPatientCount} />}
 
         <div className="dashboard-toolbar">
           <Link to="/patients/add"><Button>+ Add New Patient</Button></Link>
