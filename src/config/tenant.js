@@ -20,8 +20,15 @@ const parseJsonEnv = (value, fallback) => {
 };
 
 export const TENANT_CONFIG = {
-  name: process.env.REACT_APP_TENANT_NAME || 'Panchkuiyan Hospital',
-  shortName: process.env.REACT_APP_TENANT_SHORT_NAME || 'Panchkuiyan',
+  // Spelled "Panchkuian" (no y) to match the real area name - every major
+  // directory (Practo, Justdial, onefivenine) already indexes this whole
+  // locality that way, and Google's own autocorrect kept reverting search
+  // queries for the earlier "Panchkuiyan" spelling back to this one. Fighting
+  // an already-established spelling used by dozens of neighbouring listings
+  // is a losing SEO battle; matching it is the easier, faster path to
+  // actually showing up for the hospital's own name.
+  name: process.env.REACT_APP_TENANT_NAME || 'Panchkuian Hospital',
+  shortName: process.env.REACT_APP_TENANT_SHORT_NAME || 'Panchkuian',
   // Legal name of the individual/entity operating this business (as on the
   // PAN/GST used for payment-gateway KYC) - distinct from the trade name
   // above. Payment gateways (Instamojo, 2026-08-11) require this to be
