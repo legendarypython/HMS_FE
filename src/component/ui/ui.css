@@ -62,7 +62,7 @@
   transform: translateY(-1px);
 }
 .ui-btn-primary:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 .ui-btn-secondary {
@@ -72,6 +72,9 @@
 }
 .ui-btn-secondary:hover:not(:disabled) {
   background-color: var(--color-primary-bg);
+}
+.ui-btn-secondary:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 /* Outlined rather than solid-filled - destructive actions sit next to a
@@ -87,6 +90,9 @@
   border-color: var(--color-danger);
   color: var(--color-danger-dark);
 }
+.ui-btn-danger:active:not(:disabled) {
+  transform: scale(0.97);
+}
 
 .ui-btn-success {
   background-color: var(--color-success);
@@ -98,7 +104,7 @@
   transform: translateY(-1px);
 }
 .ui-btn-success:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.97);
 }
 
 .ui-btn-ghost {
@@ -108,6 +114,9 @@
 }
 .ui-btn-ghost:hover:not(:disabled) {
   background-color: var(--color-bg);
+}
+.ui-btn-ghost:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .ui-btn-sm {
@@ -135,6 +144,10 @@
 
 .ui-card-interactive {
   cursor: pointer;
+}
+
+.ui-card-interactive:active {
+  transform: scale(0.98);
 }
 
 .ui-card-tinted {

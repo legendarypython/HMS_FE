@@ -347,7 +347,42 @@
   background-color: rgba(255, 255, 255, 0.9);
 }
 
+.trust-badge {
+  margin-top: var(--space-4);
+}
+
+.trust-badge svg {
+  margin-right: var(--space-1);
+}
+
+/* Persistent "Book Appointment" bar for mobile, appears once scrolled past
+   the hero's own CTA so booking is always one tap away. Desktop already has
+   the hero button in view most of the time and a fixed bottom bar there
+   would just be clutter, so this only ever renders on mobile widths. */
+.mobile-sticky-cta {
+  display: none;
+}
+
 @media (max-width: 640px) {
+  .mobile-sticky-cta {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    padding: var(--space-3) var(--space-4);
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    background-color: var(--color-surface);
+    box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.14);
+    transform: translateY(100%);
+    transition: transform var(--transition-base);
+  }
+
+  .mobile-sticky-cta-visible {
+    transform: translateY(0);
+  }
+
   .home-hero {
     padding: var(--space-16) var(--space-4);
   }

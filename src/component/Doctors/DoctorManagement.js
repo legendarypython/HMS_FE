@@ -227,7 +227,7 @@ const DoctorManagement = () => {
             {doctors.length === 0 && (
               <div className="ui-table-empty">
                 <Icon name="inbox" size={28} />
-                No doctors added yet.
+                No doctors added yet — use the form above to add your first one.
               </div>
             )}
           </div>

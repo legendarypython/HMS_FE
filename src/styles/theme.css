@@ -141,6 +141,32 @@ input, textarea, select {
   box-shadow: var(--shadow-lg);
 }
 
+.ui-hover-lift:active {
+  transform: scale(0.98);
+}
+
+/* Scroll-triggered fade-in - paired with the useScrollReveal hook, which
+   toggles ui-reveal-visible once the element enters the viewport. Respects
+   reduced-motion since this is purely decorative. */
+.ui-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.ui-reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 @media (max-width: 640px) {
   .page {
     padding: var(--space-5) var(--space-3);

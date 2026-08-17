@@ -34,3 +34,68 @@
     var(--color-bg);
 }
 
+/* Two-step progress label - makes the form read as "almost done" rather
+   than an open-ended commitment, and gives the payment wait a name instead
+   of it feeling like an unexplained pause. */
+.booking-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.booking-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.55;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.booking-step-active {
+  opacity: 1;
+  color: var(--color-primary);
+}
+
+.booking-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.booking-step-active .booking-step-num {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+.booking-step-divider {
+  color: var(--color-border);
+}
+
+/* Gentle pulse on the icon during the payment-confirmation wait, so the
+   pause reads as "actively working" rather than a frozen/dead screen. */
+.confirming-icon-pulse {
+  animation: booking-gentle-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes booking-gentle-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirming-icon-pulse {
+    animation: none;
+  }
+}
+

@@ -240,6 +240,17 @@ const BookAppointment = () => {
       <div className="booking-page-bg">
         <div className="page page-narrow">
           <Card variant="elevated">
+          {!success && (
+            <div className="booking-steps">
+              <span className={`booking-step ${!confirming ? 'booking-step-active' : ''}`}>
+                <span className="booking-step-num">1</span> Your Details
+              </span>
+              <span className="booking-step-divider">&mdash;</span>
+              <span className={`booking-step ${confirming ? 'booking-step-active' : ''}`}>
+                <span className="booking-step-num">2</span> Payment
+              </span>
+            </div>
+          )}
           {success ? (
             <>
               <IconBadge name="check-circle" variant="success" />
@@ -251,7 +262,7 @@ const BookAppointment = () => {
             </>
           ) : confirming ? (
             <>
-              <IconBadge name="calendar" />
+              <IconBadge name="calendar" className="confirming-icon-pulse" />
               <h2 className="section-title">Confirming your payment&hellip;</h2>
               <p className="text-muted">This usually takes just a few seconds. Please don't close this page.</p>
               {error && <div className="ui-banner ui-banner-error" style={{ marginTop: '16px' }}>{error}</div>}

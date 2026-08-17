@@ -85,7 +85,7 @@ const AppointmentInbox = () => {
             {appointments.length === 0 && (
               <div className="ui-table-empty">
                 <Icon name="inbox" size={28} />
-                No appointment requests yet.
+                No appointment requests yet — they'll show up here the moment a patient books online.
               </div>
             )}
           </div>
