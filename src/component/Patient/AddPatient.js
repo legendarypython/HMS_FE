@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
@@ -50,6 +50,19 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
   const [saving, setSaving] = useState(false);
   const [cardDownloading, setCardDownloading] = useState(false);
   const [cardError, setCardError] = useState(null);
+  const errorBannerRef = useRef(null);
+
+  // This form is long enough that the submit button can be well below the
+  // fold - a validation error rendered up at the top next to the heading
+  // is invisible unless something scrolls it into view, same problem the
+  // browser's own native "please fill out this field" tooltip solves for
+  // free on plain inputs (caught live: this is what made a missing Case
+  // Type selection look like clicking Save Patient did nothing).
+  useEffect(() => {
+    if (error && errorBannerRef.current) {
+      errorBannerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
 
   // Mandatory-for-Private M1 requirement: "View and Download ABHA details."
   // Only available right after a fresh verification (initialAbhaProfile
@@ -210,7 +223,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
       <IconBadge name="user" />
       <span className="ui-eyebrow">Patient Records</span>
       <h2 className="section-title">{isEditMode ? 'Edit Patient' : 'Add New Patient'}</h2>
-      {error && <div className="ui-banner ui-banner-error">{error}</div>}
+      {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
       {abhaConflict && (
         <div className="ui-banner ui-banner-error">
           This ABHA number is already linked to {abhaConflict.firstName} {abhaConflict.lastName} -{' '}

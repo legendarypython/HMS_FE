@@ -1,6 +1,6 @@
 // InfertilityDetailsForm.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
@@ -17,6 +17,22 @@ import { API_BASE, apiFetch } from '../../utils/api';
 const InfertilityDetailsForm = () => {
   const { patientId } = useParams();
   const history = useHistory();
+  // Same gap found and fixed on AddAnteNatal.js: a failed submit used to
+  // only go to console.error, so it looked from the user's side like
+  // clicking Submit did nothing at all.
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const errorBannerRef = useRef(null);
+
+  // The submit button sits at the bottom of a long form - an error
+  // rendered up at the top (next to the heading) is invisible unless
+  // something scrolls it into view, same problem the browser's own native
+  // "please fill out this field" tooltip solves for free on plain inputs.
+  useEffect(() => {
+    if (error && errorBannerRef.current) {
+      errorBannerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
 
   // Initialize state for infertility details
   const [infertilityDetails, setInfertilityDetails] = useState({
@@ -66,6 +82,8 @@ const InfertilityDetailsForm = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError(null);
+    setSaving(true);
 
     try {
       const formData = new FormData();
@@ -95,9 +113,13 @@ const InfertilityDetailsForm = () => {
         // Handle error response
         const errorData = await response.json();
         console.error('Error submitting infertility details:', errorData);
+        setError(errorData?.message || 'Could not save infertility details. Please try again.');
       }
-    } catch (error) {
-      console.error('Error submitting infertility details:', error);
+    } catch (err) {
+      console.error('Error submitting infertility details:', err);
+      setError('Network error. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -201,6 +223,7 @@ const InfertilityDetailsForm = () => {
           <IconBadge name="baby" />
           <span className="ui-eyebrow">Patient Records</span>
           <h2 className="section-title">Infertility Details Form</h2>
+          {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
           <form onSubmit={handleSubmit}>
             <input type="hidden" name="patientId" value={patientId} />
 
@@ -312,7 +335,7 @@ const InfertilityDetailsForm = () => {
             />
 
             <div className="case-form-actions">
-              <Button type="submit">Submit Infertility Details</Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Submitting...' : 'Submit Infertility Details'}</Button>
               <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
             </div>
           </form>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useHistory, Link } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
@@ -17,6 +17,23 @@ import { API_BASE } from '../../utils/api';
 const AntenatalDetailsForm = () => {
   const { patientId } = useParams();
   const history = useHistory();
+  // Errors used to only go to console.error, so a failed submit (missing
+  // obstetric history, or a genuine backend rejection) looked from the
+  // user's side like clicking Submit did nothing at all - caught live,
+  // this is what actually surfaces it now.
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const errorBannerRef = useRef(null);
+
+  // The submit button sits at the bottom of a long form - a validation
+  // error rendered up at the top (next to the heading) is invisible unless
+  // something scrolls it into view, same problem the browser's own native
+  // "please fill out this field" tooltip solves for free on plain inputs.
+  useEffect(() => {
+    if (error && errorBannerRef.current) {
+      errorBannerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
 
   // Initialize state for antenatal details
   const [antenatalDetails, setAntenatalDetails] = useState({
@@ -60,15 +77,17 @@ const AntenatalDetailsForm = () => {
   // Handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError(null);
     // The native <select required> this field used to have enforced this
     // at the browser level for free - the custom Select component (styling
     // fix, see ui/Select.js) doesn't support native constraint validation,
     // so this check has to happen here now instead (same gap found and
     // fixed on AddPatient.js's Case Type field).
     if (!antenatalDetails.obstetricHistory) {
-      alert('Please select an obstetric history.');
+      setError('Please select an obstetric history.');
       return;
     }
+    setSaving(true);
     const formData = new FormData();
 
     // Append non-file data to formData
@@ -109,9 +128,13 @@ const AntenatalDetailsForm = () => {
       } else {
         // Handle error response
         console.error('Error submitting antenatal details:', response.data);
+        setError(response.data?.message || 'Could not save antenatal details. Please try again.');
       }
-    } catch (error) {
-      console.error('Error submitting antenatal details:', error);
+    } catch (err) {
+      console.error('Error submitting antenatal details:', err);
+      setError(err.response?.data?.message || 'Could not save antenatal details. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -209,6 +232,7 @@ const AntenatalDetailsForm = () => {
           <IconBadge name="baby" />
           <span className="ui-eyebrow">Patient Records</span>
           <h2 className="section-title">Antenatal Details Form</h2>
+          {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
           <form onSubmit={handleSubmit}>
             <input type="hidden" name="patientId" value={patientId} />
 
@@ -389,7 +413,7 @@ const AntenatalDetailsForm = () => {
             />
 
             <div className="case-form-actions">
-              <Button type="submit">Submit Antenatal Details</Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Submitting...' : 'Submit Antenatal Details'}</Button>
               <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
             </div>
           </form>
