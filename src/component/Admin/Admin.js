@@ -204,6 +204,7 @@ const Admin = () => {
                   <th>Case Type</th>
                   <th>Date of Admission</th>
                   <th>Status</th>
+                  <th>Payment</th>
                   <th>Phone Number</th>
                   <th>Actions</th>
                 </tr>
@@ -232,6 +233,13 @@ const Admin = () => {
                     <td data-label="Status">
                       <Badge variant={patient.isNewPatient ? 'success' : 'neutral'}>
                         {patient.isNewPatient ? 'New' : 'Returning'}
+                      </Badge>
+                    </td>
+                    <td data-label="Payment">
+                      <Badge variant={patient.paymentStatus === 'paid' ? 'success' : 'warning'}>
+                        {patient.paymentStatus === 'paid'
+                          ? `Paid (${patient.paymentMethod === 'online' ? 'Online' : 'Offline'})`
+                          : 'Pending'}
                       </Badge>
                     </td>
                     <td data-label="Phone Number">{patient.phone.replace(/-/g, '')}</td>

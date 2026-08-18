@@ -32,7 +32,9 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
     caseType: initialPatientDetails ? '' : '',
     isNewPatient: initialPatientDetails ? initialPatientDetails.isNewPatient : true,
     abhaNumber: initialPatientDetails?.abhaNumber || initialAbhaProfile?.abhaNumber || '',
-    abhaAddress: initialPatientDetails?.abhaAddress || initialAbhaProfile?.abhaAddress || ''
+    abhaAddress: initialPatientDetails?.abhaAddress || initialAbhaProfile?.abhaAddress || '',
+    paymentStatus: initialPatientDetails?.paymentStatus || 'pending',
+    paymentMethod: initialPatientDetails?.paymentMethod || 'offline'
   }));
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState(null);
@@ -260,9 +262,34 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
 
         <h3 className="record-section-title">Medical &amp; Admission Details</h3>
         <div className="patient-form-grid">
-          <Field label="Date of Admission" required htmlFor="dateOfAdmission">
+          <Field
+            label={isEditMode ? 'Date of Admission / Last Visit' : 'Date of Admission'}
+            required
+            htmlFor="dateOfAdmission"
+          >
             <input className="ui-input" type="date" id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
+            {isEditMode && (
+              <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
+                For a returning patient's next visit, update this to today's date instead of creating a new record.
+              </p>
+            )}
           </Field>
+
+          <Field label="Payment Status" htmlFor="paymentStatus">
+            <select className="ui-select" id="paymentStatus" value={form.paymentStatus} onChange={handleChange('paymentStatus')}>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+            </select>
+          </Field>
+
+          {form.paymentStatus === 'paid' && (
+            <Field label="Payment Method" htmlFor="paymentMethod">
+              <select className="ui-select" id="paymentMethod" value={form.paymentMethod} onChange={handleChange('paymentMethod')}>
+                <option value="offline">Offline (cash/card at desk)</option>
+                <option value="online">Online</option>
+              </select>
+            </Field>
+          )}
 
           {isEditMode ? (
             <Field label="Case Type" htmlFor="caseTypeDisplay">

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
 import Button from '../ui/Button';
 import Badge from '../ui/Badge';
@@ -64,9 +63,6 @@ const AppointmentInbox = () => {
       <AppNavbar role={role} />
       <div className="page">
         <PageHeader icon="calendar" title="Appointment Requests" />
-        <div className="dashboard-toolbar" style={{ marginBottom: 20 }}>
-          <Link to="/appointments/log-offline"><Button variant="secondary">+ Log Offline Visit</Button></Link>
-        </div>
         {loading ? (
           <Spinner label="Loading appointments..." />
         ) : (

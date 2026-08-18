@@ -12,7 +12,6 @@ import DoctorManagement from './component/Doctors/DoctorManagement';
 import DoctorAvailability from './component/Doctors/DoctorAvailability';
 import AppointmentInbox from './component/Appointments/AppointmentInbox';
 import BookAppointment from './component/Appointments/BookAppointment';
-import LogOfflineAppointment from './component/Appointments/LogOfflineAppointment';
 
 import AddPatientPage from './component/Patient/AddPatientPage';
 import ScanShareQr from './component/Patient/ScanShareQr';
@@ -39,12 +38,17 @@ function App() {
           <Route exact path="/terms" component={Terms} />
           <Route exact path="/refund-policy" component={RefundPolicy} />
 
-          <PrivateRoute exact path="/dashboard" roles={STAFF_ROLES} component={Dashboard} />
+          {/* Owner-only - not in STAFF_ROLES. Per the owner's explicit request,
+              a manager-role staff account can only add patients and view
+              appointments; everything else (including Dashboard) is hidden
+              from their nav (AppNavbar.js) and blocked here too, so a direct
+              URL visit can't bypass what the nav simply doesn't show. */}
+          <PrivateRoute exact path="/dashboard" roles={['owner']} component={Dashboard} />
+          <PrivateRoute exact path="/doctors" roles={['owner']} component={DoctorManagement} />
+          <PrivateRoute exact path="/availability" roles={['owner']} component={DoctorAvailability} />
+
           <PrivateRoute exact path="/patients" roles={STAFF_ROLES} component={Admin} />
-          <PrivateRoute exact path="/doctors" roles={STAFF_ROLES} component={DoctorManagement} />
-          <PrivateRoute exact path="/availability" roles={STAFF_ROLES} component={DoctorAvailability} />
           <PrivateRoute exact path="/appointments" roles={STAFF_ROLES} component={AppointmentInbox} />
-          <PrivateRoute exact path="/appointments/log-offline" roles={STAFF_ROLES} component={LogOfflineAppointment} />
 
           <PrivateRoute exact path="/patients/add" roles={STAFF_ROLES} component={AddPatientPage} />
           <PrivateRoute exact path="/scan-qr" roles={STAFF_ROLES} component={ScanShareQr} />

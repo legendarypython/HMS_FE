@@ -22,13 +22,14 @@ const LINKS_BY_ROLE = {
     // link from pointing anywhere real staff would follow it).
     ...(TENANT_ID === 'demo' ? [{ to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }] : [])
   ],
+  // Deliberately narrow - per the owner's explicit request, staff with this
+  // role can add patients and view appointments, nothing else. Dashboard,
+  // Doctors, and Availability are owner-only now (also enforced at the
+  // route level in App.js, not just hidden here - a hidden nav link alone
+  // wouldn't stop a direct URL visit).
   manager: [
-    { to: '/dashboard', label: 'Dashboard', icon: 'home' },
     { to: '/patients', label: 'Patients', icon: 'users' },
-    { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
     { to: '/appointments', label: 'Appointments', icon: 'calendar' },
-    { to: '/availability', label: 'Availability', icon: 'calendar-off' },
-    ...(TENANT_ID === 'demo' ? [{ to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }] : [])
   ],
   patient: [
     { to: '/patient/my-record', label: 'My Record', icon: 'file' }
@@ -41,7 +42,7 @@ const LINKS_BY_ROLE = {
 const BRAND_LINK_BY_ROLE = {
   public: '/',
   owner: '/dashboard',
-  manager: '/dashboard',
+  manager: '/patients',
   patient: '/patient/my-record'
 };
 

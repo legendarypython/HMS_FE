@@ -93,6 +93,11 @@ const PatientQuickView = ({ patientId, onClose }) => {
         <Badge variant={patient.isNewPatient ? 'success' : 'neutral'}>
           {patient.isNewPatient ? 'New' : 'Returning'}
         </Badge>
+        <Badge variant={patient.paymentStatus === 'paid' ? 'success' : 'warning'}>
+          {patient.paymentStatus === 'paid'
+            ? `Paid (${patient.paymentMethod === 'online' ? 'Online' : 'Offline'})`
+            : 'Payment Pending'}
+        </Badge>
       </div>
 
       <h4 className="patient-quick-view-section-title">Contact</h4>

@@ -107,11 +107,6 @@ const Dashboard = () => {
                   <Icon name="user" size={16} /> Add Patient
                 </Button>
               </Link>
-              <Link to="/appointments/log-offline">
-                <Button variant="secondary" style={{ width: '100%' }}>
-                  <Icon name="calendar" size={16} /> Log Offline Visit
-                </Button>
-              </Link>
               <Link to="/appointments">
                 <Button variant="secondary" style={{ width: '100%' }}>
                   <Icon name="calendar" size={16} /> View Appointments

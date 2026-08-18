@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
 import AppNavbar from '../Shared/AppNavbar';
 import DocumentPreviewModal from '../Shared/DocumentPreviewModal';
@@ -41,10 +41,12 @@ const RecordField = ({ label, value, icon }) => (
 const PatientDetails = () => {
   const role = sessionStorage.getItem('userRole');
   const { patientId } = useParams();
+  const history = useHistory();
   const [patientDetails, setPatientDetails] = useState(null);
   const [error, setError] = useState(null);
   const [previewDocument, setPreviewDocument] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchPatientDetails = async () => {
     try {
@@ -73,6 +75,26 @@ const PatientDetails = () => {
   const handleSaved = () => {
     setEditMode(false);
     fetchPatientDetails();
+  };
+
+  // Owner-only (matches the backend route). Plain window.confirm, same
+  // reasoning as the appointment Delete action - the only two destructive
+  // actions in the app, not worth a shared dialog component for just these.
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete ${patientDetails.firstName} ${patientDetails.lastName}'s record? This can't be undone.`)) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      // axios throws on any non-2xx status, so reaching here means it
+      // genuinely succeeded - no separate success flag in this API's
+      // response shape to check.
+      await axios.delete(`${API_BASE}/api/patients/${patientId}`, { headers: getAuthHeader() });
+      history.push('/patients');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not delete this patient.');
+      setDeleting(false);
+    }
   };
 
   if (error) {
@@ -124,8 +146,14 @@ const PatientDetails = () => {
               <RecordField label="Phone Number" value={patientDetails.phone} icon={FIELD_ICONS.phone} />
               <RecordField label="Email" value={patientDetails.email || '-'} icon={FIELD_ICONS.email} />
               <RecordField label="Married For (Years)" value={patientDetails.marriedFor} />
-              <RecordField label="Date of Admission" value={new Date(patientDetails.dateOfAdmission).toLocaleDateString()} icon={FIELD_ICONS.admission} />
+              <RecordField label="Date of Admission / Last Visit" value={new Date(patientDetails.dateOfAdmission).toLocaleDateString()} icon={FIELD_ICONS.admission} />
               <RecordField label="Is New Patient" value={patientDetails.isNewPatient ? 'Yes' : 'No'} />
+              <RecordField
+                label="Payment Status"
+                value={patientDetails.paymentStatus === 'paid'
+                  ? `Paid (${patientDetails.paymentMethod === 'online' ? 'Online' : 'Offline'})`
+                  : 'Pending'}
+              />
             </div>
 
             <div className="record-diagnosis-callout">
@@ -152,6 +180,11 @@ const PatientDetails = () => {
 
             <div className="patient-detail-actions">
               {role === 'owner' && <Button onClick={() => setEditMode(true)}>Edit</Button>}
+              {role === 'owner' && (
+                <Button variant="danger" onClick={handleDelete} disabled={deleting}>
+                  {deleting ? 'Deleting...' : 'Delete Patient'}
+                </Button>
+              )}
               {patientDetails.caseType === 1 && (
                 <Link to={`/patients/view/anteNatalForm/${patientId}`}><Button variant="secondary">View AnteNatal Form</Button></Link>
               )}
