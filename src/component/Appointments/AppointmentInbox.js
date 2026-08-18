@@ -43,6 +43,22 @@ const AppointmentInbox = () => {
     fetchAppointments();
   };
 
+  // Owner-only (matches the backend route), for removing a mistaken entry -
+  // a bad manual/offline log, a duplicate, a test record. window.confirm
+  // rather than a custom dialog component - this is the only destructive
+  // action in the app right now, not worth a whole new component for one
+  // use site.
+  const deleteAppointment = async (appt) => {
+    if (!window.confirm(`Delete the appointment for ${appt.patientName} (${new Date(appt.preferredDate).toLocaleDateString()})? This can't be undone.`)) {
+      return;
+    }
+    await apiFetch(`${API_BASE}/api/appointments/${appt._id}`, {
+      method: 'DELETE',
+      headers: getAuthHeader()
+    });
+    fetchAppointments();
+  };
+
   return (
     <div>
       <AppNavbar role={role} />
@@ -85,12 +101,17 @@ const AppointmentInbox = () => {
                     </td>
                     <td data-label="Status"><Badge variant={STATUS_VARIANT[appt.status]}>{appt.status}</Badge></td>
                     <td data-label="Actions">
-                      {appt.status === 'pending' && (
-                        <div className="ui-action-group">
-                          <Button size="sm" variant="success" onClick={() => updateStatus(appt._id, 'confirmed')}>Confirm</Button>
-                          <Button size="sm" variant="danger" onClick={() => updateStatus(appt._id, 'rejected')}>Reject</Button>
-                        </div>
-                      )}
+                      <div className="ui-action-group">
+                        {appt.status === 'pending' && (
+                          <>
+                            <Button size="sm" variant="success" onClick={() => updateStatus(appt._id, 'confirmed')}>Confirm</Button>
+                            <Button size="sm" variant="danger" onClick={() => updateStatus(appt._id, 'rejected')}>Reject</Button>
+                          </>
+                        )}
+                        {role === 'owner' && (
+                          <Button size="sm" variant="ghost" onClick={() => deleteAppointment(appt)}>Delete</Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
