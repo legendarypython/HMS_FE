@@ -177,11 +177,18 @@
   margin-bottom: var(--space-3);
 }
 
+/* Real bug found live: this used to have a fixed height:60px matching
+   the bar-track's own 60px, but each column also stacks a count number
+   and a day label below the track - taller than 60px in total.
+   align-items: flex-end then pinned every column's bottom to this box's
+   bottom, so a bar at full height pushed the column's top edge past the
+   row's own top and visibly clipped into the "Appointments this week"
+   label above it. No fixed height needed here - the row should just
+   size to its tallest column (bar-track + count + day) naturally. */
 .week-chart-bars {
   display: flex;
   align-items: flex-end;
   gap: var(--space-2);
-  height: 60px;
 }
 
 .week-chart-col {
