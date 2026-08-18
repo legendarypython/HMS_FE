@@ -6,6 +6,7 @@ import Button from '../ui/Button';
 import Icon from '../ui/Icon';
 import IconBadge from '../ui/IconBadge';
 import Select from '../ui/Select';
+import DateInput from '../ui/DateInput';
 import { API_BASE, apiFetch } from '../../utils/api';
 import { TENANT_CONFIG } from '../../config/tenant';
 import { generateTimeSlots, isClinicClosed, formatWindowsSummary } from '../../utils/timeSlots';
@@ -325,7 +326,7 @@ const BookAppointment = () => {
               )}
 
               <Field label="Preferred Date" required htmlFor="preferredDate">
-                <input id="preferredDate" className="ui-input" type="date" min={TODAY} value={form.preferredDate} onChange={handleDateChange} />
+                <DateInput id="preferredDate" min={TODAY} value={form.preferredDate} onChange={handleDateChange} />
               </Field>
 
               <Field label="Preferred Time" required htmlFor="preferredTimeSlot">

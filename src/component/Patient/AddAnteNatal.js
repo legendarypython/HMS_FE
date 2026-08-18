@@ -5,6 +5,7 @@ import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
 import Select from '../ui/Select';
+import DateInput from '../ui/DateInput';
 import IconBadge from '../ui/IconBadge';
 import InvestigationField from './InvestigationField';
 import '../../styles/caseForms.css';
@@ -59,6 +60,15 @@ const AntenatalDetailsForm = () => {
   // Handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
+    // The native <select required> this field used to have enforced this
+    // at the browser level for free - the custom Select component (styling
+    // fix, see ui/Select.js) doesn't support native constraint validation,
+    // so this check has to happen here now instead (same gap found and
+    // fixed on AddPatient.js's Case Type field).
+    if (!antenatalDetails.obstetricHistory) {
+      alert('Please select an obstetric history.');
+      return;
+    }
     const formData = new FormData();
 
     // Append non-file data to formData
@@ -219,9 +229,7 @@ const AntenatalDetailsForm = () => {
             </Field>
 
             <Field label="Last Menstrual Period (LMP)" required htmlFor="LMP">
-              <input
-                className="ui-input"
-                type="date"
+              <DateInput
                 id="LMP"
                 name="LMP"
                 value={antenatalDetails.LMP}
@@ -231,9 +239,7 @@ const AntenatalDetailsForm = () => {
             </Field>
 
             <Field label="Expected Date of Delivery" required htmlFor="expectedDateOfDelivery">
-              <input
-                className="ui-input"
-                type="date"
+              <DateInput
                 id="expectedDateOfDelivery"
                 name="expectedDateOfDelivery"
                 value={antenatalDetails.expectedDateOfDelivery}

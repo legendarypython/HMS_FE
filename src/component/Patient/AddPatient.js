@@ -4,6 +4,7 @@ import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
 import Select from '../ui/Select';
+import DateInput from '../ui/DateInput';
 import IconBadge from '../ui/IconBadge';
 import Icon from '../ui/Icon';
 import { getAuthHeader } from '../../utils/auth';
@@ -12,6 +13,11 @@ import './AddPatient.css';
 
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
 const CASE_TYPE_ENUM = { AnteNatal: 1, Infertility: 2, General: 3 };
+// yyyy-mm-dd, local timezone - same pattern already used in BookAppointment
+// (its TODAY) and DoctorAvailability (dateStringForOffset), so Date of
+// Birth can't be picked in the future without a hardcoded, drifts-by-a-day
+// UTC conversion.
+const TODAY = new Date().toLocaleDateString('en-CA');
 
 const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfile, initialAbhaIdentifier, onSaved }) => {
   const isEditMode = Boolean(initialPatientDetails);
@@ -141,6 +147,16 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
     event.preventDefault();
     setError(null);
     setAbhaConflict(null);
+    // The native <select required> this field used to have enforced this
+    // at the browser level for free - the custom Select component (styling
+    // fix, see ui/Select.js) doesn't support native constraint validation,
+    // so this check has to happen here now instead. Missing this let a
+    // patient get created with no case type at all (caught live in
+    // production - the record had to be corrected by hand).
+    if (!form.caseType) {
+      setError('Please select a case type.');
+      return;
+    }
     setSaving(true);
     try {
       const formData = new FormData();
@@ -213,7 +229,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
             <input className="ui-input" id="lastName" value={form.lastName} onChange={handleChange('lastName')} required />
           </Field>
           <Field label="Date of Birth" required htmlFor="dateOfBirth">
-            <input className="ui-input" type="date" id="dateOfBirth" value={form.dateOfBirth} onChange={handleChange('dateOfBirth')} required />
+            <DateInput id="dateOfBirth" value={form.dateOfBirth} onChange={handleChange('dateOfBirth')} max={TODAY} required />
           </Field>
           <Field label="Aadhar Number" required htmlFor="aadhar">
             <input className="ui-input" id="aadhar" value={form.aadhar} onChange={handleChange('aadhar')} required />
@@ -264,7 +280,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
         <h3 className="record-section-title">Medical &amp; Appointment Details</h3>
         <div className="patient-form-grid">
           <Field label="Date of Appointment" required htmlFor="dateOfAdmission">
-            <input className="ui-input" type="date" id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
+            <DateInput id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
             {isEditMode && (
               <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
                 For a returning patient's next visit, update this to today's date instead of creating a new record.
