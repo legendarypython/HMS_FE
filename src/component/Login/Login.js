@@ -66,7 +66,12 @@ const Login = () => {
       }
       sessionStorage.setItem('usertoken', json.token);
       sessionStorage.setItem('userRole', json.role);
-      window.location.href = '/dashboard';
+      // Was hardcoded to /dashboard for every role - broke manager login
+      // entirely once /dashboard became owner-only (redirect landed on a
+      // route manager can't access, which PrivateRoute immediately bounces
+      // back to /login, an invisible redirect loop from the user's side -
+      // caught this live testing the new manager account).
+      window.location.href = json.role === 'owner' ? '/dashboard' : '/patients';
     } catch (err) {
       setError('Something went wrong. Please try again.');
     } finally {

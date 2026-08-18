@@ -146,7 +146,7 @@ const PatientDetails = () => {
               <RecordField label="Phone Number" value={patientDetails.phone} icon={FIELD_ICONS.phone} />
               <RecordField label="Email" value={patientDetails.email || '-'} icon={FIELD_ICONS.email} />
               <RecordField label="Married For (Years)" value={patientDetails.marriedFor} />
-              <RecordField label="Date of Admission / Last Visit" value={new Date(patientDetails.dateOfAdmission).toLocaleDateString()} icon={FIELD_ICONS.admission} />
+              <RecordField label="Date of Appointment" value={new Date(patientDetails.dateOfAdmission).toLocaleDateString()} icon={FIELD_ICONS.admission} />
               <RecordField label="Is New Patient" value={patientDetails.isNewPatient ? 'Yes' : 'No'} />
               <RecordField
                 label="Payment Status"

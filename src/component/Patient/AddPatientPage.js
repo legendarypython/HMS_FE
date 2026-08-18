@@ -490,7 +490,7 @@ const AddPatientPageRoute = () => {
             <div className="record-grid">
               <div><div className="record-field-label">Phone Number</div><div className="record-field-value">{existingPatient.phone}</div></div>
               <div><div className="record-field-label">Address</div><div className="record-field-value">{existingPatient.address}</div></div>
-              <div><div className="record-field-label">Date of Admission</div><div className="record-field-value">{new Date(existingPatient.dateOfAdmission).toLocaleDateString()}</div></div>
+              <div><div className="record-field-label">Date of Appointment</div><div className="record-field-value">{new Date(existingPatient.dateOfAdmission).toLocaleDateString()}</div></div>
             </div>
 
             <h3 className="record-section-title">Add Documents</h3>

@@ -3,6 +3,7 @@ import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
 import PageHeader from '../ui/PageHeader';
 import Button from '../ui/Button';
+import Select from '../ui/Select';
 import Spinner from '../ui/Spinner';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
@@ -126,10 +127,10 @@ const DoctorAvailability = () => {
 
         {doctors.length > 1 && (
           <div style={{ marginBottom: 16 }}>
-            <select className="ui-select" value={doctorId} onChange={(e) => setDoctorId(e.target.value)} style={{ maxWidth: 320 }}>
+            <Select value={doctorId} onChange={(e) => setDoctorId(e.target.value)} className="doctor-availability-select">
               <option value="">Select a doctor</option>
               {doctors.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-            </select>
+            </Select>
           </div>
         )}
 

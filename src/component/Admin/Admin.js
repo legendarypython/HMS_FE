@@ -202,7 +202,7 @@ const Admin = () => {
                   <th>Name</th>
                   <th>Age</th>
                   <th>Case Type</th>
-                  <th>Date of Admission</th>
+                  <th>Date of Appointment</th>
                   <th>Status</th>
                   <th>Payment</th>
                   <th>Phone Number</th>
@@ -229,7 +229,7 @@ const Admin = () => {
                         {CASE_TYPE_LABELS[patient.caseType] || ''}
                       </Badge>
                     </td>
-                    <td data-label="Date of Admission">{formatDate(patient.dateOfAdmission)}</td>
+                    <td data-label="Date of Appointment">{formatDate(patient.dateOfAdmission)}</td>
                     <td data-label="Status">
                       <Badge variant={patient.isNewPatient ? 'success' : 'neutral'}>
                         {patient.isNewPatient ? 'New' : 'Returning'}

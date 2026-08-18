@@ -5,6 +5,7 @@ import Field from '../ui/Field';
 import Button from '../ui/Button';
 import Icon from '../ui/Icon';
 import IconBadge from '../ui/IconBadge';
+import Select from '../ui/Select';
 import { API_BASE, apiFetch } from '../../utils/api';
 import { TENANT_CONFIG } from '../../config/tenant';
 import { generateTimeSlots, isClinicClosed, formatWindowsSummary } from '../../utils/timeSlots';
@@ -311,12 +312,12 @@ const BookAppointment = () => {
 
               {doctors.length > 1 && (
                 <Field label="Doctor" required htmlFor="doctorId">
-                  <select id="doctorId" className="ui-select" value={form.doctorId} onChange={handleChange('doctorId')}>
+                  <Select id="doctorId" value={form.doctorId} onChange={handleChange('doctorId')}>
                     <option value="">Select a doctor</option>
                     {doctors.map(doc => (
                       <option key={doc._id} value={doc._id}>{doc.name} - {doc.specialization}</option>
                     ))}
-                  </select>
+                  </Select>
                 </Field>
               )}
               {doctors.length === 1 && (
@@ -328,12 +329,12 @@ const BookAppointment = () => {
               </Field>
 
               <Field label="Preferred Time" required htmlFor="preferredTimeSlot">
-                <select id="preferredTimeSlot" className="ui-select" value={form.preferredTimeSlot} onChange={handleChange('preferredTimeSlot')} disabled={!form.preferredDate}>
+                <Select id="preferredTimeSlot" value={form.preferredTimeSlot} onChange={handleChange('preferredTimeSlot')} disabled={!form.preferredDate}>
                   <option value="">{form.preferredDate ? 'Select a time slot' : 'Pick a date first'}</option>
                   {visibleSlots.map(slot => (
                     <option key={slot.value} value={slot.value}>{slot.label}</option>
                   ))}
-                </select>
+                </Select>
                 {form.preferredDate && availableSlots !== null && visibleSlots.length === 0 && (
                   <p className="text-muted" style={{ fontSize: '0.82rem', marginTop: '6px' }}>
                     No slots available this day - please pick another date.

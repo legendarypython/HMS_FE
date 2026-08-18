@@ -3,6 +3,7 @@ import AppNavbar from '../Shared/AppNavbar';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
+import Select from '../ui/Select';
 import Badge from '../ui/Badge';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
@@ -129,10 +130,10 @@ const DoctorManagement = () => {
               <input id="docName" className="ui-input" value={name} onChange={(e) => setName(e.target.value)} />
             </Field>
             <Field label="Specialization" required htmlFor="docSpec">
-              <select id="docSpec" className="ui-select" value={specialization} onChange={(e) => setSpecialization(e.target.value)}>
+              <Select id="docSpec" value={specialization} onChange={(e) => setSpecialization(e.target.value)}>
                 <option value="">Select specialization</option>
                 {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              </Select>
             </Field>
             <Field label="WhatsApp Number (optional)" htmlFor="docPhone">
               <input

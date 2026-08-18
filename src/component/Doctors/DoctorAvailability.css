@@ -111,3 +111,7 @@
   height: 16px;
   cursor: default;
 }
+
+.doctor-availability-select {
+  max-width: 320px;
+}

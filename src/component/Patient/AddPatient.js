@@ -3,6 +3,7 @@ import { Link, useHistory } from 'react-router-dom';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
+import Select from '../ui/Select';
 import IconBadge from '../ui/IconBadge';
 import Icon from '../ui/Icon';
 import { getAuthHeader } from '../../utils/auth';
@@ -260,13 +261,9 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
           </Field>
         </div>
 
-        <h3 className="record-section-title">Medical &amp; Admission Details</h3>
+        <h3 className="record-section-title">Medical &amp; Appointment Details</h3>
         <div className="patient-form-grid">
-          <Field
-            label={isEditMode ? 'Date of Admission / Last Visit' : 'Date of Admission'}
-            required
-            htmlFor="dateOfAdmission"
-          >
+          <Field label="Date of Appointment" required htmlFor="dateOfAdmission">
             <input className="ui-input" type="date" id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
             {isEditMode && (
               <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
@@ -276,18 +273,18 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
           </Field>
 
           <Field label="Payment Status" htmlFor="paymentStatus">
-            <select className="ui-select" id="paymentStatus" value={form.paymentStatus} onChange={handleChange('paymentStatus')}>
+            <Select id="paymentStatus" value={form.paymentStatus} onChange={handleChange('paymentStatus')}>
               <option value="pending">Pending</option>
               <option value="paid">Paid</option>
-            </select>
+            </Select>
           </Field>
 
           {form.paymentStatus === 'paid' && (
             <Field label="Payment Method" htmlFor="paymentMethod">
-              <select className="ui-select" id="paymentMethod" value={form.paymentMethod} onChange={handleChange('paymentMethod')}>
+              <Select id="paymentMethod" value={form.paymentMethod} onChange={handleChange('paymentMethod')}>
                 <option value="offline">Offline (cash/card at desk)</option>
                 <option value="online">Online</option>
-              </select>
+              </Select>
             </Field>
           )}
 
@@ -297,12 +294,12 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
             </Field>
           ) : (
             <Field label="Case Type" required htmlFor="caseType">
-              <select className="ui-select" id="caseType" value={form.caseType} onChange={handleChange('caseType')} required>
+              <Select id="caseType" value={form.caseType} onChange={handleChange('caseType')}>
                 <option value="">Select Case Type</option>
                 <option value="AnteNatal">AnteNatal</option>
                 <option value="Infertility">Infertility</option>
                 <option value="General">General</option>
-              </select>
+              </Select>
             </Field>
           )}
 

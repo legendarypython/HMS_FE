@@ -4,6 +4,7 @@ import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
+import Select from '../ui/Select';
 import IconBadge from '../ui/IconBadge';
 import InvestigationField from './InvestigationField';
 import '../../styles/caseForms.css';
@@ -203,20 +204,18 @@ const AntenatalDetailsForm = () => {
 
             <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
             <Field label="Obstetric History" required htmlFor="obstetricHistory">
-              <select
-                className="ui-select"
+              <Select
                 id="obstetricHistory"
                 name="obstetricHistory"
                 value={antenatalDetails.obstetricHistory}
                 onChange={handleChange}
-                required
               >
                 <option value="">Select Obstetric History</option>
                 <option value="G">G</option>
                 <option value="P">P</option>
                 <option value="A">A</option>
                 <option value="L">L</option>
-              </select>
+              </Select>
             </Field>
 
             <Field label="Last Menstrual Period (LMP)" required htmlFor="LMP">
@@ -256,8 +255,7 @@ const AntenatalDetailsForm = () => {
             </Field>
 
             <Field label="Previous Delivery By" htmlFor="previousDeliveryBy">
-              <select
-                className="ui-select"
+              <Select
                 id="previousDeliveryBy"
                 name="specificHistory.previousDeliveryBy"
                 value={antenatalDetails.specificHistory.previousDeliveryBy}
@@ -268,7 +266,7 @@ const AntenatalDetailsForm = () => {
                 <option value="Caesarean">Caesarean</option>
                 <option value="Ventouse">Ventouse</option>
                 <option value="Others">Others</option>
-              </select>
+              </Select>
             </Field>
 
             <h3 className="record-section-title">Medical History</h3>

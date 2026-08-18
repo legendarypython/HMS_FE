@@ -8,6 +8,7 @@ import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
 import IconBadge from '../ui/IconBadge';
+import Select from '../ui/Select';
 import InvestigationField from './InvestigationField';
 import '../../styles/caseForms.css';
 import { getAuthHeader } from '../../utils/auth';
@@ -251,8 +252,7 @@ const InfertilityDetailsForm = () => {
 
             <h3 className="record-section-title">Secondary History</h3>
             <Field label="Obstetric History" htmlFor="obstetricHistory">
-              <select
-                className="ui-select"
+              <Select
                 id="obstetricHistory"
                 name="secondaryHistory.obstetricHistory"
                 value={infertilityDetails.secondaryHistory.obstetricHistory}
@@ -263,7 +263,7 @@ const InfertilityDetailsForm = () => {
                 <option value="P">P</option>
                 <option value="A">A</option>
                 <option value="L">L</option>
-              </select>
+              </Select>
             </Field>
 
             <InvestigationField

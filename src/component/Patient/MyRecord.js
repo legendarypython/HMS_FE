@@ -67,7 +67,7 @@ const MyRecord = () => {
               <Field label="Date of Birth" value={patient.dateOfBirth} />
               <Field label="Phone" value={patient.phone} />
               <Field label="Address" value={patient.address} />
-              <Field label="Date of Admission" value={new Date(patient.dateOfAdmission).toLocaleDateString()} />
+              <Field label="Date of Appointment" value={new Date(patient.dateOfAdmission).toLocaleDateString()} />
               <Field label="Diagnosis" value={patient.diagnosis} />
               <Field label="New Patient" value={patient.isNewPatient ? 'Yes' : 'No'} />
             </div>
