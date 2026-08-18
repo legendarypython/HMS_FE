@@ -11,6 +11,9 @@ import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
 
 const formatDate = (date) => (date ? new Date(date).toLocaleDateString() : '-');
+// obstetricHistory is four counts (Gravida/Para/Abortus/Living), not the
+// single letter it used to be - see AnteNatalCases.js for why.
+const formatObstetricHistory = (ob) => (ob ? `G${ob.gravida ?? 0} P${ob.para ?? 0} A${ob.abortus ?? 0} L${ob.living ?? 0}` : '-');
 
 const ViewAntenatalForm = () => {
   const { patientId } = useParams();
@@ -85,12 +88,20 @@ const ViewAntenatalForm = () => {
   }
 
   if (error || !antenatalDetails) {
+    // Real gap found live: this used to be a dead end - a patient with an
+    // AnteNatal case type but no submitted case yet (e.g. the original
+    // submit silently failed) had no way back in from here, since this was
+    // the only link PatientDetails.js offered. Now offers the actual next
+    // step instead of just reporting the 404.
     return (
       <div>
         <AppNavbar role={sessionStorage.getItem('userRole')} />
         <div className="page page-narrow">
-          <div className="ui-banner ui-banner-error">{error || 'No antenatal case found for this patient.'}</div>
-          <Link to="/patients"><Button variant="ghost">Back to Patients</Button></Link>
+          <div className="ui-banner ui-banner-error">No antenatal details have been entered for this patient yet.</div>
+          <div className="case-form-actions">
+            <Link to={`/patients/add/anteNatalForm/${patientId}`}><Button>Add Antenatal Details</Button></Link>
+            <Link to="/patients"><Button variant="ghost">Back to Patients</Button></Link>
+          </div>
         </div>
       </div>
     );
@@ -105,7 +116,7 @@ const ViewAntenatalForm = () => {
 
         <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
         <div className="record-grid">
-          <div><div className="record-field-label">Obstetric History</div><div className="record-field-value">{antenatalDetails.obstetricHistory || '-'}</div></div>
+          <div><div className="record-field-label">Obstetric History</div><div className="record-field-value">{formatObstetricHistory(antenatalDetails.obstetricHistory)}</div></div>
           <div><div className="record-field-label">Last Menstrual Period (LMP)</div><div className="record-field-value">{antenatalDetails.LMP || '-'}</div></div>
           <div><div className="record-field-label">Expected Date of Delivery</div><div className="record-field-value">{formatDate(antenatalDetails.expectedDateOfDelivery)}</div></div>
           <div><div className="record-field-label">Previous Delivery By</div><div className="record-field-value">{antenatalDetails.specificHistory.previousDeliveryBy || '-'}</div></div>
@@ -147,7 +158,15 @@ const ViewAntenatalForm = () => {
           {renderInvestigationDocuments('xrayInvestigation')}
         </div>
 
-        <Link to="/patients"><Button variant="ghost">Back</Button></Link>
+        <h3 className="record-section-title">Treatments</h3>
+        <div style={{ marginBottom: 'var(--space-5)' }}>
+          <div className="record-field-value">{antenatalDetails.treatments || '-'}</div>
+        </div>
+
+        <div className="case-form-actions">
+          <Link to={`/patients/add/anteNatalForm/${patientId}`}><Button>Edit</Button></Link>
+          <Link to="/patients"><Button variant="ghost">Back</Button></Link>
+        </div>
       </div>
 
       <DocumentPreviewModal document={previewDocument} onClose={closePreview} />

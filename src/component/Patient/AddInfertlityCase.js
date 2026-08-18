@@ -8,11 +8,56 @@ import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
 import IconBadge from '../ui/IconBadge';
-import Select from '../ui/Select';
+import Spinner from '../ui/Spinner';
 import InvestigationField from './InvestigationField';
 import '../../styles/caseForms.css';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
+
+const BLANK_INVESTIGATIONS = () => ({
+  bloodInvestigation: { details: '', documents: [] },
+  urineInvestigation: { details: '', documents: [] },
+  ultrasoundInvestigation: { details: '', documents: [] },
+  xrayInvestigation: { details: '', documents: [] },
+});
+
+const BLANK_DETAILS = (patientId) => ({
+  patientId,
+  primaryHistory: { investigations: BLANK_INVESTIGATIONS() },
+  secondaryHistory: {
+    obstetricHistory: { gravida: '', para: '', abortus: '', living: '' },
+    investigations: BLANK_INVESTIGATIONS(),
+  },
+});
+
+// Maps a populated Document object (from the backend) into the shape
+// InvestigationField already knows how to display ({name, ...}) - existing
+// docs are tagged `existing: true` so handleSubmit knows to send their id
+// back rather than try to re-upload them.
+const mapExistingDocs = (docs) => (docs || []).map((doc) => ({
+  _id: doc._id,
+  name: doc.filename,
+  existing: true,
+}));
+
+const mapExistingInvestigations = (investigations) => ({
+  bloodInvestigation: {
+    details: investigations?.bloodInvestigation?.details || '',
+    documents: mapExistingDocs(investigations?.bloodInvestigation?.documents),
+  },
+  urineInvestigation: {
+    details: investigations?.urineInvestigation?.details || '',
+    documents: mapExistingDocs(investigations?.urineInvestigation?.documents),
+  },
+  ultrasoundInvestigation: {
+    details: investigations?.ultrasoundInvestigation?.details || '',
+    documents: mapExistingDocs(investigations?.ultrasoundInvestigation?.documents),
+  },
+  xrayInvestigation: {
+    details: investigations?.xrayInvestigation?.details || '',
+    documents: mapExistingDocs(investigations?.xrayInvestigation?.documents),
+  },
+});
 
 const InfertilityDetailsForm = () => {
   const { patientId } = useParams();
@@ -34,51 +79,44 @@ const InfertilityDetailsForm = () => {
     }
   }, [error]);
 
-  // Initialize state for infertility details
-  const [infertilityDetails, setInfertilityDetails] = useState({
-    patientId: patientId,
-    primaryHistory: {
-      investigations: {
-        bloodInvestigation: {
-          details: '',
-          documents: []
-        },
-        urineInvestigation: {
-          details: '',
-          documents: []
-        },
-        ultrasoundInvestigation: {
-          details: '',
-          documents: []
-        },
-        xrayInvestigation: {
-          details: '',
-          documents: []
-        }
-      }
-    },
-    secondaryHistory: {
-      obstetricHistory: '',
-      investigations: {
-        bloodInvestigation: {
-          details: '',
-          documents: []
-        },
-        ultrasoundInvestigation: {
-          details: '',
-          documents: []
-        },
-        urineInvestigation: {
-            details: '',
-            documents: []
+  // Same gap found and fixed on AddAnteNatal.js: a patient with an
+  // Infertility case type but no submitted case yet had no way back into
+  // this form - it now loads any existing case for this patientId on
+  // mount and switches into edit mode if one exists.
+  const [caseId, setCaseId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [infertilityDetails, setInfertilityDetails] = useState(() => BLANK_DETAILS(patientId));
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch(`${API_BASE}/api/infertility/getByPatientId?patientId=${patientId}`, { headers: getAuthHeader() })
+      .then((res) => (res.status === 404 ? null : res.json()))
+      .then((json) => {
+        if (cancelled || !json?.data) return;
+        const existing = json.data;
+        setCaseId(existing.caseId);
+        setInfertilityDetails({
+          patientId,
+          primaryHistory: {
+            investigations: mapExistingInvestigations(existing.primaryHistory?.investigations),
           },
-        xrayInvestigation: {
-          details: '',
-          documents: []
-        }
-      }
-    }
-  });
+          secondaryHistory: {
+            obstetricHistory: {
+              gravida: existing.secondaryHistory?.obstetricHistory?.gravida ?? 0,
+              para: existing.secondaryHistory?.obstetricHistory?.para ?? 0,
+              abortus: existing.secondaryHistory?.obstetricHistory?.abortus ?? 0,
+              living: existing.secondaryHistory?.obstetricHistory?.living ?? 0,
+            },
+            investigations: mapExistingInvestigations(existing.secondaryHistory?.investigations),
+          },
+        });
+      })
+      .catch((err) => console.error('Error checking for an existing infertility case:', err))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [patientId]);
+
+  const isEditMode = caseId !== null;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -90,25 +128,30 @@ const InfertilityDetailsForm = () => {
 
       // Append patientId
       formData.append('patientId', infertilityDetails.patientId);
+      if (isEditMode) formData.append('caseId', caseId);
 
       // Append primary history details and documents
       appendInvestigationDetails(formData, 'primaryHistory', infertilityDetails.primaryHistory);
 
-      // Append secondary history details including ObstetricHistory
-      formData.append('secondaryHistory.obstetricHistory', infertilityDetails.secondaryHistory.obstetricHistory);
-
-      // Append secondary history investigations details and documents
+      // Append secondary history's obstetric-history counts (see
+      // AnteNatalCases.js for why this is four numbers, not a single
+      // G/P/A/L choice) and investigations details and documents
+      const ob = infertilityDetails.secondaryHistory.obstetricHistory;
+      formData.append('secondaryHistory.obstetricHistory.gravida', Number(ob.gravida) || 0);
+      formData.append('secondaryHistory.obstetricHistory.para', Number(ob.para) || 0);
+      formData.append('secondaryHistory.obstetricHistory.abortus', Number(ob.abortus) || 0);
+      formData.append('secondaryHistory.obstetricHistory.living', Number(ob.living) || 0);
       appendInvestigationDetails(formData, 'secondaryHistory', infertilityDetails.secondaryHistory);
 
-      const response = await apiFetch(`${API_BASE}/api/infertility/create`, {
-        method: 'POST',
+      const response = await apiFetch(`${API_BASE}/api/infertility/${isEditMode ? 'update' : 'create'}`, {
+        method: isEditMode ? 'PUT' : 'POST',
         headers: getAuthHeader(),
         body: formData
       });
 
       if (response.ok) {
         // Submission successful
-        history.push( `/patients`); // Redirect to the patient list
+        history.push(isEditMode ? `/patients/view/${patientId}` : '/patients');
       } else {
         // Handle error response
         const errorData = await response.json();
@@ -123,19 +166,25 @@ const InfertilityDetailsForm = () => {
     }
   };
 
-  // Helper function to append investigation details and documents to FormData
+  // Helper function to append investigation details and documents to
+  // FormData - existing (already-uploaded) documents aren't re-uploaded,
+  // their ids go in a parallel "keep list" field instead (edit mode only),
+  // so the backend knows which of the case's current documents survived
+  // this save alongside whatever's newly attached here.
   const appendInvestigationDetails = (formData, historyType, historyDetails) => {
-    // Iterate over investigations (blood, urine, ultrasound, xray)
     Object.keys(historyDetails.investigations).forEach((category) => {
       const investigation = historyDetails.investigations[category];
-
-      // Append investigation details
       formData.append(`${historyType}.investigations.${category}.details`, investigation.details);
 
-      // Append investigation documents
+      const keepIds = [];
       investigation.documents.forEach((doc) => {
-        formData.append(`${historyType}.investigations.${category}.documents`, doc.file);
+        if (doc.existing) {
+          keepIds.push(doc._id);
+        } else {
+          formData.append(`${historyType}.investigations.${category}.documents`, doc.file);
+        }
       });
+      if (isEditMode) formData.append(`${historyType}.investigations.${category}.keepDocumentIds`, JSON.stringify(keepIds));
     });
   };
 
@@ -215,6 +264,17 @@ const InfertilityDetailsForm = () => {
     }));
   };
 
+  if (loading) {
+    return (
+      <div>
+        <AppNavbar role={sessionStorage.getItem('userRole')} />
+        <div className="background-container">
+          <Spinner fullPage label="Loading..." />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <AppNavbar role={sessionStorage.getItem('userRole')} />
@@ -222,7 +282,7 @@ const InfertilityDetailsForm = () => {
         <Card variant="elevated" style={{ width: '100%', maxWidth: 680 }}>
           <IconBadge name="baby" />
           <span className="ui-eyebrow">Patient Records</span>
-          <h2 className="section-title">Infertility Details Form</h2>
+          <h2 className="section-title">{isEditMode ? 'Edit Infertility Details' : 'Infertility Details Form'}</h2>
           {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
           <form onSubmit={handleSubmit}>
             <input type="hidden" name="patientId" value={patientId} />
@@ -274,20 +334,52 @@ const InfertilityDetailsForm = () => {
             />
 
             <h3 className="record-section-title">Secondary History</h3>
-            <Field label="Obstetric History" htmlFor="obstetricHistory">
-              <Select
-                id="obstetricHistory"
-                name="secondaryHistory.obstetricHistory"
-                value={infertilityDetails.secondaryHistory.obstetricHistory}
-                onChange={handleChange}
-              >
-                <option value="">Select Obstetric History</option>
-                <option value="G">G</option>
-                <option value="P">P</option>
-                <option value="A">A</option>
-                <option value="L">L</option>
-              </Select>
-            </Field>
+            <div className="patient-form-grid">
+              <Field label="Gravida (total pregnancies)" htmlFor="obGravida">
+                <input
+                  className="ui-input"
+                  type="number"
+                  min="0"
+                  id="obGravida"
+                  name="secondaryHistory.obstetricHistory.gravida"
+                  value={infertilityDetails.secondaryHistory.obstetricHistory.gravida}
+                  onChange={handleChange}
+                />
+              </Field>
+              <Field label="Para (viable deliveries)" htmlFor="obPara">
+                <input
+                  className="ui-input"
+                  type="number"
+                  min="0"
+                  id="obPara"
+                  name="secondaryHistory.obstetricHistory.para"
+                  value={infertilityDetails.secondaryHistory.obstetricHistory.para}
+                  onChange={handleChange}
+                />
+              </Field>
+              <Field label="Abortus (losses)" htmlFor="obAbortus">
+                <input
+                  className="ui-input"
+                  type="number"
+                  min="0"
+                  id="obAbortus"
+                  name="secondaryHistory.obstetricHistory.abortus"
+                  value={infertilityDetails.secondaryHistory.obstetricHistory.abortus}
+                  onChange={handleChange}
+                />
+              </Field>
+              <Field label="Living (children alive)" htmlFor="obLiving">
+                <input
+                  className="ui-input"
+                  type="number"
+                  min="0"
+                  id="obLiving"
+                  name="secondaryHistory.obstetricHistory.living"
+                  value={infertilityDetails.secondaryHistory.obstetricHistory.living}
+                  onChange={handleChange}
+                />
+              </Field>
+            </div>
 
             <InvestigationField
               label="Blood Investigation"
@@ -335,7 +427,9 @@ const InfertilityDetailsForm = () => {
             />
 
             <div className="case-form-actions">
-              <Button type="submit" disabled={saving}>{saving ? 'Submitting...' : 'Submit Infertility Details'}</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Submit Infertility Details')}
+              </Button>
               <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
             </div>
           </form>

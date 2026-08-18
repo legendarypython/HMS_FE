@@ -7,12 +7,53 @@ import Button from '../ui/Button';
 import Select from '../ui/Select';
 import DateInput from '../ui/DateInput';
 import IconBadge from '../ui/IconBadge';
+import Spinner from '../ui/Spinner';
 import InvestigationField from './InvestigationField';
 import '../../styles/caseForms.css';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { getAuthHeader } from '../../utils/auth';
-import { API_BASE } from '../../utils/api';
+import { API_BASE, apiFetch } from '../../utils/api';
+
+const BLANK_INVESTIGATIONS = {
+  bloodInvestigation: { details: '', documents: [] },
+  urineInvestigation: { details: '', documents: [] },
+  ultrasoundInvestigation: { details: '', documents: [] },
+  xrayInvestigation: { details: '', documents: [] },
+};
+
+const BLANK_DETAILS = (patientId) => ({
+  patientId,
+  obstetricHistory: { gravida: '', para: '', abortus: '', living: '' },
+  LMP: '',
+  expectedDateOfDelivery: '',
+  specificHistory: {
+    pregnancyComplications: '',
+    previousDeliveryBy: ''
+  },
+  medicalComplications: {
+    heartDisease: '',
+    lungDisease: '',
+    liverDisease: '',
+    GIT: '',
+    Kidney: '',
+    SpineProblem: '',
+    Others: ''
+  },
+  investigations: JSON.parse(JSON.stringify(BLANK_INVESTIGATIONS)),
+  treatments: '',
+});
+
+// Maps a populated Document object (from the backend) into the shape
+// InvestigationField already knows how to display ({name, ...}) - existing
+// docs are tagged `existing: true` so handleSubmit knows to send their id
+// back rather than try to re-upload them (the update endpoint doesn't
+// accept file uploads at all, only create does).
+const mapExistingDocs = (docs) => (docs || []).map((doc) => ({
+  _id: doc._id,
+  name: doc.filename,
+  existing: true,
+}));
 
 const AntenatalDetailsForm = () => {
   const { patientId } = useParams();
@@ -35,64 +76,91 @@ const AntenatalDetailsForm = () => {
     }
   }, [error]);
 
-  // Initialize state for antenatal details
-  const [antenatalDetails, setAntenatalDetails] = useState({
-    patientId: patientId,
-    obstetricHistory: '',
-    LMP: '',
-    expectedDateOfDelivery: '',
-    specificHistory: {
-      pregnancyComplications: '',
-      previousDeliveryBy: ''
-    },
-    medicalComplications: {
-      heartDisease: '',
-      lungDisease: '',
-      liverDisease: '',
-      GIT: '',
-      Kidney: '',
-      SpineProblem: '',
-      Others: ''
-    },
-    investigations: {
-        bloodInvestigation: {
-          details: '',
-          documents: [] // Array to store documents for blood investigation
-        },
-        urineInvestigation: {
-          details: '',
-          documents: [] // Array to store documents for urine investigation
-        },
-        ultrasoundInvestigation: {
-          details: '',
-          documents: [] // Array to store documents for ultrasound investigation
-        },
-        xrayInvestigation: {
-          details: '',
-          documents: [] // Array to store documents for x-ray investigation
-        }
-      }
-  });
+  // Real gap found live: a patient with an AnteNatal case type but no
+  // submitted case yet (e.g. the original submit silently failed) had no
+  // way back into this form - "View AnteNatal Form" only ever linked to
+  // the read-only view, which 404s if nothing was ever saved, with no
+  // fallback. This form now does double duty: loads any existing case for
+  // this patientId on mount and switches into edit mode if one exists,
+  // otherwise behaves exactly as the plain create form always has.
+  const [caseId, setCaseId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [antenatalDetails, setAntenatalDetails] = useState(() => BLANK_DETAILS(patientId));
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch(`${API_BASE}/api/antenatal/getByPatientId?patientId=${patientId}`, { headers: getAuthHeader() })
+      .then((res) => (res.status === 404 ? null : res.json()))
+      .then((json) => {
+        if (cancelled || !json?.data) return;
+        const existing = json.data;
+        setCaseId(existing.caseId);
+        setAntenatalDetails({
+          patientId,
+          obstetricHistory: {
+            gravida: existing.obstetricHistory?.gravida ?? 0,
+            para: existing.obstetricHistory?.para ?? 0,
+            abortus: existing.obstetricHistory?.abortus ?? 0,
+            living: existing.obstetricHistory?.living ?? 0,
+          },
+          LMP: existing.LMP || '',
+          expectedDateOfDelivery: existing.expectedDateOfDelivery ? existing.expectedDateOfDelivery.slice(0, 10) : '',
+          specificHistory: {
+            pregnancyComplications: existing.specificHistory?.pregnancyComplications || '',
+            previousDeliveryBy: existing.specificHistory?.previousDeliveryBy || '',
+          },
+          medicalComplications: {
+            heartDisease: existing.medicalComplications?.heartDisease || '',
+            lungDisease: existing.medicalComplications?.lungDisease || '',
+            liverDisease: existing.medicalComplications?.liverDisease || '',
+            GIT: existing.medicalComplications?.GIT || '',
+            Kidney: existing.medicalComplications?.Kidney || '',
+            SpineProblem: existing.medicalComplications?.SpineProblem || '',
+            Others: existing.medicalComplications?.Others || '',
+          },
+          investigations: {
+            bloodInvestigation: {
+              details: existing.investigations?.bloodInvestigation?.details || '',
+              documents: mapExistingDocs(existing.investigations?.bloodInvestigation?.documents),
+            },
+            urineInvestigation: {
+              details: existing.investigations?.urineInvestigation?.details || '',
+              documents: mapExistingDocs(existing.investigations?.urineInvestigation?.documents),
+            },
+            ultrasoundInvestigation: {
+              details: existing.investigations?.ultrasoundInvestigation?.details || '',
+              documents: mapExistingDocs(existing.investigations?.ultrasoundInvestigation?.documents),
+            },
+            xrayInvestigation: {
+              details: existing.investigations?.xrayInvestigation?.details || '',
+              documents: mapExistingDocs(existing.investigations?.xrayInvestigation?.documents),
+            },
+          },
+          treatments: existing.treatments || '',
+        });
+      })
+      .catch((err) => console.error('Error checking for an existing antenatal case:', err))
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [patientId]);
+
+  const isEditMode = caseId !== null;
 
   // Handle form submission
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError(null);
-    // The native <select required> this field used to have enforced this
-    // at the browser level for free - the custom Select component (styling
-    // fix, see ui/Select.js) doesn't support native constraint validation,
-    // so this check has to happen here now instead (same gap found and
-    // fixed on AddPatient.js's Case Type field).
-    if (!antenatalDetails.obstetricHistory) {
-      setError('Please select an obstetric history.');
-      return;
-    }
     setSaving(true);
+
     const formData = new FormData();
 
     // Append non-file data to formData
     formData.append('patientId', antenatalDetails.patientId);
-    formData.append('obstetricHistory', antenatalDetails.obstetricHistory);
+    if (isEditMode) formData.append('caseId', caseId);
+    formData.append('obstetricHistory.gravida', Number(antenatalDetails.obstetricHistory.gravida) || 0);
+    formData.append('obstetricHistory.para', Number(antenatalDetails.obstetricHistory.para) || 0);
+    formData.append('obstetricHistory.abortus', Number(antenatalDetails.obstetricHistory.abortus) || 0);
+    formData.append('obstetricHistory.living', Number(antenatalDetails.obstetricHistory.living) || 0);
     formData.append('LMP', antenatalDetails.LMP);
     formData.append('expectedDateOfDelivery', antenatalDetails.expectedDateOfDelivery);
     formData.append('specificHistory.pregnancyComplications', antenatalDetails.specificHistory.pregnancyComplications);
@@ -104,27 +172,42 @@ const AntenatalDetailsForm = () => {
     formData.append('medicalComplications.SpineProblem', antenatalDetails.medicalComplications.SpineProblem);
     formData.append('medicalComplications.Others', antenatalDetails.medicalComplications.Others);
 
-    // Append files to formData
+    // Append files to formData - each document is either a fresh local pick
+    // ({name, file}, a real File to upload) or one already on the case from
+    // before this edit ({name, _id, existing: true}). Existing ones aren't
+    // re-uploaded - their ids go in a parallel "keep list" field instead, so
+    // the backend knows which of the case's current documents survived this
+    // save (anything not listed there was removed locally) alongside
+    // whatever's newly attached here.
     const investigations = antenatalDetails.investigations;
     for (const key in investigations) {
       if (investigations.hasOwnProperty(key)) {
         formData.append(`investigations.${key}.details`, investigations[key].details);
+        const keepIds = [];
         investigations[key].documents.forEach((doc) => {
-          formData.append(`investigations.${key}.documents`, doc.file);
+          if (doc.existing) {
+            keepIds.push(doc._id);
+          } else {
+            formData.append(`investigations.${key}.documents`, doc.file);
+          }
         });
+        if (isEditMode) formData.append(`investigations.${key}.keepDocumentIds`, JSON.stringify(keepIds));
       }
     }
+    formData.append('treatments', antenatalDetails.treatments);
 
     try {
-      const response = await axios.post(`${API_BASE}/api/antenatal/create`, formData, {
-        method: 'POST',
+      const response = await axios.request({
+        url: `${API_BASE}/api/antenatal/${isEditMode ? 'update' : 'create'}`,
+        method: isEditMode ? 'PUT' : 'POST',
+        data: formData,
         headers: {
             'Content-Type': 'multipart/form-data',
             ...getAuthHeader()
         }      });
-      if (response.status === 201) {
+      if (response.status === 200 || response.status === 201) {
         // Submission successful
-        history.push( `/patients`); // Redirect to the patient list
+        history.push(isEditMode ? `/patients/view/${patientId}` : '/patients');
       } else {
         // Handle error response
         console.error('Error submitting antenatal details:', response.data);
@@ -179,6 +262,15 @@ const AntenatalDetailsForm = () => {
             [subCategory]: value
           }
         }));
+      } else if (name.startsWith('obstetricHistory')) {
+        const [category, subCategory] = name.split('.');
+        setAntenatalDetails((prevState) => ({
+          ...prevState,
+          [category]: {
+            ...prevState.obstetricHistory,
+            [subCategory]: value
+          }
+        }));
       }  else {
       setAntenatalDetails((prevState) => ({
         ...prevState,
@@ -224,6 +316,17 @@ const AntenatalDetailsForm = () => {
       }));
   };
 
+  if (loading) {
+    return (
+      <div>
+        <AppNavbar role={sessionStorage.getItem('userRole')} />
+        <div className="background-container">
+          <Spinner fullPage label="Loading..." />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <AppNavbar role={sessionStorage.getItem('userRole')} />
@@ -231,26 +334,58 @@ const AntenatalDetailsForm = () => {
         <Card variant="elevated" style={{ width: '100%', maxWidth: 680 }}>
           <IconBadge name="baby" />
           <span className="ui-eyebrow">Patient Records</span>
-          <h2 className="section-title">Antenatal Details Form</h2>
+          <h2 className="section-title">{isEditMode ? 'Edit Antenatal Details' : 'Antenatal Details Form'}</h2>
           {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
           <form onSubmit={handleSubmit}>
             <input type="hidden" name="patientId" value={patientId} />
 
             <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
-            <Field label="Obstetric History" required htmlFor="obstetricHistory">
-              <Select
-                id="obstetricHistory"
-                name="obstetricHistory"
-                value={antenatalDetails.obstetricHistory}
-                onChange={handleChange}
-              >
-                <option value="">Select Obstetric History</option>
-                <option value="G">G</option>
-                <option value="P">P</option>
-                <option value="A">A</option>
-                <option value="L">L</option>
-              </Select>
-            </Field>
+            <div className="patient-form-grid">
+              <Field label="Gravida (total pregnancies)" htmlFor="obGravida">
+                <input
+                  className="ui-input"
+                  type="number"
+                  min="0"
+                  id="obGravida"
+                  name="obstetricHistory.gravida"
+                  value={antenatalDetails.obstetricHistory.gravida}
+                  onChange={handleChange}
+                />
+              </Field>
+              <Field label="Para (viable deliveries)" htmlFor="obPara">
+                <input
+                  className="ui-input"
+                  type="number"
+                  min="0"
+                  id="obPara"
+                  name="obstetricHistory.para"
+                  value={antenatalDetails.obstetricHistory.para}
+                  onChange={handleChange}
+                />
+              </Field>
+              <Field label="Abortus (losses)" htmlFor="obAbortus">
+                <input
+                  className="ui-input"
+                  type="number"
+                  min="0"
+                  id="obAbortus"
+                  name="obstetricHistory.abortus"
+                  value={antenatalDetails.obstetricHistory.abortus}
+                  onChange={handleChange}
+                />
+              </Field>
+              <Field label="Living (children alive)" htmlFor="obLiving">
+                <input
+                  className="ui-input"
+                  type="number"
+                  min="0"
+                  id="obLiving"
+                  name="obstetricHistory.living"
+                  value={antenatalDetails.obstetricHistory.living}
+                  onChange={handleChange}
+                />
+              </Field>
+            </div>
 
             <Field label="Last Menstrual Period (LMP)" required htmlFor="LMP">
               <DateInput
@@ -412,8 +547,22 @@ const AntenatalDetailsForm = () => {
               onRemoveDocument={(index) => removeDocument(index, 'xrayInvestigation')}
             />
 
+            <h3 className="record-section-title">Treatments</h3>
+            <Field label="Treatments" htmlFor="treatments">
+              <textarea
+                className="ui-textarea"
+                id="treatments"
+                name="treatments"
+                rows={4}
+                value={antenatalDetails.treatments}
+                onChange={handleChange}
+              />
+            </Field>
+
             <div className="case-form-actions">
-              <Button type="submit" disabled={saving}>{saving ? 'Submitting...' : 'Submit Antenatal Details'}</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Submit Antenatal Details')}
+              </Button>
               <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
             </div>
           </form>

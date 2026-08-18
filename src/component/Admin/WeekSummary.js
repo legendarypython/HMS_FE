@@ -29,8 +29,12 @@ const WeekSummary = ({ totalPatients }) => {
   // reason, the page's actual job (finding a patient) still works.
   if (appointments === null) return null;
 
+  // Real bug found live: this used to build i from 6 down to 0, so the
+  // array read [6 days ago, ..., yesterday, today] - today ended up as the
+  // LAST bar (rightmost) instead of the first. Building it 0 up to 6
+  // instead puts today first, 6-days-ago last, matching what was expected.
   const days = [];
-  for (let i = 6; i >= 0; i--) {
+  for (let i = 0; i <= 6; i++) {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - i);
@@ -48,7 +52,7 @@ const WeekSummary = ({ totalPatients }) => {
     a => a.paymentStatus === 'paid' && a.paymentMethod !== 'waived' && days.some(d => sameDay(new Date(a.preferredDate), d))
   ).length;
   const weekRevenue = weekPaidCount * CONSULTATION_FEE;
-  const todayCount = counts[counts.length - 1];
+  const todayCount = counts[0];
 
   return (
     <div className="week-summary">

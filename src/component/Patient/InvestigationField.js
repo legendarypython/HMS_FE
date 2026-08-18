@@ -10,13 +10,26 @@ import Icon from '../ui/Icon';
 // "investigations.bloodInvestigation.details") the parent's handleChange/
 // handleFileChange expect - id is just for label association and can be
 // a simpler unique string.
-const InvestigationField = ({ label, id, name, fileFieldName, value, onChange, documents, onFileChange, onRemoveDocument }) => (
+//
+// `disableUpload`: the case-detail update endpoint is JSON-only (no multer
+// middleware attached), so editing an existing case can't accept new file
+// uploads - only create can. Picking a file here in edit mode would look
+// like it worked (the chip renders locally) then silently vanish on save,
+// the exact "looks fine, does nothing" failure mode found and fixed
+// elsewhere this session - so the upload control itself is hidden rather
+// than offering something that can't actually be saved. Removing an
+// already-uploaded document still works in edit mode (no upload needed).
+const InvestigationField = ({ label, id, name, fileFieldName, value, onChange, documents, onFileChange, onRemoveDocument, disableUpload }) => (
   <Field label={label} htmlFor={id}>
     <textarea className="ui-textarea" id={id} name={name} rows={3} value={value} onChange={onChange} />
-    <label htmlFor={`${id}Docs`} className="ui-file-upload-label">
-      <Icon name="file" size={16} /> Choose Documents
-    </label>
-    <input type="file" id={`${id}Docs`} name={fileFieldName} multiple onChange={onFileChange} className="ui-file-upload-input" />
+    {!disableUpload && (
+      <>
+        <label htmlFor={`${id}Docs`} className="ui-file-upload-label">
+          <Icon name="file" size={16} /> Choose Documents
+        </label>
+        <input type="file" id={`${id}Docs`} name={fileFieldName} multiple onChange={onFileChange} className="ui-file-upload-input" />
+      </>
+    )}
     {documents.map((doc, index) => (
       <div key={index} className="ui-document-chip">
         <Icon name="file" size={16} />

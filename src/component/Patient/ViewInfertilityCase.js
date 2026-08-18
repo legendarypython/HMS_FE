@@ -10,6 +10,10 @@ import '../../styles/caseForms.css';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
 
+// obstetricHistory is four counts (Gravida/Para/Abortus/Living), not a
+// single letter - see AnteNatalCases.js/InfertilityCases.js for why.
+const formatObstetricHistory = (ob) => (ob ? `G${ob.gravida ?? 0} P${ob.para ?? 0} A${ob.abortus ?? 0} L${ob.living ?? 0}` : '-');
+
 const ViewInfertilityForm = () => {
   const { patientId } = useParams();
   const [infertilityDetails, setInfertilityDetails] = useState(null);
@@ -87,12 +91,17 @@ const ViewInfertilityForm = () => {
   }
 
   if (error || !infertilityDetails) {
+    // Same gap found and fixed on ViewAnteNatal.js - this used to be a dead
+    // end for a patient with no case submitted yet.
     return (
       <div>
         <AppNavbar role={sessionStorage.getItem('userRole')} />
         <div className="page page-narrow">
-          <div className="ui-banner ui-banner-error">{error || 'No infertility case found for this patient.'}</div>
-          <Link to="/patients"><Button variant="ghost">Back to Patients</Button></Link>
+          <div className="ui-banner ui-banner-error">No infertility details have been entered for this patient yet.</div>
+          <div className="case-form-actions">
+            <Link to={`/patients/add/infertilityForm/${patientId}`}><Button>Add Infertility Details</Button></Link>
+            <Link to="/patients"><Button variant="ghost">Back to Patients</Button></Link>
+          </div>
         </div>
       </div>
     );
@@ -108,7 +117,7 @@ const ViewInfertilityForm = () => {
         <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
         <div style={{ marginBottom: 'var(--space-5)' }}>
           <div className="record-field-label">Obstetric History</div>
-          <div className="record-field-value">{infertilityDetails.secondaryHistory.obstetricHistory || '-'}</div>
+          <div className="record-field-value">{formatObstetricHistory(infertilityDetails.secondaryHistory.obstetricHistory)}</div>
         </div>
 
         <h3 className="record-section-title">Investigations</h3>
@@ -136,7 +145,10 @@ const ViewInfertilityForm = () => {
           {renderInvestigationDocuments('primaryHistory.investigations.xrayInvestigation')}
         </div>
 
-        <Link to="/patients"><Button variant="ghost">Back</Button></Link>
+        <div className="case-form-actions">
+          <Link to={`/patients/add/infertilityForm/${patientId}`}><Button>Edit</Button></Link>
+          <Link to="/patients"><Button variant="ghost">Back</Button></Link>
+        </div>
       </div>
 
       <DocumentPreviewModal document={previewDocument} onClose={closePreview} />
