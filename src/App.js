@@ -12,6 +12,7 @@ import DoctorManagement from './component/Doctors/DoctorManagement';
 import DoctorAvailability from './component/Doctors/DoctorAvailability';
 import AppointmentInbox from './component/Appointments/AppointmentInbox';
 import BookAppointment from './component/Appointments/BookAppointment';
+import LogOfflineAppointment from './component/Appointments/LogOfflineAppointment';
 
 import AddPatientPage from './component/Patient/AddPatientPage';
 import ScanShareQr from './component/Patient/ScanShareQr';
@@ -43,6 +44,7 @@ function App() {
           <PrivateRoute exact path="/doctors" roles={STAFF_ROLES} component={DoctorManagement} />
           <PrivateRoute exact path="/availability" roles={STAFF_ROLES} component={DoctorAvailability} />
           <PrivateRoute exact path="/appointments" roles={STAFF_ROLES} component={AppointmentInbox} />
+          <PrivateRoute exact path="/appointments/log-offline" roles={STAFF_ROLES} component={LogOfflineAppointment} />
 
           <PrivateRoute exact path="/patients/add" roles={STAFF_ROLES} component={AddPatientPage} />
           <PrivateRoute exact path="/scan-qr" roles={STAFF_ROLES} component={ScanShareQr} />

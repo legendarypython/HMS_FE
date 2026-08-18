@@ -40,8 +40,12 @@ const WeekSummary = ({ totalPatients }) => {
   const counts = days.map(day => appointments.filter(a => sameDay(new Date(a.preferredDate), day)).length);
   const maxCount = Math.max(1, ...counts);
   const pendingCount = appointments.filter(a => a.status === 'pending').length;
+  // Excludes 'waived' (free 7-day follow-ups) - those are real confirmed
+  // appointments but zero rupees actually changed hands, so counting them
+  // here would overstate revenue. 'online' and 'offline' both count - both
+  // are real money, just collected differently.
   const weekPaidCount = appointments.filter(
-    a => a.paymentStatus === 'paid' && days.some(d => sameDay(new Date(a.preferredDate), d))
+    a => a.paymentStatus === 'paid' && a.paymentMethod !== 'waived' && days.some(d => sameDay(new Date(a.preferredDate), d))
   ).length;
   const weekRevenue = weekPaidCount * CONSULTATION_FEE;
   const todayCount = counts[counts.length - 1];

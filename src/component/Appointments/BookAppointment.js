@@ -34,6 +34,10 @@ const BookAppointment = () => {
   // effect below), which wipes form state - captured separately from
   // payment-status so the success message still has a name to show.
   const [confirmedName, setConfirmedName] = useState('');
+  // True when this booking skipped payment entirely (free 7-day follow-up) -
+  // changes the success message, since "your payment was received" would be
+  // false for these.
+  const [isFreeFollowup, setIsFreeFollowup] = useState(false);
   // null = not yet fetched for the current date (show the full static list
   // so the dropdown isn't empty before a date is picked); array = the real,
   // doctor-availability-filtered set for that specific date.
@@ -194,6 +198,13 @@ const BookAppointment = () => {
         return;
       }
 
+      if (json.data.freeFollowup) {
+        setIsFreeFollowup(true);
+        setConfirmedName(json.data.patientName || form.patientName);
+        setSuccess(true);
+        return;
+      }
+
       const { longurl, paymentRequestId } = json.data;
       if (!window.Instamojo) {
         setError('Payment could not load. Please refresh and try again.');
@@ -254,11 +265,18 @@ const BookAppointment = () => {
           {success ? (
             <>
               <IconBadge name="check-circle" variant="success" />
-              <h2 className="section-title">Request Sent</h2>
-              <p>
-                Thanks, {confirmedName || form.patientName}. Your payment was received and your appointment request has been
-                sent to the hospital - they'll confirm it shortly by phone.
-              </p>
+              <h2 className="section-title">{isFreeFollowup ? 'Appointment Confirmed' : 'Request Sent'}</h2>
+              {isFreeFollowup ? (
+                <p>
+                  Thanks, {confirmedName || form.patientName}. Since you visited within the last 7 days, this follow-up
+                  is <strong>free</strong> - no payment needed. Your appointment is confirmed.
+                </p>
+              ) : (
+                <p>
+                  Thanks, {confirmedName || form.patientName}. Your payment was received and your appointment request has been
+                  sent to the hospital - they'll confirm it shortly by phone.
+                </p>
+              )}
             </>
           ) : confirming ? (
             <>
