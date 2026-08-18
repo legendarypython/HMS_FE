@@ -89,7 +89,7 @@ const InfertilityDetailsForm = () => {
 
       if (response.ok) {
         // Submission successful
-        history.push( `/dashboard`); // Redirect to success page
+        history.push( `/patients`); // Redirect to the patient list
       } else {
         // Handle error response
         const errorData = await response.json();
@@ -313,7 +313,7 @@ const InfertilityDetailsForm = () => {
 
             <div className="case-form-actions">
               <Button type="submit">Submit Infertility Details</Button>
-              <Link to="/dashboard"><Button type="button" variant="ghost">Cancel</Button></Link>
+              <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
             </div>
           </form>
         </Card>

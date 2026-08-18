@@ -168,7 +168,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
             history.push(`/patients/add/infertilityForm/${newPatientId}`);
             break;
           default:
-            history.push('/dashboard');
+            history.push('/patients');
             break;
         }
       } else {
@@ -310,7 +310,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
 
         <div className="patient-form-actions">
           <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Save Patient')}</Button>
-          <Link to="/dashboard"><Button type="button" variant="ghost">Cancel</Button></Link>
+          <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
         </div>
       </form>
     </Card>

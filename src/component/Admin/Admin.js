@@ -11,7 +11,6 @@ import Icon from '../ui/Icon';
 import Badge from '../ui/Badge';
 import PageHeader from '../ui/PageHeader';
 import Drawer from '../ui/Drawer';
-import WeekSummary from './WeekSummary';
 import PatientQuickView from './PatientQuickView';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
@@ -47,18 +46,34 @@ const Admin = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalPatientCount, setTotalPatientCount] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // raw input value, updates every keystroke
+  const [searchQuery, setSearchQuery] = useState(''); // debounced value that actually drives the fetch
   const [filterValues, setFilterValues] = useState({});
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [quickViewPatientId, setQuickViewPatientId] = useState(null);
 
+  // 300ms debounce - was firing a request on every single keystroke before
+  // (fetchPatients depends on searchQuery, which updated directly from the
+  // input's onChange), with no way to tell the difference between "still
+  // typing" and "done typing". This is also why the explicit Search button
+  // is gone now - there's nothing left for it to trigger that typing itself
+  // doesn't already do.
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchQuery(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // A stale page number from before a new search/filter would otherwise
+  // silently return zero results (e.g. sitting on page 3 of "all patients",
+  // then searching for something with only 1 page of matches).
+  useEffect(() => { setPage(1); }, [searchQuery, filterValues]);
+
   const fetchPatients = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.post(`${API_BASE}/api/patients/search`, {
-        name: searchQuery,
+        query: searchQuery,
         sortBy: 'firstName',
         order: 'asc',
         page,
@@ -77,23 +92,6 @@ const Admin = () => {
   }, [page, limit, filterValues, searchQuery]);
 
   useEffect(() => { fetchPatients(); }, [fetchPatients]);
-
-  // Separate, unfiltered, fetch-once count for the overview strip - the
-  // paginated/filtered totalPages above reflects whatever search/filter is
-  // currently active in the table below, which isn't the same thing as "how
-  // many patients do we actually have".
-  useEffect(() => {
-    axios.post(`${API_BASE}/api/patients/search`, {
-      name: '', sortBy: 'firstName', order: 'asc', page: 1, limit: 1, filters: {}
-    }, { headers: getAuthHeader() })
-      .then(response => setTotalPatientCount(response.data.pagination.total))
-      .catch(() => setTotalPatientCount(null));
-  }, []);
-
-  const handleSearch = () => {
-    setPage(1);
-    fetchPatients();
-  };
 
   const handleFilterValueSelection = (name, value) => {
     setFilterValues(prev => ({ ...prev, [name]: value }));
@@ -118,18 +116,18 @@ const Admin = () => {
       <div className="page">
         <PageHeader icon="users" title="Patients" />
 
-        {totalPatientCount !== null && <WeekSummary totalPatients={totalPatientCount} />}
-
         <div className="dashboard-toolbar">
           <Link to="/patients/add"><Button>+ Add New Patient</Button></Link>
-          <input
-            className="ui-input"
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by name or phone..."
-          />
-          <Button variant="secondary" onClick={handleSearch}>Search</Button>
+          <div className="patient-search-box">
+            <Icon name="search" size={16} className="patient-search-icon" />
+            <input
+              className="ui-input"
+              type="text"
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Search by name, phone, or ID..."
+            />
+          </div>
           <Button variant="secondary" onClick={() => setShowFiltersModal(!showFiltersModal)}>
             <Icon name="filter" size={16} /> Filters
           </Button>
@@ -212,7 +210,11 @@ const Admin = () => {
               </thead>
               <tbody>
                 {patients.map(patient => (
-                  <tr key={patient.patientId} className="patient-row">
+                  <tr
+                    key={patient.patientId}
+                    className="patient-row patient-row-clickable"
+                    onClick={() => setQuickViewPatientId(patient.patientId)}
+                  >
                     <td data-label="Name" className="patient-name-cell">
                       <span className="ui-avatar" aria-hidden="true">{getInitials(patient.firstName, patient.lastName)}</span>
                       <span className="patient-name-cell-text">
@@ -233,10 +235,8 @@ const Admin = () => {
                       </Badge>
                     </td>
                     <td data-label="Phone Number">{patient.phone.replace(/-/g, '')}</td>
-                    <td data-label="Actions">
-                      <Button size="sm" variant="secondary" onClick={() => setQuickViewPatientId(patient.patientId)}>
-                        View
-                      </Button>
+                    <td data-label="Actions" className="patient-row-chevron-cell">
+                      <Icon name="chevron-right" size={18} className="patient-row-chevron" />
                     </td>
                   </tr>
                 ))}

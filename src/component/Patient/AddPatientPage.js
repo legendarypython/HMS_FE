@@ -464,7 +464,7 @@ const AddPatientPageRoute = () => {
               </Field>
               <div className="patient-form-actions">
                 <Button type="submit" disabled={checking}>{checking ? 'Checking...' : 'Continue'}</Button>
-                <Link to="/dashboard"><Button type="button" variant="ghost">Cancel</Button></Link>
+                <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
               </div>
             </form>
           </Card>

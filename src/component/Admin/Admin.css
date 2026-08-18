@@ -244,9 +244,40 @@
   margin-bottom: var(--space-6);
 }
 
-.dashboard-toolbar .ui-input {
+.patient-search-box {
+  position: relative;
   flex: 1;
   min-width: 220px;
+}
+
+.patient-search-box .ui-input {
+  width: 100%;
+  padding-left: 38px;
+}
+
+.patient-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.patient-row-clickable {
+  cursor: pointer;
+}
+
+.patient-row-clickable:hover {
+  background-color: var(--color-bg);
+}
+
+.patient-row-chevron-cell {
+  text-align: right;
+}
+
+.patient-row-chevron {
+  color: var(--color-text-muted);
 }
 
 .filters-modal {

@@ -146,9 +146,14 @@
   padding: var(--space-6);
 }
 
+/* Was --shadow-xl with no border - the same visual weight the Drawer (an
+   actual overlay) uses, which undercut the distinction between "a regular
+   card that happens to be the main content on its page" and "something
+   floating above the page". Cards should read as surfaces; --shadow-xl is
+   reserved for drawers/modals/dropdowns/popovers now. */
 .ui-card-elevated {
-  box-shadow: var(--shadow-xl);
-  border-color: transparent;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
 }
 
 .ui-card-interactive {
@@ -185,6 +190,11 @@
   align-items: center;
   gap: var(--space-4);
   margin-bottom: var(--space-6);
+}
+
+.ui-page-header-subtitle {
+  font-size: 0.9rem;
+  margin-top: 2px;
 }
 
 .ui-icon-badge-primary { background-color: var(--color-primary-bg); color: var(--color-primary-dark); }
@@ -513,16 +523,6 @@
 
 .ui-row-inactive td {
   font-style: italic;
-}
-
-.view-button {
-  color: var(--color-accent);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.view-button:hover {
-  text-decoration: underline;
 }
 
 @media (max-width: 640px) {

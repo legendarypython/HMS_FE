@@ -81,7 +81,7 @@ const PatientDetails = () => {
         <AppNavbar role={role} />
         <div className="page page-narrow">
           <div className="ui-banner ui-banner-error">{error}</div>
-          <Link to="/dashboard"><Button variant="ghost">Back to Patients</Button></Link>
+          <Link to="/patients"><Button variant="ghost">Back to Patients</Button></Link>
         </div>
       </div>
     );
@@ -158,7 +158,7 @@ const PatientDetails = () => {
               {patientDetails.caseType === 2 && (
                 <Link to={`/patients/view/infertilityForm/${patientId}`}><Button variant="secondary">View Infertility Form</Button></Link>
               )}
-              <Link to="/dashboard"><Button variant="ghost">Back</Button></Link>
+              <Link to="/patients"><Button variant="ghost">Back</Button></Link>
             </div>
           </Card>
         )}

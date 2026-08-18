@@ -90,7 +90,7 @@ const ViewAntenatalForm = () => {
         <AppNavbar role={sessionStorage.getItem('userRole')} />
         <div className="page page-narrow">
           <div className="ui-banner ui-banner-error">{error || 'No antenatal case found for this patient.'}</div>
-          <Link to="/dashboard"><Button variant="ghost">Back to Patients</Button></Link>
+          <Link to="/patients"><Button variant="ghost">Back to Patients</Button></Link>
         </div>
       </div>
     );
@@ -147,7 +147,7 @@ const ViewAntenatalForm = () => {
           {renderInvestigationDocuments('xrayInvestigation')}
         </div>
 
-        <Link to="/dashboard"><Button variant="ghost">Back</Button></Link>
+        <Link to="/patients"><Button variant="ghost">Back</Button></Link>
       </div>
 
       <DocumentPreviewModal document={previewDocument} onClose={closePreview} />

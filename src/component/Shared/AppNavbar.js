@@ -11,7 +11,8 @@ const LINKS_BY_ROLE = {
     { to: '/login', label: 'Login', icon: 'lock' }
   ],
   owner: [
-    { to: '/dashboard', label: 'Patients', icon: 'users' },
+    { to: '/dashboard', label: 'Dashboard', icon: 'home' },
+    { to: '/patients', label: 'Patients', icon: 'users' },
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
     { to: '/appointments', label: 'Appointments', icon: 'calendar' },
     { to: '/availability', label: 'Availability', icon: 'calendar-off' },
@@ -22,7 +23,8 @@ const LINKS_BY_ROLE = {
     ...(TENANT_ID === 'demo' ? [{ to: '/scan-qr', label: 'Scan & Share', icon: 'qr-code' }] : [])
   ],
   manager: [
-    { to: '/dashboard', label: 'Patients', icon: 'users' },
+    { to: '/dashboard', label: 'Dashboard', icon: 'home' },
+    { to: '/patients', label: 'Patients', icon: 'users' },
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
     { to: '/appointments', label: 'Appointments', icon: 'calendar' },
     { to: '/availability', label: 'Availability', icon: 'calendar-off' },
