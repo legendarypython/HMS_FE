@@ -9,7 +9,7 @@ import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
 import Tabs from '../ui/Tabs';
-import { AddPatientForm } from './AddPatient';
+import { AddPatientForm, DETAIL_TABS } from './AddPatient';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
 import './PatientDetails.css';
@@ -38,13 +38,6 @@ const RecordField = ({ label, value, icon }) => (
     </div>
   </div>
 );
-
-const DETAIL_TABS = [
-  { key: 'personal', label: 'Personal Info', icon: 'user' },
-  { key: 'family', label: 'Family & Marriage', icon: 'heart' },
-  { key: 'visit', label: 'Visit & Payment', icon: 'calendar' },
-  { key: 'documents', label: 'Documents', icon: 'file' },
-];
 
 const PatientDetails = () => {
   const role = sessionStorage.getItem('userRole');
@@ -132,7 +125,12 @@ const PatientDetails = () => {
       <AppNavbar role={role} />
       <div className="page">
         {editMode ? (
-          <AddPatientForm initialPatientDetails={patientDetails} onSaved={handleSaved} />
+          <AddPatientForm
+            initialPatientDetails={patientDetails}
+            onSaved={handleSaved}
+            initialTab={activeTab}
+            onPreviewDocument={handleDocumentPreview}
+          />
         ) : (
           <Card variant="elevated">
             <div className="patient-detail-header">

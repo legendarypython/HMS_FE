@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useHistory, Link } from 'react-router-dom';
+import { useHistory, useLocation, Link } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
 import Field from '../ui/Field';
@@ -8,7 +8,9 @@ import Select from '../ui/Select';
 import DateInput from '../ui/DateInput';
 import IconBadge from '../ui/IconBadge';
 import Spinner from '../ui/Spinner';
+import Tabs from '../ui/Tabs';
 import InvestigationField from './InvestigationField';
+import { ANTENATAL_TABS } from './ViewAnteNatal';
 import '../../styles/caseForms.css';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -58,6 +60,7 @@ const mapExistingDocs = (docs) => (docs || []).map((doc) => ({
 const AntenatalDetailsForm = () => {
   const { patientId } = useParams();
   const history = useHistory();
+  const location = useLocation();
   // Errors used to only go to console.error, so a failed submit (missing
   // obstetric history, or a genuine backend rejection) looked from the
   // user's side like clicking Submit did nothing at all - caught live,
@@ -145,6 +148,15 @@ const AntenatalDetailsForm = () => {
   }, [patientId]);
 
   const isEditMode = caseId !== null;
+  // Real bug this fixes: Edit (a real page navigation from ViewAnteNatal.js,
+  // not an in-place swap) used to always land here at Obstetric History
+  // regardless of which tab was open on the read view. ViewAnteNatal.js's
+  // Edit link now carries that tab via route state (location.state), since
+  // there's no component to pass a prop through across a navigation.
+  // Create mode has no "where you came from" to preserve, so showSection is
+  // always true there and every section shows at once, same as before.
+  const [editTab, setEditTab] = useState(location.state?.initialTab || 'obstetric');
+  const showSection = (tabKey) => !isEditMode || editTab === tabKey;
 
   // Handle form submission
   const handleSubmit = async (event) => {
@@ -336,9 +348,12 @@ const AntenatalDetailsForm = () => {
           <span className="ui-eyebrow">Patient Records</span>
           <h2 className="section-title">{isEditMode ? 'Edit Antenatal Details' : 'Antenatal Details Form'}</h2>
           {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
+          {isEditMode && <Tabs tabs={ANTENATAL_TABS} active={editTab} onChange={setEditTab} />}
           <form onSubmit={handleSubmit}>
             <input type="hidden" name="patientId" value={patientId} />
 
+            {showSection('obstetric') && (
+              <>
             <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
             <div className="patient-form-grid">
               <Field label="Gravida (total pregnancies)" htmlFor="obGravida">
@@ -433,8 +448,12 @@ const AntenatalDetailsForm = () => {
                 <option value="Others">Others</option>
               </Select>
             </Field>
+              </>
+            )}
 
-            <h3 className="record-section-title">Medical History</h3>
+            {showSection('medical') && (
+              <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Medical History</h3>
             <Field label="Heart Disease" htmlFor="heartDisease">
               <textarea
                 className="ui-textarea"
@@ -500,8 +519,12 @@ const AntenatalDetailsForm = () => {
                 onChange={handleChange}
               />
             </Field>
+              </>
+            )}
 
-            <h3 className="record-section-title">Investigations</h3>
+            {showSection('investigations') && (
+              <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Investigations</h3>
             <InvestigationField
               label="Blood Investigation"
               id="bloodInvestigation"
@@ -546,8 +569,12 @@ const AntenatalDetailsForm = () => {
               onFileChange={handleFileChange}
               onRemoveDocument={(index) => removeDocument(index, 'xrayInvestigation')}
             />
+              </>
+            )}
 
-            <h3 className="record-section-title">Treatments</h3>
+            {showSection('treatments') && (
+              <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Treatments</h3>
             <Field label="Treatments" htmlFor="treatments">
               <textarea
                 className="ui-textarea"
@@ -558,6 +585,8 @@ const AntenatalDetailsForm = () => {
                 onChange={handleChange}
               />
             </Field>
+              </>
+            )}
 
             <div className="case-form-actions">
               <Button type="submit" disabled={saving}>

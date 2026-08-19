@@ -15,7 +15,9 @@ import { API_BASE } from '../../utils/api';
 // single letter - see AnteNatalCases.js/InfertilityCases.js for why.
 const formatObstetricHistory = (ob) => (ob ? `G${ob.gravida ?? 0} P${ob.para ?? 0} A${ob.abortus ?? 0} L${ob.living ?? 0}` : '-');
 
-const INFERTILITY_TABS = [
+// Exported so AddInfertlityCase.js's edit-mode tabs are always the exact
+// same list as this read view's, not two definitions that can drift apart.
+export const INFERTILITY_TABS = [
   { key: 'obstetric', label: 'Obstetric History', icon: 'baby' },
   { key: 'investigations', label: 'Investigations', icon: 'file' },
   { key: 'treatments', label: 'Treatments', icon: 'edit' },
@@ -166,7 +168,11 @@ const ViewInfertilityForm = () => {
         )}
 
         <div className="case-form-actions">
-          <Link to={`/patients/add/infertilityForm/${patientId}`}><Button>Edit</Button></Link>
+          {/* Carries the tab you were reading via route state, same reasoning
+              as ViewAnteNatal.js's own Edit link. */}
+          <Link to={{ pathname: `/patients/add/infertilityForm/${patientId}`, state: { initialTab: activeTab } }}>
+            <Button>Edit</Button>
+          </Link>
           <Link to="/patients"><Button variant="ghost">Back</Button></Link>
         </div>
       </div>

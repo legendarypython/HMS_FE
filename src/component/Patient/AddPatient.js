@@ -7,6 +7,7 @@ import Select from '../ui/Select';
 import DateInput from '../ui/DateInput';
 import IconBadge from '../ui/IconBadge';
 import Icon from '../ui/Icon';
+import Tabs from '../ui/Tabs';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
 import './AddPatient.css';
@@ -19,9 +20,29 @@ const CASE_TYPE_ENUM = { AnteNatal: 1, Infertility: 2, General: 3 };
 // UTC conversion.
 const TODAY = new Date().toLocaleDateString('en-CA');
 
-const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfile, initialAbhaIdentifier, onSaved }) => {
+// Exported (not kept local to PatientDetails.js, which imports this file -
+// defining it there instead would make a circular import) so the read view's
+// tabs and this edit form's tabs are always the exact same list, not two
+// definitions that can quietly drift apart.
+const DETAIL_TABS = [
+  { key: 'personal', label: 'Personal Info', icon: 'user' },
+  { key: 'family', label: 'Family & Marriage', icon: 'heart' },
+  { key: 'visit', label: 'Visit & Payment', icon: 'calendar' },
+  { key: 'documents', label: 'Documents', icon: 'file' },
+];
+
+const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfile, initialAbhaIdentifier, initialTab, onPreviewDocument, onSaved }) => {
   const isEditMode = Boolean(initialPatientDetails);
   const history = useHistory();
+  // Real bug this fixes: edit mode used to always be one long flat scroll
+  // starting at "Personal Details", no matter which tab you were reading
+  // when you clicked Edit - PatientDetails.js passes the tab you were on in
+  // as initialTab so this reopens where you actually were, not the top.
+  // Only meaningful in edit mode - create mode has no "where you came from"
+  // to preserve, so it keeps showing every section at once (see showSection
+  // below, which is always true there).
+  const [editTab, setEditTab] = useState(initialTab || 'personal');
+  const showSection = (tabKey) => !isEditMode || editTab === tabKey;
 
   const [form, setForm] = useState(() => ({
     firstName: initialPatientDetails?.firstName || initialAbhaProfile?.firstName || '',
@@ -237,118 +258,141 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
       )}
       {success && <div className="ui-banner ui-banner-success">{isEditMode ? 'Patient updated successfully' : 'Patient added successfully'}</div>}
 
-      <form onSubmit={isEditMode ? handleEditSubmit : handleCreateSubmit}>
-        <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Personal Details</h3>
-        <div className="patient-form-grid">
-          <Field label="First Name" required htmlFor="firstName">
-            <input className="ui-input" id="firstName" value={form.firstName} onChange={handleChange('firstName')} required />
-          </Field>
-          <Field label="Last Name" required htmlFor="lastName">
-            <input className="ui-input" id="lastName" value={form.lastName} onChange={handleChange('lastName')} required />
-          </Field>
-          <Field label="Date of Birth" required htmlFor="dateOfBirth">
-            <DateInput id="dateOfBirth" value={form.dateOfBirth} onChange={handleChange('dateOfBirth')} max={TODAY} required />
-          </Field>
-          <Field label="Aadhar Number" required htmlFor="aadhar">
-            <input className="ui-input" id="aadhar" value={form.aadhar} onChange={handleChange('aadhar')} required />
-          </Field>
-          <Field label="Husband's First Name" htmlFor="husbandFirstName">
-            <input className="ui-input" id="husbandFirstName" value={form.husbandFirstName} onChange={handleChange('husbandFirstName')} />
-          </Field>
-          <Field label="Husband's Last Name" htmlFor="husbandLastName">
-            <input className="ui-input" id="husbandLastName" value={form.husbandLastName} onChange={handleChange('husbandLastName')} />
-          </Field>
-          <Field label="Marital Status" required htmlFor="maritalStatus">
-            <Select id="maritalStatus" value={form.maritalStatus} onChange={handleChange('maritalStatus')}>
-              <option value="married">Married</option>
-              <option value="unmarried">Unmarried</option>
-            </Select>
-          </Field>
-          {form.maritalStatus === 'married' && (
-            <Field label="Married For (Years)" required htmlFor="marriedFor">
-              <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
-            </Field>
-          )}
-          {form.abhaNumber && (
-            <Field label="ABHA Number (Verified)" htmlFor="abhaNumber">
-              <input className="ui-input" id="abhaNumber" value={form.abhaNumber} disabled />
-            </Field>
-          )}
-          {form.abhaAddress && (
-            <Field label="ABHA Address" htmlFor="abhaAddress">
-              <input className="ui-input" id="abhaAddress" value={form.abhaAddress} disabled />
-            </Field>
-          )}
-        </div>
+      {isEditMode && <Tabs tabs={DETAIL_TABS} active={editTab} onChange={setEditTab} />}
 
-        {initialAbhaProfile?.refreshToken && (
-          <div style={{ marginBottom: 16 }}>
-            {cardError && <div className="ui-banner ui-banner-error">{cardError}</div>}
-            <Button type="button" variant="secondary" disabled={cardDownloading} onClick={handleDownloadAbhaCard}>
-              {cardDownloading ? 'Downloading...' : 'Download ABHA Card'}
-            </Button>
-          </div>
+      <form onSubmit={isEditMode ? handleEditSubmit : handleCreateSubmit}>
+        {showSection('personal') && (
+          <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Personal Details</h3>
+            <div className="patient-form-grid">
+              <Field label="First Name" required htmlFor="firstName">
+                <input className="ui-input" id="firstName" value={form.firstName} onChange={handleChange('firstName')} required />
+              </Field>
+              <Field label="Last Name" required htmlFor="lastName">
+                <input className="ui-input" id="lastName" value={form.lastName} onChange={handleChange('lastName')} required />
+              </Field>
+              <Field label="Date of Birth" required htmlFor="dateOfBirth">
+                <DateInput id="dateOfBirth" value={form.dateOfBirth} onChange={handleChange('dateOfBirth')} max={TODAY} required />
+              </Field>
+              <Field label="Aadhar Number" required htmlFor="aadhar">
+                <input className="ui-input" id="aadhar" value={form.aadhar} onChange={handleChange('aadhar')} required />
+              </Field>
+              {form.abhaNumber && (
+                <Field label="ABHA Number (Verified)" htmlFor="abhaNumber">
+                  <input className="ui-input" id="abhaNumber" value={form.abhaNumber} disabled />
+                </Field>
+              )}
+              {form.abhaAddress && (
+                <Field label="ABHA Address" htmlFor="abhaAddress">
+                  <input className="ui-input" id="abhaAddress" value={form.abhaAddress} disabled />
+                </Field>
+              )}
+            </div>
+
+            {initialAbhaProfile?.refreshToken && (
+              <div style={{ marginBottom: 16 }}>
+                {cardError && <div className="ui-banner ui-banner-error">{cardError}</div>}
+                <Button type="button" variant="secondary" disabled={cardDownloading} onClick={handleDownloadAbhaCard}>
+                  {cardDownloading ? 'Downloading...' : 'Download ABHA Card'}
+                </Button>
+              </div>
+            )}
+
+            <h3 className="record-section-title">Contact Details</h3>
+            <div className="patient-form-grid">
+              <Field label="Phone Number" required htmlFor="phone">
+                <input className="ui-input" type="tel" id="phone" pattern="\d{10}" title="10-digit mobile number" value={form.phone} onChange={handleChange('phone')} required />
+              </Field>
+              <Field label="Email" htmlFor="email">
+                <input className="ui-input" type="email" id="email" value={form.email} onChange={handleChange('email')} />
+              </Field>
+              <Field label="Address" required htmlFor="address" className="patient-form-grid-full">
+                <input className="ui-input" id="address" value={form.address} onChange={handleChange('address')} required />
+              </Field>
+            </div>
+          </>
         )}
 
-        <h3 className="record-section-title">Contact Details</h3>
-        <div className="patient-form-grid">
-          <Field label="Phone Number" required htmlFor="phone">
-            <input className="ui-input" type="tel" id="phone" pattern="\d{10}" title="10-digit mobile number" value={form.phone} onChange={handleChange('phone')} required />
-          </Field>
-          <Field label="Email" htmlFor="email">
-            <input className="ui-input" type="email" id="email" value={form.email} onChange={handleChange('email')} />
-          </Field>
-          <Field label="Address" required htmlFor="address" className="patient-form-grid-full">
-            <input className="ui-input" id="address" value={form.address} onChange={handleChange('address')} required />
-          </Field>
-        </div>
+        {showSection('family') && (
+          <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Family &amp; Marriage</h3>
+            <div className="patient-form-grid">
+              <Field label="Husband's First Name" htmlFor="husbandFirstName">
+                <input className="ui-input" id="husbandFirstName" value={form.husbandFirstName} onChange={handleChange('husbandFirstName')} />
+              </Field>
+              <Field label="Husband's Last Name" htmlFor="husbandLastName">
+                <input className="ui-input" id="husbandLastName" value={form.husbandLastName} onChange={handleChange('husbandLastName')} />
+              </Field>
+              <Field label="Marital Status" required htmlFor="maritalStatus">
+                <Select id="maritalStatus" value={form.maritalStatus} onChange={handleChange('maritalStatus')}>
+                  <option value="married">Married</option>
+                  <option value="unmarried">Unmarried</option>
+                </Select>
+              </Field>
+              {form.maritalStatus === 'married' && (
+                <Field label="Married For (Years)" required htmlFor="marriedFor">
+                  <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
+                </Field>
+              )}
+            </div>
+          </>
+        )}
 
-        <h3 className="record-section-title">Medical &amp; Appointment Details</h3>
-        <div className="patient-form-grid">
-          <Field label="Date of Appointment" required htmlFor="dateOfAdmission">
-            <DateInput id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
-            {isEditMode && (
-              <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
-                For a returning patient's next visit, update this to today's date instead of creating a new record.
-              </p>
-            )}
-          </Field>
+        {showSection('visit') && (
+          <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Medical &amp; Appointment Details</h3>
+            <div className="patient-form-grid">
+              <Field label="Date of Appointment" required htmlFor="dateOfAdmission">
+                <DateInput id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
+                {isEditMode && (
+                  <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
+                    For a returning patient's next visit, update this to today's date instead of creating a new record.
+                  </p>
+                )}
+              </Field>
 
-          <Field label="Payment Status" htmlFor="paymentStatus">
-            <Select id="paymentStatus" value={form.paymentStatus} onChange={handleChange('paymentStatus')}>
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-            </Select>
-          </Field>
+              <Field label="Payment Status" htmlFor="paymentStatus">
+                <Select id="paymentStatus" value={form.paymentStatus} onChange={handleChange('paymentStatus')}>
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                </Select>
+              </Field>
 
-          {form.paymentStatus === 'paid' && (
-            <Field label="Payment Method" htmlFor="paymentMethod">
-              <Select id="paymentMethod" value={form.paymentMethod} onChange={handleChange('paymentMethod')}>
-                <option value="offline">Offline (cash/card at desk)</option>
-                <option value="online">Online</option>
-              </Select>
-            </Field>
-          )}
+              {form.paymentStatus === 'paid' && (
+                <Field label="Payment Method" htmlFor="paymentMethod">
+                  <Select id="paymentMethod" value={form.paymentMethod} onChange={handleChange('paymentMethod')}>
+                    <option value="offline">Offline (cash/card at desk)</option>
+                    <option value="online">Online</option>
+                  </Select>
+                </Field>
+              )}
 
-          {isEditMode ? (
-            <Field label="Case Type" htmlFor="caseTypeDisplay">
-              <input className="ui-input" id="caseTypeDisplay" value={CASE_TYPE_LABELS[initialPatientDetails.caseType] || ''} disabled />
-            </Field>
-          ) : (
-            <Field label="Case Type" required htmlFor="caseType">
-              <Select id="caseType" value={form.caseType} onChange={handleChange('caseType')}>
-                <option value="">Select Case Type</option>
-                <option value="AnteNatal">AnteNatal</option>
-                <option value="Infertility">Infertility</option>
-                <option value="General">General</option>
-              </Select>
-            </Field>
-          )}
+              {isEditMode ? (
+                <Field label="Case Type" htmlFor="caseTypeDisplay">
+                  <input className="ui-input" id="caseTypeDisplay" value={CASE_TYPE_LABELS[initialPatientDetails.caseType] || ''} disabled />
+                </Field>
+              ) : (
+                <Field label="Case Type" required htmlFor="caseType">
+                  <Select id="caseType" value={form.caseType} onChange={handleChange('caseType')}>
+                    <option value="">Select Case Type</option>
+                    <option value="AnteNatal">AnteNatal</option>
+                    <option value="Infertility">Infertility</option>
+                    <option value="General">General</option>
+                  </Select>
+                </Field>
+              )}
 
-          <Field label="Diagnosis" htmlFor="diagnosis" className="patient-form-grid-full">
-            <textarea className="ui-textarea" id="diagnosis" rows={4} value={form.diagnosis} onChange={handleChange('diagnosis')} />
-          </Field>
-        </div>
+              <Field label="Diagnosis" htmlFor="diagnosis" className="patient-form-grid-full">
+                <textarea className="ui-textarea" id="diagnosis" rows={4} value={form.diagnosis} onChange={handleChange('diagnosis')} />
+              </Field>
+            </div>
+
+            <label className="ui-checkbox-field" htmlFor="isNewPatient">
+              <input type="checkbox" id="isNewPatient" checked={form.isNewPatient} onChange={handleChange('isNewPatient')} />
+              <span>Is New Patient</span>
+            </label>
+          </>
+        )}
 
         {!isEditMode && (
           <>
@@ -369,10 +413,39 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
           </>
         )}
 
-        <label className="ui-checkbox-field" htmlFor="isNewPatient">
-          <input type="checkbox" id="isNewPatient" checked={form.isNewPatient} onChange={handleChange('isNewPatient')} />
-          <span>Is New Patient</span>
-        </label>
+        {/* Edit mode can't attach/remove documents (the update endpoint
+            doesn't accept file uploads) - this tab just lets you get back to
+            what's already here without leaving the edit flow, same preview
+            behavior as the read view via the callback PatientDetails.js
+            passes down. */}
+        {isEditMode && showSection('documents') && (
+          <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Documents</h3>
+            {initialPatientDetails.documents && initialPatientDetails.documents.length > 0 ? (
+              <div className="record-documents">
+                {initialPatientDetails.documents.map((document) => (
+                  <button
+                    key={document._id}
+                    type="button"
+                    className="record-document-item"
+                    onClick={() => onPreviewDocument && onPreviewDocument(document)}
+                  >
+                    <Icon name="file" size={18} />
+                    {document.filename}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="ui-empty-state">
+                <Icon name="inbox" size={28} />
+                <p>No documents uploaded.</p>
+              </div>
+            )}
+            <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 'var(--space-3)' }}>
+              Documents can only be attached when a patient is first added, not from this edit form.
+            </p>
+          </>
+        )}
 
         <div className="patient-form-actions">
           <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Save Patient')}</Button>
@@ -387,4 +460,4 @@ const AddPatientPage = () => (
   <Link to="/patients/add" className="add-patient">Add New</Link>
 );
 
-export { AddPatientForm, AddPatientPage };
+export { AddPatientForm, AddPatientPage, DETAIL_TABS };

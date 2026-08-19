@@ -1,7 +1,7 @@
 // InfertilityDetailsForm.js
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useHistory, Link } from 'react-router-dom';
+import { useHistory, useLocation, Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
 import Card from '../ui/Card';
@@ -9,7 +9,9 @@ import Field from '../ui/Field';
 import Button from '../ui/Button';
 import IconBadge from '../ui/IconBadge';
 import Spinner from '../ui/Spinner';
+import Tabs from '../ui/Tabs';
 import InvestigationField from './InvestigationField';
+import { INFERTILITY_TABS } from './ViewInfertilityCase';
 import '../../styles/caseForms.css';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
@@ -63,6 +65,7 @@ const mapExistingInvestigations = (investigations) => ({
 const InfertilityDetailsForm = () => {
   const { patientId } = useParams();
   const history = useHistory();
+  const location = useLocation();
   // Same gap found and fixed on AddAnteNatal.js: a failed submit used to
   // only go to console.error, so it looked from the user's side like
   // clicking Submit did nothing at all.
@@ -119,6 +122,14 @@ const InfertilityDetailsForm = () => {
   }, [patientId]);
 
   const isEditMode = caseId !== null;
+  // Same fix as AddAnteNatal.js: reopens on the tab you were reading on
+  // ViewInfertilityCase.js (carried via route state on its Edit link)
+  // instead of always landing at the top. The read view's "Investigations"
+  // tab only ever displays primaryHistory - this form still edits both
+  // primary and secondary investigations, just grouped together under that
+  // same tab (see the render below), so no field loses its edit path.
+  const [editTab, setEditTab] = useState(location.state?.initialTab || 'obstetric');
+  const showSection = (tabKey) => !isEditMode || editTab === tabKey;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -296,9 +307,17 @@ const InfertilityDetailsForm = () => {
           <span className="ui-eyebrow">Patient Records</span>
           <h2 className="section-title">{isEditMode ? 'Edit Infertility Details' : 'Infertility Details Form'}</h2>
           {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
+          {isEditMode && <Tabs tabs={INFERTILITY_TABS} active={editTab} onChange={setEditTab} />}
           <form onSubmit={handleSubmit}>
             <input type="hidden" name="patientId" value={patientId} />
 
+            {/* Grouped under the same "Investigations" tab as Secondary
+                History's investigations below, even though they're two
+                separate sections in the data model - the read view
+                (ViewInfertilityCase.js) only has one Investigations tab, and
+                this is the only place either ever gets edited. */}
+            {showSection('investigations') && (
+              <>
             <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Primary History</h3>
             <InvestigationField
               label="Blood Investigation"
@@ -344,8 +363,12 @@ const InfertilityDetailsForm = () => {
               onFileChange={handleFileChange}
               onRemoveDocument={(index) => removeDocument('primaryHistory', 'xrayInvestigation', index)}
             />
+              </>
+            )}
 
-            <h3 className="record-section-title">Secondary History</h3>
+            {showSection('obstetric') && (
+              <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
             <div className="patient-form-grid">
               <Field label="Gravida (total pregnancies)" htmlFor="obGravida">
                 <input
@@ -392,7 +415,12 @@ const InfertilityDetailsForm = () => {
                 />
               </Field>
             </div>
+              </>
+            )}
 
+            {showSection('investigations') && (
+              <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Secondary History Investigations</h3>
             <InvestigationField
               label="Blood Investigation"
               id="secondaryBlood"
@@ -437,8 +465,12 @@ const InfertilityDetailsForm = () => {
               onFileChange={handleFileChange}
               onRemoveDocument={(index) => removeDocument('secondaryHistory', 'xrayInvestigation', index)}
             />
+              </>
+            )}
 
-            <h3 className="record-section-title">Treatments</h3>
+            {showSection('treatments') && (
+              <>
+            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Treatments</h3>
             <Field label="Treatments" htmlFor="treatments">
               <textarea
                 className="ui-textarea"
@@ -449,6 +481,8 @@ const InfertilityDetailsForm = () => {
                 onChange={handleTreatmentsChange}
               />
             </Field>
+              </>
+            )}
 
             <div className="case-form-actions">
               <Button type="submit" disabled={saving}>

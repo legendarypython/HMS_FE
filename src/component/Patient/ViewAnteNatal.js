@@ -16,7 +16,9 @@ const formatDate = (date) => (date ? new Date(date).toLocaleDateString() : '-');
 // single letter it used to be - see AnteNatalCases.js for why.
 const formatObstetricHistory = (ob) => (ob ? `G${ob.gravida ?? 0} P${ob.para ?? 0} A${ob.abortus ?? 0} L${ob.living ?? 0}` : '-');
 
-const ANTENATAL_TABS = [
+// Exported so AddAnteNatal.js's edit-mode tabs are always the exact same
+// list as this read view's, not two definitions that can drift apart.
+export const ANTENATAL_TABS = [
   { key: 'obstetric', label: 'Obstetric History', icon: 'baby' },
   { key: 'medical', label: 'Medical History', icon: 'heart' },
   { key: 'investigations', label: 'Investigations', icon: 'file' },
@@ -183,7 +185,14 @@ const ViewAntenatalForm = () => {
         )}
 
         <div className="case-form-actions">
-          <Link to={`/patients/add/anteNatalForm/${patientId}`}><Button>Edit</Button></Link>
+          {/* Carries the tab you were reading via route state (a real page
+              navigation, not an in-place swap like PatientDetails.js's own
+              Edit - so there's no component state to just pass as a prop) so
+              the edit form can reopen on the same section instead of always
+              landing on Obstetric History. */}
+          <Link to={{ pathname: `/patients/add/anteNatalForm/${patientId}`, state: { initialTab: activeTab } }}>
+            <Button>Edit</Button>
+          </Link>
           <Link to="/patients"><Button variant="ghost">Back</Button></Link>
         </div>
       </div>
