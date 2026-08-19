@@ -8,6 +8,7 @@ import DateInput from '../ui/DateInput';
 import IconBadge from '../ui/IconBadge';
 import Icon from '../ui/Icon';
 import Tabs from '../ui/Tabs';
+import StepTracker from '../ui/StepTracker';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
 import './AddPatient.css';
@@ -21,9 +22,10 @@ const CASE_TYPE_ENUM = { AnteNatal: 1, Infertility: 2, General: 3 };
 const TODAY = new Date().toLocaleDateString('en-CA');
 
 // Exported (not kept local to PatientDetails.js, which imports this file -
-// defining it there instead would make a circular import) so the read view's
-// tabs and this edit form's tabs are always the exact same list, not two
-// definitions that can quietly drift apart.
+// defining it there instead would make a circular import) so the read
+// view's tabs, this form's edit-mode tabs, and its create-mode wizard steps
+// are always the exact same list, not definitions that can quietly drift
+// apart.
 const DETAIL_TABS = [
   { key: 'personal', label: 'Personal Info', icon: 'user' },
   { key: 'family', label: 'Family & Marriage', icon: 'heart' },
@@ -34,15 +36,30 @@ const DETAIL_TABS = [
 const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfile, initialAbhaIdentifier, initialTab, onPreviewDocument, onSaved }) => {
   const isEditMode = Boolean(initialPatientDetails);
   const history = useHistory();
+  const formRef = useRef(null);
+
   // Real bug this fixes: edit mode used to always be one long flat scroll
   // starting at "Personal Details", no matter which tab you were reading
   // when you clicked Edit - PatientDetails.js passes the tab you were on in
   // as initialTab so this reopens where you actually were, not the top.
-  // Only meaningful in edit mode - create mode has no "where you came from"
-  // to preserve, so it keeps showing every section at once (see showSection
-  // below, which is always true there).
   const [editTab, setEditTab] = useState(initialTab || 'personal');
-  const showSection = (tabKey) => !isEditMode || editTab === tabKey;
+
+  // Create mode is a guided step-by-step wizard instead - there's no "where
+  // you came from" to reopen on, but a brand-new patient record has a lot of
+  // fields, and a receptionist asked for the same kind of section structure
+  // the read/edit views already have rather than one long scroll. Next
+  // validates the *current* step (native reportValidity() on the form only
+  // ever sees whichever step's fields are actually mounted, which
+  // conveniently scopes it to just that step) before advancing furthestStep,
+  // and the StepTracker only lets you click a step you've already reached -
+  // free jumping is allowed backward/sideways within that, but not forward
+  // past validation, so jumping straight to Documents and hitting Save can't
+  // silently skip a required field on an earlier step.
+  const [wizardStep, setWizardStep] = useState('personal');
+  const [furthestStep, setFurthestStep] = useState(0);
+
+  const activeSection = isEditMode ? editTab : wizardStep;
+  const showSection = (tabKey) => activeSection === tabKey;
 
   const [form, setForm] = useState(() => ({
     firstName: initialPatientDetails?.firstName || initialAbhaProfile?.firstName || '',
@@ -178,14 +195,19 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
     }
   };
 
+  // event is optional - the wizard's own Save Patient button calls this
+  // directly (see the real-bug comment on the wizard-nav buttons below)
+  // rather than relying on native type="submit" form submission.
   const handleCreateSubmit = async (event) => {
-    event.preventDefault();
+    if (event) event.preventDefault();
     setError(null);
     setAbhaConflict(null);
     // The native <select required> this field used to have enforced this
     // at the browser level for free - the custom Select component (styling
     // fix, see ui/Select.js) doesn't support native constraint validation,
-    // so this check has to happen here now instead. Missing this let a
+    // so this check has to happen here too (goNext below checks it as the
+    // wizard leaves the Visit & Payment step, but this is still the real
+    // backstop - the only thing that can't be bypassed). Missing this let a
     // patient get created with no case type at all (caught live in
     // production - the record had to be corrected by hand).
     if (!form.caseType) {
@@ -244,11 +266,221 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
     }
   };
 
-  return (
-    <Card variant="elevated" style={{ maxWidth: 720, margin: '0 auto' }}>
-      <IconBadge name="user" />
-      <span className="ui-eyebrow">Patient Records</span>
-      <h2 className="section-title">{isEditMode ? 'Edit Patient' : 'Add New Patient'}</h2>
+  const wizardStepIndex = DETAIL_TABS.findIndex((s) => s.key === wizardStep);
+  const isLastWizardStep = wizardStepIndex === DETAIL_TABS.length - 1;
+
+  // Native reportValidity() only ever inspects whichever fields are
+  // currently mounted - since only the active step's inputs render at a
+  // time, this naturally scopes validation to just this step without any
+  // manual per-field bookkeeping.
+  const goNext = () => {
+    if (formRef.current && !formRef.current.reportValidity()) return;
+    if (wizardStep === 'visit' && !form.caseType) {
+      setError('Please select a case type.');
+      return;
+    }
+    setError(null);
+    const nextIndex = wizardStepIndex + 1;
+    setFurthestStep((f) => Math.max(f, nextIndex));
+    setWizardStep(DETAIL_TABS[nextIndex].key);
+  };
+
+  const goBack = () => {
+    if (wizardStepIndex > 0) setWizardStep(DETAIL_TABS[wizardStepIndex - 1].key);
+  };
+
+  const jumpToStep = (key) => {
+    const idx = DETAIL_TABS.findIndex((s) => s.key === key);
+    if (idx <= furthestStep) setWizardStep(key);
+  };
+
+  const renderPersonalSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Personal Details</h3>
+      <div className="patient-form-grid">
+        <Field label="First Name" required htmlFor="firstName">
+          <input className="ui-input" id="firstName" value={form.firstName} onChange={handleChange('firstName')} required />
+        </Field>
+        <Field label="Last Name" required htmlFor="lastName">
+          <input className="ui-input" id="lastName" value={form.lastName} onChange={handleChange('lastName')} required />
+        </Field>
+        <Field label="Date of Birth" required htmlFor="dateOfBirth">
+          <DateInput id="dateOfBirth" value={form.dateOfBirth} onChange={handleChange('dateOfBirth')} max={TODAY} required />
+        </Field>
+        <Field label="Aadhar Number" required htmlFor="aadhar">
+          <input className="ui-input" id="aadhar" value={form.aadhar} onChange={handleChange('aadhar')} required />
+        </Field>
+        {form.abhaNumber && (
+          <Field label="ABHA Number (Verified)" htmlFor="abhaNumber">
+            <input className="ui-input" id="abhaNumber" value={form.abhaNumber} disabled />
+          </Field>
+        )}
+        {form.abhaAddress && (
+          <Field label="ABHA Address" htmlFor="abhaAddress">
+            <input className="ui-input" id="abhaAddress" value={form.abhaAddress} disabled />
+          </Field>
+        )}
+      </div>
+
+      {initialAbhaProfile?.refreshToken && (
+        <div style={{ marginBottom: 16 }}>
+          {cardError && <div className="ui-banner ui-banner-error">{cardError}</div>}
+          <Button type="button" variant="secondary" disabled={cardDownloading} onClick={handleDownloadAbhaCard}>
+            {cardDownloading ? 'Downloading...' : 'Download ABHA Card'}
+          </Button>
+        </div>
+      )}
+
+      <h3 className="record-section-title">Contact Details</h3>
+      <div className="patient-form-grid">
+        <Field label="Phone Number" required htmlFor="phone">
+          <input className="ui-input" type="tel" id="phone" pattern="\d{10}" title="10-digit mobile number" value={form.phone} onChange={handleChange('phone')} required />
+        </Field>
+        <Field label="Email" htmlFor="email">
+          <input className="ui-input" type="email" id="email" value={form.email} onChange={handleChange('email')} />
+        </Field>
+        <Field label="Address" required htmlFor="address" className="patient-form-grid-full">
+          <input className="ui-input" id="address" value={form.address} onChange={handleChange('address')} required />
+        </Field>
+      </div>
+    </>
+  );
+
+  const renderFamilySection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Family &amp; Marriage</h3>
+      <div className="patient-form-grid">
+        <Field label="Husband's First Name" htmlFor="husbandFirstName">
+          <input className="ui-input" id="husbandFirstName" value={form.husbandFirstName} onChange={handleChange('husbandFirstName')} />
+        </Field>
+        <Field label="Husband's Last Name" htmlFor="husbandLastName">
+          <input className="ui-input" id="husbandLastName" value={form.husbandLastName} onChange={handleChange('husbandLastName')} />
+        </Field>
+        <Field label="Marital Status" required htmlFor="maritalStatus">
+          <Select id="maritalStatus" value={form.maritalStatus} onChange={handleChange('maritalStatus')}>
+            <option value="married">Married</option>
+            <option value="unmarried">Unmarried</option>
+          </Select>
+        </Field>
+        {form.maritalStatus === 'married' && (
+          <Field label="Married For (Years)" required htmlFor="marriedFor">
+            <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
+          </Field>
+        )}
+      </div>
+    </>
+  );
+
+  const renderVisitSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Medical &amp; Appointment Details</h3>
+      <div className="patient-form-grid">
+        <Field label="Date of Appointment" required htmlFor="dateOfAdmission">
+          <DateInput id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
+          {isEditMode && (
+            <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
+              For a returning patient's next visit, update this to today's date instead of creating a new record.
+            </p>
+          )}
+        </Field>
+
+        <Field label="Payment Status" htmlFor="paymentStatus">
+          <Select id="paymentStatus" value={form.paymentStatus} onChange={handleChange('paymentStatus')}>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+          </Select>
+        </Field>
+
+        {form.paymentStatus === 'paid' && (
+          <Field label="Payment Method" htmlFor="paymentMethod">
+            <Select id="paymentMethod" value={form.paymentMethod} onChange={handleChange('paymentMethod')}>
+              <option value="offline">Offline (cash/card at desk)</option>
+              <option value="online">Online</option>
+            </Select>
+          </Field>
+        )}
+
+        {isEditMode ? (
+          <Field label="Case Type" htmlFor="caseTypeDisplay">
+            <input className="ui-input" id="caseTypeDisplay" value={CASE_TYPE_LABELS[initialPatientDetails.caseType] || ''} disabled />
+          </Field>
+        ) : (
+          <Field label="Case Type" required htmlFor="caseType">
+            <Select id="caseType" value={form.caseType} onChange={handleChange('caseType')}>
+              <option value="">Select Case Type</option>
+              <option value="AnteNatal">AnteNatal</option>
+              <option value="Infertility">Infertility</option>
+              <option value="General">General</option>
+            </Select>
+          </Field>
+        )}
+
+        <Field label="Diagnosis" htmlFor="diagnosis" className="patient-form-grid-full">
+          <textarea className="ui-textarea" id="diagnosis" rows={4} value={form.diagnosis} onChange={handleChange('diagnosis')} />
+        </Field>
+      </div>
+
+      <label className="ui-checkbox-field" htmlFor="isNewPatient">
+        <input type="checkbox" id="isNewPatient" checked={form.isNewPatient} onChange={handleChange('isNewPatient')} />
+        <span>Is New Patient</span>
+      </label>
+    </>
+  );
+
+  const renderDocumentsUploadSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Documents</h3>
+      <Field label="Upload Documents" htmlFor="documents">
+        <label htmlFor="documents" className="ui-file-upload-label">
+          <Icon name="file" size={16} /> Choose Documents
+        </label>
+        <input type="file" id="documents" multiple onChange={handleFileChange} className="ui-file-upload-input" />
+        {documents.map((doc, index) => (
+          <div key={index} className="ui-document-chip">
+            <Icon name="file" size={16} />
+            <span>{doc.name}</span>
+            <button type="button" onClick={() => removeDocument(index)}>x</button>
+          </div>
+        ))}
+      </Field>
+    </>
+  );
+
+  // Edit mode can't attach/remove documents (the update endpoint doesn't
+  // accept file uploads) - this tab just lets you get back to what's
+  // already here without leaving the edit flow, same preview behavior as
+  // the read view via the callback PatientDetails.js passes down.
+  const renderDocumentsReadOnlySection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Documents</h3>
+      {initialPatientDetails.documents && initialPatientDetails.documents.length > 0 ? (
+        <div className="record-documents">
+          {initialPatientDetails.documents.map((document) => (
+            <button
+              key={document._id}
+              type="button"
+              className="record-document-item"
+              onClick={() => onPreviewDocument && onPreviewDocument(document)}
+            >
+              <Icon name="file" size={18} />
+              {document.filename}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="ui-empty-state">
+          <Icon name="inbox" size={28} />
+          <p>No documents uploaded.</p>
+        </div>
+      )}
+      <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 'var(--space-3)' }}>
+        Documents can only be attached when a patient is first added, not from this edit form.
+      </p>
+    </>
+  );
+
+  const banners = (
+    <>
       {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
       {abhaConflict && (
         <div className="ui-banner ui-banner-error">
@@ -257,202 +489,70 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
         </div>
       )}
       {success && <div className="ui-banner ui-banner-success">{isEditMode ? 'Patient updated successfully' : 'Patient added successfully'}</div>}
+    </>
+  );
 
-      {isEditMode && <Tabs tabs={DETAIL_TABS} active={editTab} onChange={setEditTab} />}
+  if (isEditMode) {
+    return (
+      <Card variant="elevated" style={{ maxWidth: 720, margin: '0 auto' }}>
+        <IconBadge name="user" />
+        <span className="ui-eyebrow">Patient Records</span>
+        <h2 className="section-title">Edit Patient</h2>
+        {banners}
+        <Tabs tabs={DETAIL_TABS} active={editTab} onChange={setEditTab} />
+        <form onSubmit={handleEditSubmit}>
+          {showSection('personal') && renderPersonalSection()}
+          {showSection('family') && renderFamilySection()}
+          {showSection('visit') && renderVisitSection()}
+          {showSection('documents') && renderDocumentsReadOnlySection()}
+          <div className="patient-form-actions">
+            <Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
+            <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
+          </div>
+        </form>
+      </Card>
+    );
+  }
 
-      <form onSubmit={isEditMode ? handleEditSubmit : handleCreateSubmit}>
-        {showSection('personal') && (
-          <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Personal Details</h3>
-            <div className="patient-form-grid">
-              <Field label="First Name" required htmlFor="firstName">
-                <input className="ui-input" id="firstName" value={form.firstName} onChange={handleChange('firstName')} required />
-              </Field>
-              <Field label="Last Name" required htmlFor="lastName">
-                <input className="ui-input" id="lastName" value={form.lastName} onChange={handleChange('lastName')} required />
-              </Field>
-              <Field label="Date of Birth" required htmlFor="dateOfBirth">
-                <DateInput id="dateOfBirth" value={form.dateOfBirth} onChange={handleChange('dateOfBirth')} max={TODAY} required />
-              </Field>
-              <Field label="Aadhar Number" required htmlFor="aadhar">
-                <input className="ui-input" id="aadhar" value={form.aadhar} onChange={handleChange('aadhar')} required />
-              </Field>
-              {form.abhaNumber && (
-                <Field label="ABHA Number (Verified)" htmlFor="abhaNumber">
-                  <input className="ui-input" id="abhaNumber" value={form.abhaNumber} disabled />
-                </Field>
-              )}
-              {form.abhaAddress && (
-                <Field label="ABHA Address" htmlFor="abhaAddress">
-                  <input className="ui-input" id="abhaAddress" value={form.abhaAddress} disabled />
-                </Field>
-              )}
-            </div>
+  return (
+    <div className="wizard-layout">
+      <div className="wizard-tracker-col">
+        <StepTracker steps={DETAIL_TABS} active={wizardStep} furthestStep={furthestStep} onChange={jumpToStep} />
+      </div>
+      <Card variant="elevated" className="wizard-card">
+        <IconBadge name="user" />
+        <span className="ui-eyebrow">Patient Records</span>
+        <h2 className="section-title">Add New Patient</h2>
+        {banners}
+        <form ref={formRef} onSubmit={handleCreateSubmit}>
+          {showSection('personal') && renderPersonalSection()}
+          {showSection('family') && renderFamilySection()}
+          {showSection('visit') && renderVisitSection()}
+          {showSection('documents') && renderDocumentsUploadSection()}
 
-            {initialAbhaProfile?.refreshToken && (
-              <div style={{ marginBottom: 16 }}>
-                {cardError && <div className="ui-banner ui-banner-error">{cardError}</div>}
-                <Button type="button" variant="secondary" disabled={cardDownloading} onClick={handleDownloadAbhaCard}>
-                  {cardDownloading ? 'Downloading...' : 'Download ABHA Card'}
-                </Button>
-              </div>
-            )}
-
-            <h3 className="record-section-title">Contact Details</h3>
-            <div className="patient-form-grid">
-              <Field label="Phone Number" required htmlFor="phone">
-                <input className="ui-input" type="tel" id="phone" pattern="\d{10}" title="10-digit mobile number" value={form.phone} onChange={handleChange('phone')} required />
-              </Field>
-              <Field label="Email" htmlFor="email">
-                <input className="ui-input" type="email" id="email" value={form.email} onChange={handleChange('email')} />
-              </Field>
-              <Field label="Address" required htmlFor="address" className="patient-form-grid-full">
-                <input className="ui-input" id="address" value={form.address} onChange={handleChange('address')} required />
-              </Field>
-            </div>
-          </>
-        )}
-
-        {showSection('family') && (
-          <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Family &amp; Marriage</h3>
-            <div className="patient-form-grid">
-              <Field label="Husband's First Name" htmlFor="husbandFirstName">
-                <input className="ui-input" id="husbandFirstName" value={form.husbandFirstName} onChange={handleChange('husbandFirstName')} />
-              </Field>
-              <Field label="Husband's Last Name" htmlFor="husbandLastName">
-                <input className="ui-input" id="husbandLastName" value={form.husbandLastName} onChange={handleChange('husbandLastName')} />
-              </Field>
-              <Field label="Marital Status" required htmlFor="maritalStatus">
-                <Select id="maritalStatus" value={form.maritalStatus} onChange={handleChange('maritalStatus')}>
-                  <option value="married">Married</option>
-                  <option value="unmarried">Unmarried</option>
-                </Select>
-              </Field>
-              {form.maritalStatus === 'married' && (
-                <Field label="Married For (Years)" required htmlFor="marriedFor">
-                  <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
-                </Field>
-              )}
-            </div>
-          </>
-        )}
-
-        {showSection('visit') && (
-          <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Medical &amp; Appointment Details</h3>
-            <div className="patient-form-grid">
-              <Field label="Date of Appointment" required htmlFor="dateOfAdmission">
-                <DateInput id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
-                {isEditMode && (
-                  <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
-                    For a returning patient's next visit, update this to today's date instead of creating a new record.
-                  </p>
-                )}
-              </Field>
-
-              <Field label="Payment Status" htmlFor="paymentStatus">
-                <Select id="paymentStatus" value={form.paymentStatus} onChange={handleChange('paymentStatus')}>
-                  <option value="pending">Pending</option>
-                  <option value="paid">Paid</option>
-                </Select>
-              </Field>
-
-              {form.paymentStatus === 'paid' && (
-                <Field label="Payment Method" htmlFor="paymentMethod">
-                  <Select id="paymentMethod" value={form.paymentMethod} onChange={handleChange('paymentMethod')}>
-                    <option value="offline">Offline (cash/card at desk)</option>
-                    <option value="online">Online</option>
-                  </Select>
-                </Field>
-              )}
-
-              {isEditMode ? (
-                <Field label="Case Type" htmlFor="caseTypeDisplay">
-                  <input className="ui-input" id="caseTypeDisplay" value={CASE_TYPE_LABELS[initialPatientDetails.caseType] || ''} disabled />
-                </Field>
-              ) : (
-                <Field label="Case Type" required htmlFor="caseType">
-                  <Select id="caseType" value={form.caseType} onChange={handleChange('caseType')}>
-                    <option value="">Select Case Type</option>
-                    <option value="AnteNatal">AnteNatal</option>
-                    <option value="Infertility">Infertility</option>
-                    <option value="General">General</option>
-                  </Select>
-                </Field>
-              )}
-
-              <Field label="Diagnosis" htmlFor="diagnosis" className="patient-form-grid-full">
-                <textarea className="ui-textarea" id="diagnosis" rows={4} value={form.diagnosis} onChange={handleChange('diagnosis')} />
-              </Field>
-            </div>
-
-            <label className="ui-checkbox-field" htmlFor="isNewPatient">
-              <input type="checkbox" id="isNewPatient" checked={form.isNewPatient} onChange={handleChange('isNewPatient')} />
-              <span>Is New Patient</span>
-            </label>
-          </>
-        )}
-
-        {!isEditMode && (
-          <>
-            <h3 className="record-section-title">Documents</h3>
-            <Field label="Upload Documents" htmlFor="documents">
-              <label htmlFor="documents" className="ui-file-upload-label">
-                <Icon name="file" size={16} /> Choose Documents
-              </label>
-              <input type="file" id="documents" multiple onChange={handleFileChange} className="ui-file-upload-input" />
-              {documents.map((doc, index) => (
-                <div key={index} className="ui-document-chip">
-                  <Icon name="file" size={16} />
-                  <span>{doc.name}</span>
-                  <button type="button" onClick={() => removeDocument(index)}>x</button>
-                </div>
-              ))}
-            </Field>
-          </>
-        )}
-
-        {/* Edit mode can't attach/remove documents (the update endpoint
-            doesn't accept file uploads) - this tab just lets you get back to
-            what's already here without leaving the edit flow, same preview
-            behavior as the read view via the callback PatientDetails.js
-            passes down. */}
-        {isEditMode && showSection('documents') && (
-          <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Documents</h3>
-            {initialPatientDetails.documents && initialPatientDetails.documents.length > 0 ? (
-              <div className="record-documents">
-                {initialPatientDetails.documents.map((document) => (
-                  <button
-                    key={document._id}
-                    type="button"
-                    className="record-document-item"
-                    onClick={() => onPreviewDocument && onPreviewDocument(document)}
-                  >
-                    <Icon name="file" size={18} />
-                    {document.filename}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="ui-empty-state">
-                <Icon name="inbox" size={28} />
-                <p>No documents uploaded.</p>
-              </div>
-            )}
-            <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 'var(--space-3)' }}>
-              Documents can only be attached when a patient is first added, not from this edit form.
-            </p>
-          </>
-        )}
-
-        <div className="patient-form-actions">
-          <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Save Patient')}</Button>
-          <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
-        </div>
-      </form>
-    </Card>
+          <div className="wizard-nav">
+            <Button type="button" variant="ghost" onClick={goBack} disabled={wizardStepIndex === 0}>
+              <Icon name="arrow-left" size={16} /> Previous
+            </Button>
+            {/* Real bug found live: this used to be type="submit" on the last
+                step. React reuses the same <button> DOM node across a
+                re-render at the same JSX position, so the instant Next's
+                click handler advanced wizardStep to the last step,
+                isLastWizardStep flipped true and React mutated THAT SAME
+                node's type from "button" to "submit" mid-click - the
+                browser then ran ITS native default action (form submit)
+                against the now-submit-typed node, since that's evaluated
+                after React's own synchronous re-render commits. One click
+                silently created a real patient a step early. Always
+                type="button" now; the last step calls handleCreateSubmit
+                directly instead of trusting native submit semantics. */}
+            <Button type="button" onClick={isLastWizardStep ? () => handleCreateSubmit() : goNext} disabled={saving}>
+              {isLastWizardStep ? (saving ? 'Saving...' : 'Save Patient') : 'Next'}
+            </Button>
+          </div>
+        </form>
+      </Card>
+    </div>
   );
 };
 

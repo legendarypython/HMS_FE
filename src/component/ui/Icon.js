@@ -4,7 +4,7 @@ import {
   Mail, MapPin, Clock, Users, Award, Stethoscope, Baby, CheckCircle2,
   ArrowRight, Menu, X, User, Lock, ChevronRight, Sparkles, Quote, Home, LogOut,
   QrCode, Pencil, CalendarOff, Bell, Search, ChevronDown, UserPlus, UserCheck,
-  Wallet,
+  Wallet, Check, ArrowLeft,
 } from 'lucide-react';
 
 // Keeps the existing <Icon name="..." size={} /> call sites unchanged while
@@ -45,6 +45,8 @@ const ICONS = {
   'user-plus': UserPlus,
   'user-check': UserCheck,
   wallet: Wallet,
+  check: Check,
+  'arrow-left': ArrowLeft,
 };
 
 const Icon = ({ name, size = 20, className = '', strokeWidth = 1.8 }) => {

@@ -8,8 +8,10 @@ import Card from '../ui/Card';
 import Field from '../ui/Field';
 import Button from '../ui/Button';
 import IconBadge from '../ui/IconBadge';
+import Icon from '../ui/Icon';
 import Spinner from '../ui/Spinner';
 import Tabs from '../ui/Tabs';
+import StepTracker from '../ui/StepTracker';
 import InvestigationField from './InvestigationField';
 import { INFERTILITY_TABS } from './ViewInfertilityCase';
 import '../../styles/caseForms.css';
@@ -66,6 +68,7 @@ const InfertilityDetailsForm = () => {
   const { patientId } = useParams();
   const history = useHistory();
   const location = useLocation();
+  const formRef = useRef(null);
   // Same gap found and fixed on AddAnteNatal.js: a failed submit used to
   // only go to console.error, so it looked from the user's side like
   // clicking Submit did nothing at all.
@@ -129,10 +132,44 @@ const InfertilityDetailsForm = () => {
   // primary and secondary investigations, just grouped together under that
   // same tab (see the render below), so no field loses its edit path.
   const [editTab, setEditTab] = useState(location.state?.initialTab || 'obstetric');
-  const showSection = (tabKey) => !isEditMode || editTab === tabKey;
 
+  // Create mode is a guided step wizard instead, same reasoning as
+  // AddAnteNatal.js's own wizard (see its comment). None of this form's
+  // fields are actually `required`, so goNext's reportValidity() call never
+  // blocks anything here - the wizard still adds real value through section
+  // structure and progress tracking even without a hard validation gate on
+  // every step.
+  const [wizardStep, setWizardStep] = useState('obstetric');
+  const [furthestStep, setFurthestStep] = useState(0);
+
+  const activeSection = isEditMode ? editTab : wizardStep;
+  const showSection = (tabKey) => activeSection === tabKey;
+
+  const wizardStepIndex = INFERTILITY_TABS.findIndex((s) => s.key === wizardStep);
+  const isLastWizardStep = wizardStepIndex === INFERTILITY_TABS.length - 1;
+
+  const goNext = () => {
+    if (formRef.current && !formRef.current.reportValidity()) return;
+    setError(null);
+    const nextIndex = wizardStepIndex + 1;
+    setFurthestStep((f) => Math.max(f, nextIndex));
+    setWizardStep(INFERTILITY_TABS[nextIndex].key);
+  };
+
+  const goBack = () => {
+    if (wizardStepIndex > 0) setWizardStep(INFERTILITY_TABS[wizardStepIndex - 1].key);
+  };
+
+  const jumpToStep = (key) => {
+    const idx = INFERTILITY_TABS.findIndex((s) => s.key === key);
+    if (idx <= furthestStep) setWizardStep(key);
+  };
+
+  // event is optional - the wizard's own Submit button calls this directly
+  // (see the real-bug comment on the wizard-nav buttons below) rather than
+  // relying on native type="submit" form submission.
   const handleSubmit = async (event) => {
-    event.preventDefault();
+    if (event) event.preventDefault();
     setError(null);
     setSaving(true);
 
@@ -298,200 +335,244 @@ const InfertilityDetailsForm = () => {
     );
   }
 
+  // Grouped under the same "Investigations" tab as Secondary History's
+  // investigations below, even though they're two separate sections in the
+  // data model - the read view (ViewInfertilityCase.js) only has one
+  // Investigations tab, and this is the only place either ever gets edited.
+  const renderPrimaryInvestigationsSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Primary History</h3>
+      <InvestigationField
+        label="Blood Investigation"
+        id="primaryBlood"
+        name="primaryHistory.investigations.bloodInvestigation.details"
+        fileFieldName="primaryHistory.investigations.bloodInvestigation.documents"
+        value={infertilityDetails.primaryHistory.investigations.bloodInvestigation.details}
+        onChange={handleChange}
+        documents={infertilityDetails.primaryHistory.investigations.bloodInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument('primaryHistory', 'bloodInvestigation', index)}
+      />
+      <InvestigationField
+        label="Urine Investigation"
+        id="primaryUrine"
+        name="primaryHistory.investigations.urineInvestigation.details"
+        fileFieldName="primaryHistory.investigations.urineInvestigation.documents"
+        value={infertilityDetails.primaryHistory.investigations.urineInvestigation.details}
+        onChange={handleChange}
+        documents={infertilityDetails.primaryHistory.investigations.urineInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument('primaryHistory', 'urineInvestigation', index)}
+      />
+      <InvestigationField
+        label="Ultrasound Investigation"
+        id="primaryUltrasound"
+        name="primaryHistory.investigations.ultrasoundInvestigation.details"
+        fileFieldName="primaryHistory.investigations.ultrasoundInvestigation.documents"
+        value={infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.details}
+        onChange={handleChange}
+        documents={infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument('primaryHistory', 'ultrasoundInvestigation', index)}
+      />
+      <InvestigationField
+        label="X-ray Investigation"
+        id="primaryXray"
+        name="primaryHistory.investigations.xrayInvestigation.details"
+        fileFieldName="primaryHistory.investigations.xrayInvestigation.documents"
+        value={infertilityDetails.primaryHistory.investigations.xrayInvestigation.details}
+        onChange={handleChange}
+        documents={infertilityDetails.primaryHistory.investigations.xrayInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument('primaryHistory', 'xrayInvestigation', index)}
+      />
+    </>
+  );
+
+  const renderObstetricSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
+      <div className="patient-form-grid">
+        <Field label="Gravida (total pregnancies)" htmlFor="obGravida">
+          <input
+            className="ui-input"
+            type="number"
+            min="0"
+            id="obGravida"
+            name="secondaryHistory.obstetricHistory.gravida"
+            value={infertilityDetails.secondaryHistory.obstetricHistory.gravida}
+            onChange={handleChange}
+          />
+        </Field>
+        <Field label="Para (viable deliveries)" htmlFor="obPara">
+          <input
+            className="ui-input"
+            type="number"
+            min="0"
+            id="obPara"
+            name="secondaryHistory.obstetricHistory.para"
+            value={infertilityDetails.secondaryHistory.obstetricHistory.para}
+            onChange={handleChange}
+          />
+        </Field>
+        <Field label="Abortus (losses)" htmlFor="obAbortus">
+          <input
+            className="ui-input"
+            type="number"
+            min="0"
+            id="obAbortus"
+            name="secondaryHistory.obstetricHistory.abortus"
+            value={infertilityDetails.secondaryHistory.obstetricHistory.abortus}
+            onChange={handleChange}
+          />
+        </Field>
+        <Field label="Living (children alive)" htmlFor="obLiving">
+          <input
+            className="ui-input"
+            type="number"
+            min="0"
+            id="obLiving"
+            name="secondaryHistory.obstetricHistory.living"
+            value={infertilityDetails.secondaryHistory.obstetricHistory.living}
+            onChange={handleChange}
+          />
+        </Field>
+      </div>
+    </>
+  );
+
+  const renderSecondaryInvestigationsSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Secondary History Investigations</h3>
+      <InvestigationField
+        label="Blood Investigation"
+        id="secondaryBlood"
+        name="secondaryHistory.investigations.bloodInvestigation.details"
+        fileFieldName="secondaryHistory.investigations.bloodInvestigation.documents"
+        value={infertilityDetails.secondaryHistory.investigations.bloodInvestigation.details}
+        onChange={handleChange}
+        documents={infertilityDetails.secondaryHistory.investigations.bloodInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument('secondaryHistory', 'bloodInvestigation', index)}
+      />
+      <InvestigationField
+        label="Urine Investigation"
+        id="secondaryUrine"
+        name="secondaryHistory.investigations.urineInvestigation.details"
+        fileFieldName="secondaryHistory.investigations.urineInvestigation.documents"
+        value={infertilityDetails.secondaryHistory.investigations.urineInvestigation.details}
+        onChange={handleChange}
+        documents={infertilityDetails.secondaryHistory.investigations.urineInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument('secondaryHistory', 'urineInvestigation', index)}
+      />
+      <InvestigationField
+        label="Ultrasound Investigation"
+        id="secondaryUltrasound"
+        name="secondaryHistory.investigations.ultrasoundInvestigation.details"
+        fileFieldName="secondaryHistory.investigations.ultrasoundInvestigation.documents"
+        value={infertilityDetails.secondaryHistory.investigations.ultrasoundInvestigation.details}
+        onChange={handleChange}
+        documents={infertilityDetails.secondaryHistory.investigations.ultrasoundInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument('secondaryHistory', 'ultrasoundInvestigation', index)}
+      />
+      <InvestigationField
+        label="X-ray Investigation"
+        id="secondaryXray"
+        name="secondaryHistory.investigations.xrayInvestigation.details"
+        fileFieldName="secondaryHistory.investigations.xrayInvestigation.documents"
+        value={infertilityDetails.secondaryHistory.investigations.xrayInvestigation.details}
+        onChange={handleChange}
+        documents={infertilityDetails.secondaryHistory.investigations.xrayInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument('secondaryHistory', 'xrayInvestigation', index)}
+      />
+    </>
+  );
+
+  const renderTreatmentsSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Treatments</h3>
+      <Field label="Treatments" htmlFor="treatments">
+        <textarea
+          className="ui-textarea"
+          id="treatments"
+          name="treatments"
+          rows={4}
+          value={infertilityDetails.treatments}
+          onChange={handleTreatmentsChange}
+        />
+      </Field>
+    </>
+  );
+
+  if (isEditMode) {
+    return (
+      <div>
+        <AppNavbar role={sessionStorage.getItem('userRole')} />
+        <div className="background-container">
+          <Card variant="elevated" style={{ width: '100%', maxWidth: 680 }}>
+            <IconBadge name="baby" />
+            <span className="ui-eyebrow">Patient Records</span>
+            <h2 className="section-title">Edit Infertility Details</h2>
+            {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
+            <Tabs tabs={INFERTILITY_TABS} active={editTab} onChange={setEditTab} />
+            <form onSubmit={handleSubmit}>
+              <input type="hidden" name="patientId" value={patientId} />
+              {showSection('investigations') && renderPrimaryInvestigationsSection()}
+              {showSection('obstetric') && renderObstetricSection()}
+              {showSection('investigations') && renderSecondaryInvestigationsSection()}
+              {showSection('treatments') && renderTreatmentsSection()}
+              <div className="case-form-actions">
+                <Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
+                <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
+              </div>
+            </form>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <AppNavbar role={sessionStorage.getItem('userRole')} />
       <div className="background-container">
-        <Card variant="elevated" style={{ width: '100%', maxWidth: 680 }}>
-          <IconBadge name="baby" />
-          <span className="ui-eyebrow">Patient Records</span>
-          <h2 className="section-title">{isEditMode ? 'Edit Infertility Details' : 'Infertility Details Form'}</h2>
-          {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
-          {isEditMode && <Tabs tabs={INFERTILITY_TABS} active={editTab} onChange={setEditTab} />}
-          <form onSubmit={handleSubmit}>
-            <input type="hidden" name="patientId" value={patientId} />
+        <div className="wizard-layout">
+          <div className="wizard-tracker-col">
+            <StepTracker steps={INFERTILITY_TABS} active={wizardStep} furthestStep={furthestStep} onChange={jumpToStep} />
+          </div>
+          <Card variant="elevated" className="wizard-card">
+            <IconBadge name="baby" />
+            <span className="ui-eyebrow">Patient Records</span>
+            <h2 className="section-title">Infertility Details Form</h2>
+            {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
+            <form ref={formRef} onSubmit={handleSubmit}>
+              <input type="hidden" name="patientId" value={patientId} />
+              {showSection('obstetric') && renderObstetricSection()}
+              {showSection('investigations') && renderPrimaryInvestigationsSection()}
+              {showSection('investigations') && renderSecondaryInvestigationsSection()}
+              {showSection('treatments') && renderTreatmentsSection()}
 
-            {/* Grouped under the same "Investigations" tab as Secondary
-                History's investigations below, even though they're two
-                separate sections in the data model - the read view
-                (ViewInfertilityCase.js) only has one Investigations tab, and
-                this is the only place either ever gets edited. */}
-            {showSection('investigations') && (
-              <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Primary History</h3>
-            <InvestigationField
-              label="Blood Investigation"
-              id="primaryBlood"
-              name="primaryHistory.investigations.bloodInvestigation.details"
-              fileFieldName="primaryHistory.investigations.bloodInvestigation.documents"
-              value={infertilityDetails.primaryHistory.investigations.bloodInvestigation.details}
-              onChange={handleChange}
-              documents={infertilityDetails.primaryHistory.investigations.bloodInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument('primaryHistory', 'bloodInvestigation', index)}
-            />
-            <InvestigationField
-              label="Urine Investigation"
-              id="primaryUrine"
-              name="primaryHistory.investigations.urineInvestigation.details"
-              fileFieldName="primaryHistory.investigations.urineInvestigation.documents"
-              value={infertilityDetails.primaryHistory.investigations.urineInvestigation.details}
-              onChange={handleChange}
-              documents={infertilityDetails.primaryHistory.investigations.urineInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument('primaryHistory', 'urineInvestigation', index)}
-            />
-            <InvestigationField
-              label="Ultrasound Investigation"
-              id="primaryUltrasound"
-              name="primaryHistory.investigations.ultrasoundInvestigation.details"
-              fileFieldName="primaryHistory.investigations.ultrasoundInvestigation.documents"
-              value={infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.details}
-              onChange={handleChange}
-              documents={infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument('primaryHistory', 'ultrasoundInvestigation', index)}
-            />
-            <InvestigationField
-              label="X-ray Investigation"
-              id="primaryXray"
-              name="primaryHistory.investigations.xrayInvestigation.details"
-              fileFieldName="primaryHistory.investigations.xrayInvestigation.documents"
-              value={infertilityDetails.primaryHistory.investigations.xrayInvestigation.details}
-              onChange={handleChange}
-              documents={infertilityDetails.primaryHistory.investigations.xrayInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument('primaryHistory', 'xrayInvestigation', index)}
-            />
-              </>
-            )}
-
-            {showSection('obstetric') && (
-              <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
-            <div className="patient-form-grid">
-              <Field label="Gravida (total pregnancies)" htmlFor="obGravida">
-                <input
-                  className="ui-input"
-                  type="number"
-                  min="0"
-                  id="obGravida"
-                  name="secondaryHistory.obstetricHistory.gravida"
-                  value={infertilityDetails.secondaryHistory.obstetricHistory.gravida}
-                  onChange={handleChange}
-                />
-              </Field>
-              <Field label="Para (viable deliveries)" htmlFor="obPara">
-                <input
-                  className="ui-input"
-                  type="number"
-                  min="0"
-                  id="obPara"
-                  name="secondaryHistory.obstetricHistory.para"
-                  value={infertilityDetails.secondaryHistory.obstetricHistory.para}
-                  onChange={handleChange}
-                />
-              </Field>
-              <Field label="Abortus (losses)" htmlFor="obAbortus">
-                <input
-                  className="ui-input"
-                  type="number"
-                  min="0"
-                  id="obAbortus"
-                  name="secondaryHistory.obstetricHistory.abortus"
-                  value={infertilityDetails.secondaryHistory.obstetricHistory.abortus}
-                  onChange={handleChange}
-                />
-              </Field>
-              <Field label="Living (children alive)" htmlFor="obLiving">
-                <input
-                  className="ui-input"
-                  type="number"
-                  min="0"
-                  id="obLiving"
-                  name="secondaryHistory.obstetricHistory.living"
-                  value={infertilityDetails.secondaryHistory.obstetricHistory.living}
-                  onChange={handleChange}
-                />
-              </Field>
-            </div>
-              </>
-            )}
-
-            {showSection('investigations') && (
-              <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Secondary History Investigations</h3>
-            <InvestigationField
-              label="Blood Investigation"
-              id="secondaryBlood"
-              name="secondaryHistory.investigations.bloodInvestigation.details"
-              fileFieldName="secondaryHistory.investigations.bloodInvestigation.documents"
-              value={infertilityDetails.secondaryHistory.investigations.bloodInvestigation.details}
-              onChange={handleChange}
-              documents={infertilityDetails.secondaryHistory.investigations.bloodInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument('secondaryHistory', 'bloodInvestigation', index)}
-            />
-            <InvestigationField
-              label="Urine Investigation"
-              id="secondaryUrine"
-              name="secondaryHistory.investigations.urineInvestigation.details"
-              fileFieldName="secondaryHistory.investigations.urineInvestigation.documents"
-              value={infertilityDetails.secondaryHistory.investigations.urineInvestigation.details}
-              onChange={handleChange}
-              documents={infertilityDetails.secondaryHistory.investigations.urineInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument('secondaryHistory', 'urineInvestigation', index)}
-            />
-            <InvestigationField
-              label="Ultrasound Investigation"
-              id="secondaryUltrasound"
-              name="secondaryHistory.investigations.ultrasoundInvestigation.details"
-              fileFieldName="secondaryHistory.investigations.ultrasoundInvestigation.documents"
-              value={infertilityDetails.secondaryHistory.investigations.ultrasoundInvestigation.details}
-              onChange={handleChange}
-              documents={infertilityDetails.secondaryHistory.investigations.ultrasoundInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument('secondaryHistory', 'ultrasoundInvestigation', index)}
-            />
-            <InvestigationField
-              label="X-ray Investigation"
-              id="secondaryXray"
-              name="secondaryHistory.investigations.xrayInvestigation.details"
-              fileFieldName="secondaryHistory.investigations.xrayInvestigation.documents"
-              value={infertilityDetails.secondaryHistory.investigations.xrayInvestigation.details}
-              onChange={handleChange}
-              documents={infertilityDetails.secondaryHistory.investigations.xrayInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument('secondaryHistory', 'xrayInvestigation', index)}
-            />
-              </>
-            )}
-
-            {showSection('treatments') && (
-              <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Treatments</h3>
-            <Field label="Treatments" htmlFor="treatments">
-              <textarea
-                className="ui-textarea"
-                id="treatments"
-                name="treatments"
-                rows={4}
-                value={infertilityDetails.treatments}
-                onChange={handleTreatmentsChange}
-              />
-            </Field>
-              </>
-            )}
-
-            <div className="case-form-actions">
-              <Button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Submit Infertility Details')}
-              </Button>
-              <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
-            </div>
-          </form>
-        </Card>
+              <div className="wizard-nav">
+                <Button type="button" variant="ghost" onClick={goBack} disabled={wizardStepIndex === 0}>
+                  <Icon name="arrow-left" size={16} /> Previous
+                </Button>
+                {/* Real bug found live (same root cause on AddPatient.js's
+                    own wizard): a type="submit" button on the last step
+                    lets React silently flip the SAME clicked DOM node from
+                    type="button" to "submit" mid-click as it re-renders past
+                    the step boundary, so the browser's native default
+                    action then submits the form a step early. Always
+                    type="button"; the last step calls handleSubmit directly. */}
+                <Button type="button" onClick={isLastWizardStep ? () => handleSubmit() : goNext} disabled={saving}>
+                  {isLastWizardStep ? (saving ? 'Saving...' : 'Submit Infertility Details') : 'Next'}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -7,8 +7,10 @@ import Button from '../ui/Button';
 import Select from '../ui/Select';
 import DateInput from '../ui/DateInput';
 import IconBadge from '../ui/IconBadge';
+import Icon from '../ui/Icon';
 import Spinner from '../ui/Spinner';
 import Tabs from '../ui/Tabs';
+import StepTracker from '../ui/StepTracker';
 import InvestigationField from './InvestigationField';
 import { ANTENATAL_TABS } from './ViewAnteNatal';
 import '../../styles/caseForms.css';
@@ -61,6 +63,7 @@ const AntenatalDetailsForm = () => {
   const { patientId } = useParams();
   const history = useHistory();
   const location = useLocation();
+  const formRef = useRef(null);
   // Errors used to only go to console.error, so a failed submit (missing
   // obstetric history, or a genuine backend rejection) looked from the
   // user's side like clicking Submit did nothing at all - caught live,
@@ -153,14 +156,47 @@ const AntenatalDetailsForm = () => {
   // regardless of which tab was open on the read view. ViewAnteNatal.js's
   // Edit link now carries that tab via route state (location.state), since
   // there's no component to pass a prop through across a navigation.
-  // Create mode has no "where you came from" to preserve, so showSection is
-  // always true there and every section shows at once, same as before.
   const [editTab, setEditTab] = useState(location.state?.initialTab || 'obstetric');
-  const showSection = (tabKey) => !isEditMode || editTab === tabKey;
+
+  // Create mode is a guided step wizard instead, same reasoning and same
+  // reportValidity()-scoped-to-the-mounted-step trick as AddPatient.js's
+  // own wizard - see its comment for the full explanation. Nothing here has
+  // a Select-based required field (AnteNatal's only required inputs are
+  // plain/DateInput, both real native form controls), so unlike
+  // AddPatientForm's Case Type there's no extra manual check needed on top
+  // of reportValidity().
+  const [wizardStep, setWizardStep] = useState('obstetric');
+  const [furthestStep, setFurthestStep] = useState(0);
+
+  const activeSection = isEditMode ? editTab : wizardStep;
+  const showSection = (tabKey) => activeSection === tabKey;
+
+  const wizardStepIndex = ANTENATAL_TABS.findIndex((s) => s.key === wizardStep);
+  const isLastWizardStep = wizardStepIndex === ANTENATAL_TABS.length - 1;
+
+  const goNext = () => {
+    if (formRef.current && !formRef.current.reportValidity()) return;
+    setError(null);
+    const nextIndex = wizardStepIndex + 1;
+    setFurthestStep((f) => Math.max(f, nextIndex));
+    setWizardStep(ANTENATAL_TABS[nextIndex].key);
+  };
+
+  const goBack = () => {
+    if (wizardStepIndex > 0) setWizardStep(ANTENATAL_TABS[wizardStepIndex - 1].key);
+  };
+
+  const jumpToStep = (key) => {
+    const idx = ANTENATAL_TABS.findIndex((s) => s.key === key);
+    if (idx <= furthestStep) setWizardStep(key);
+  };
 
   // Handle form submission
+  // event is optional - the wizard's own Submit button calls this directly
+  // (see the real-bug comment on the wizard-nav buttons below) rather than
+  // relying on native type="submit" form submission.
   const handleSubmit = async (event) => {
-    event.preventDefault();
+    if (event) event.preventDefault();
     setError(null);
     setSaving(true);
 
@@ -339,263 +375,308 @@ const AntenatalDetailsForm = () => {
     );
   }
 
+  const renderObstetricSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
+      <div className="patient-form-grid">
+        <Field label="Gravida (total pregnancies)" htmlFor="obGravida">
+          <input
+            className="ui-input"
+            type="number"
+            min="0"
+            id="obGravida"
+            name="obstetricHistory.gravida"
+            value={antenatalDetails.obstetricHistory.gravida}
+            onChange={handleChange}
+          />
+        </Field>
+        <Field label="Para (viable deliveries)" htmlFor="obPara">
+          <input
+            className="ui-input"
+            type="number"
+            min="0"
+            id="obPara"
+            name="obstetricHistory.para"
+            value={antenatalDetails.obstetricHistory.para}
+            onChange={handleChange}
+          />
+        </Field>
+        <Field label="Abortus (losses)" htmlFor="obAbortus">
+          <input
+            className="ui-input"
+            type="number"
+            min="0"
+            id="obAbortus"
+            name="obstetricHistory.abortus"
+            value={antenatalDetails.obstetricHistory.abortus}
+            onChange={handleChange}
+          />
+        </Field>
+        <Field label="Living (children alive)" htmlFor="obLiving">
+          <input
+            className="ui-input"
+            type="number"
+            min="0"
+            id="obLiving"
+            name="obstetricHistory.living"
+            value={antenatalDetails.obstetricHistory.living}
+            onChange={handleChange}
+          />
+        </Field>
+      </div>
+
+      <Field label="Last Menstrual Period (LMP)" required htmlFor="LMP">
+        <DateInput
+          id="LMP"
+          name="LMP"
+          value={antenatalDetails.LMP}
+          onChange={handleChange}
+          required
+        />
+      </Field>
+
+      <Field label="Expected Date of Delivery" required htmlFor="expectedDateOfDelivery">
+        <DateInput
+          id="expectedDateOfDelivery"
+          name="expectedDateOfDelivery"
+          value={antenatalDetails.expectedDateOfDelivery}
+          onChange={handleChange}
+          required
+        />
+      </Field>
+
+      <Field label="Pregnancy Complications" required htmlFor="pregnancyComplications">
+        <input
+          className="ui-input"
+          type="text"
+          id="pregnancyComplications"
+          name="specificHistory.pregnancyComplications"
+          value={antenatalDetails.specificHistory.pregnancyComplications}
+          onChange={handleChange}
+          required
+        />
+      </Field>
+
+      <Field label="Previous Delivery By" htmlFor="previousDeliveryBy">
+        <Select
+          id="previousDeliveryBy"
+          name="specificHistory.previousDeliveryBy"
+          value={antenatalDetails.specificHistory.previousDeliveryBy}
+          onChange={handleChange}
+        >
+          <option value="">Select Previous Delivery By</option>
+          <option value="Normal">Normal</option>
+          <option value="Caesarean">Caesarean</option>
+          <option value="Ventouse">Ventouse</option>
+          <option value="Others">Others</option>
+        </Select>
+      </Field>
+    </>
+  );
+
+  const renderMedicalSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Medical History</h3>
+      <Field label="Heart Disease" htmlFor="heartDisease">
+        <textarea
+          className="ui-textarea"
+          id="heartDisease"
+          name="medicalComplications.heartDisease"
+          rows={2}
+          value={antenatalDetails.medicalComplications.heartDisease}
+          onChange={handleChange}
+        />
+      </Field>
+
+      <Field label="Liver Disease" htmlFor="liverDisease">
+        <textarea
+          className="ui-textarea"
+          id="liverDisease"
+          name="medicalComplications.liverDisease"
+          rows={2}
+          value={antenatalDetails.medicalComplications.liverDisease}
+          onChange={handleChange}
+        />
+      </Field>
+
+      <Field label="Gastrointestinal Tract (GIT) Disease" htmlFor="GIT">
+        <textarea
+          className="ui-textarea"
+          id="GIT"
+          name="medicalComplications.GIT"
+          rows={2}
+          value={antenatalDetails.medicalComplications.GIT}
+          onChange={handleChange}
+        />
+      </Field>
+
+      <Field label="Kidney Disease" htmlFor="Kidney">
+        <textarea
+          className="ui-textarea"
+          id="Kidney"
+          name="medicalComplications.Kidney"
+          rows={2}
+          value={antenatalDetails.medicalComplications.Kidney}
+          onChange={handleChange}
+        />
+      </Field>
+
+      <Field label="Spine Problem" htmlFor="SpineProblem">
+        <textarea
+          className="ui-textarea"
+          id="SpineProblem"
+          name="medicalComplications.SpineProblem"
+          rows={2}
+          value={antenatalDetails.medicalComplications.SpineProblem}
+          onChange={handleChange}
+        />
+      </Field>
+
+      <Field label="Other Medical Complications" htmlFor="Others">
+        <textarea
+          className="ui-textarea"
+          id="Others"
+          name="medicalComplications.Others"
+          rows={2}
+          value={antenatalDetails.medicalComplications.Others}
+          onChange={handleChange}
+        />
+      </Field>
+    </>
+  );
+
+  const renderInvestigationsSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Investigations</h3>
+      <InvestigationField
+        label="Blood Investigation"
+        id="bloodInvestigation"
+        name="investigations.bloodInvestigation.details"
+        fileFieldName="investigations.bloodInvestigation.documents"
+        value={antenatalDetails.investigations.bloodInvestigation.details}
+        onChange={handleChange}
+        documents={antenatalDetails.investigations.bloodInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument(index, 'bloodInvestigation')}
+      />
+      <InvestigationField
+        label="Urine Investigation"
+        id="urineInvestigation"
+        name="investigations.urineInvestigation.details"
+        fileFieldName="investigations.urineInvestigation.documents"
+        value={antenatalDetails.investigations.urineInvestigation.details}
+        onChange={handleChange}
+        documents={antenatalDetails.investigations.urineInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument(index, 'urineInvestigation')}
+      />
+      <InvestigationField
+        label="Ultrasound Investigation"
+        id="ultrasoundInvestigation"
+        name="investigations.ultrasoundInvestigation.details"
+        fileFieldName="investigations.ultrasoundInvestigation.documents"
+        value={antenatalDetails.investigations.ultrasoundInvestigation.details}
+        onChange={handleChange}
+        documents={antenatalDetails.investigations.ultrasoundInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument(index, 'ultrasoundInvestigation')}
+      />
+      <InvestigationField
+        label="X-ray Investigation"
+        id="xrayInvestigation"
+        name="investigations.xrayInvestigation.details"
+        fileFieldName="investigations.xrayInvestigation.documents"
+        value={antenatalDetails.investigations.xrayInvestigation.details}
+        onChange={handleChange}
+        documents={antenatalDetails.investigations.xrayInvestigation.documents}
+        onFileChange={handleFileChange}
+        onRemoveDocument={(index) => removeDocument(index, 'xrayInvestigation')}
+      />
+    </>
+  );
+
+  const renderTreatmentsSection = () => (
+    <>
+      <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Treatments</h3>
+      <Field label="Treatments" htmlFor="treatments">
+        <textarea
+          className="ui-textarea"
+          id="treatments"
+          name="treatments"
+          rows={4}
+          value={antenatalDetails.treatments}
+          onChange={handleChange}
+        />
+      </Field>
+    </>
+  );
+
+  if (isEditMode) {
+    return (
+      <div>
+        <AppNavbar role={sessionStorage.getItem('userRole')} />
+        <div className="background-container">
+          <Card variant="elevated" style={{ width: '100%', maxWidth: 680 }}>
+            <IconBadge name="baby" />
+            <span className="ui-eyebrow">Patient Records</span>
+            <h2 className="section-title">Edit Antenatal Details</h2>
+            {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
+            <Tabs tabs={ANTENATAL_TABS} active={editTab} onChange={setEditTab} />
+            <form onSubmit={handleSubmit}>
+              <input type="hidden" name="patientId" value={patientId} />
+              {showSection('obstetric') && renderObstetricSection()}
+              {showSection('medical') && renderMedicalSection()}
+              {showSection('investigations') && renderInvestigationsSection()}
+              {showSection('treatments') && renderTreatmentsSection()}
+              <div className="case-form-actions">
+                <Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</Button>
+                <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
+              </div>
+            </form>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <AppNavbar role={sessionStorage.getItem('userRole')} />
       <div className="background-container">
-        <Card variant="elevated" style={{ width: '100%', maxWidth: 680 }}>
-          <IconBadge name="baby" />
-          <span className="ui-eyebrow">Patient Records</span>
-          <h2 className="section-title">{isEditMode ? 'Edit Antenatal Details' : 'Antenatal Details Form'}</h2>
-          {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
-          {isEditMode && <Tabs tabs={ANTENATAL_TABS} active={editTab} onChange={setEditTab} />}
-          <form onSubmit={handleSubmit}>
-            <input type="hidden" name="patientId" value={patientId} />
+        <div className="wizard-layout">
+          <div className="wizard-tracker-col">
+            <StepTracker steps={ANTENATAL_TABS} active={wizardStep} furthestStep={furthestStep} onChange={jumpToStep} />
+          </div>
+          <Card variant="elevated" className="wizard-card">
+            <IconBadge name="baby" />
+            <span className="ui-eyebrow">Patient Records</span>
+            <h2 className="section-title">Antenatal Details Form</h2>
+            {error && <div className="ui-banner ui-banner-error" ref={errorBannerRef}>{error}</div>}
+            <form ref={formRef} onSubmit={handleSubmit}>
+              <input type="hidden" name="patientId" value={patientId} />
+              {showSection('obstetric') && renderObstetricSection()}
+              {showSection('medical') && renderMedicalSection()}
+              {showSection('investigations') && renderInvestigationsSection()}
+              {showSection('treatments') && renderTreatmentsSection()}
 
-            {showSection('obstetric') && (
-              <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
-            <div className="patient-form-grid">
-              <Field label="Gravida (total pregnancies)" htmlFor="obGravida">
-                <input
-                  className="ui-input"
-                  type="number"
-                  min="0"
-                  id="obGravida"
-                  name="obstetricHistory.gravida"
-                  value={antenatalDetails.obstetricHistory.gravida}
-                  onChange={handleChange}
-                />
-              </Field>
-              <Field label="Para (viable deliveries)" htmlFor="obPara">
-                <input
-                  className="ui-input"
-                  type="number"
-                  min="0"
-                  id="obPara"
-                  name="obstetricHistory.para"
-                  value={antenatalDetails.obstetricHistory.para}
-                  onChange={handleChange}
-                />
-              </Field>
-              <Field label="Abortus (losses)" htmlFor="obAbortus">
-                <input
-                  className="ui-input"
-                  type="number"
-                  min="0"
-                  id="obAbortus"
-                  name="obstetricHistory.abortus"
-                  value={antenatalDetails.obstetricHistory.abortus}
-                  onChange={handleChange}
-                />
-              </Field>
-              <Field label="Living (children alive)" htmlFor="obLiving">
-                <input
-                  className="ui-input"
-                  type="number"
-                  min="0"
-                  id="obLiving"
-                  name="obstetricHistory.living"
-                  value={antenatalDetails.obstetricHistory.living}
-                  onChange={handleChange}
-                />
-              </Field>
-            </div>
-
-            <Field label="Last Menstrual Period (LMP)" required htmlFor="LMP">
-              <DateInput
-                id="LMP"
-                name="LMP"
-                value={antenatalDetails.LMP}
-                onChange={handleChange}
-                required
-              />
-            </Field>
-
-            <Field label="Expected Date of Delivery" required htmlFor="expectedDateOfDelivery">
-              <DateInput
-                id="expectedDateOfDelivery"
-                name="expectedDateOfDelivery"
-                value={antenatalDetails.expectedDateOfDelivery}
-                onChange={handleChange}
-                required
-              />
-            </Field>
-
-            <Field label="Pregnancy Complications" required htmlFor="pregnancyComplications">
-              <input
-                className="ui-input"
-                type="text"
-                id="pregnancyComplications"
-                name="specificHistory.pregnancyComplications"
-                value={antenatalDetails.specificHistory.pregnancyComplications}
-                onChange={handleChange}
-                required
-              />
-            </Field>
-
-            <Field label="Previous Delivery By" htmlFor="previousDeliveryBy">
-              <Select
-                id="previousDeliveryBy"
-                name="specificHistory.previousDeliveryBy"
-                value={antenatalDetails.specificHistory.previousDeliveryBy}
-                onChange={handleChange}
-              >
-                <option value="">Select Previous Delivery By</option>
-                <option value="Normal">Normal</option>
-                <option value="Caesarean">Caesarean</option>
-                <option value="Ventouse">Ventouse</option>
-                <option value="Others">Others</option>
-              </Select>
-            </Field>
-              </>
-            )}
-
-            {showSection('medical') && (
-              <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Medical History</h3>
-            <Field label="Heart Disease" htmlFor="heartDisease">
-              <textarea
-                className="ui-textarea"
-                id="heartDisease"
-                name="medicalComplications.heartDisease"
-                rows={2}
-                value={antenatalDetails.medicalComplications.heartDisease}
-                onChange={handleChange}
-              />
-            </Field>
-
-            <Field label="Liver Disease" htmlFor="liverDisease">
-              <textarea
-                className="ui-textarea"
-                id="liverDisease"
-                name="medicalComplications.liverDisease"
-                rows={2}
-                value={antenatalDetails.medicalComplications.liverDisease}
-                onChange={handleChange}
-              />
-            </Field>
-
-            <Field label="Gastrointestinal Tract (GIT) Disease" htmlFor="GIT">
-              <textarea
-                className="ui-textarea"
-                id="GIT"
-                name="medicalComplications.GIT"
-                rows={2}
-                value={antenatalDetails.medicalComplications.GIT}
-                onChange={handleChange}
-              />
-            </Field>
-
-            <Field label="Kidney Disease" htmlFor="Kidney">
-              <textarea
-                className="ui-textarea"
-                id="Kidney"
-                name="medicalComplications.Kidney"
-                rows={2}
-                value={antenatalDetails.medicalComplications.Kidney}
-                onChange={handleChange}
-              />
-            </Field>
-
-            <Field label="Spine Problem" htmlFor="SpineProblem">
-              <textarea
-                className="ui-textarea"
-                id="SpineProblem"
-                name="medicalComplications.SpineProblem"
-                rows={2}
-                value={antenatalDetails.medicalComplications.SpineProblem}
-                onChange={handleChange}
-              />
-            </Field>
-
-            <Field label="Other Medical Complications" htmlFor="Others">
-              <textarea
-                className="ui-textarea"
-                id="Others"
-                name="medicalComplications.Others"
-                rows={2}
-                value={antenatalDetails.medicalComplications.Others}
-                onChange={handleChange}
-              />
-            </Field>
-              </>
-            )}
-
-            {showSection('investigations') && (
-              <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Investigations</h3>
-            <InvestigationField
-              label="Blood Investigation"
-              id="bloodInvestigation"
-              name="investigations.bloodInvestigation.details"
-              fileFieldName="investigations.bloodInvestigation.documents"
-              value={antenatalDetails.investigations.bloodInvestigation.details}
-              onChange={handleChange}
-              documents={antenatalDetails.investigations.bloodInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument(index, 'bloodInvestigation')}
-            />
-            <InvestigationField
-              label="Urine Investigation"
-              id="urineInvestigation"
-              name="investigations.urineInvestigation.details"
-              fileFieldName="investigations.urineInvestigation.documents"
-              value={antenatalDetails.investigations.urineInvestigation.details}
-              onChange={handleChange}
-              documents={antenatalDetails.investigations.urineInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument(index, 'urineInvestigation')}
-            />
-            <InvestigationField
-              label="Ultrasound Investigation"
-              id="ultrasoundInvestigation"
-              name="investigations.ultrasoundInvestigation.details"
-              fileFieldName="investigations.ultrasoundInvestigation.documents"
-              value={antenatalDetails.investigations.ultrasoundInvestigation.details}
-              onChange={handleChange}
-              documents={antenatalDetails.investigations.ultrasoundInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument(index, 'ultrasoundInvestigation')}
-            />
-            <InvestigationField
-              label="X-ray Investigation"
-              id="xrayInvestigation"
-              name="investigations.xrayInvestigation.details"
-              fileFieldName="investigations.xrayInvestigation.documents"
-              value={antenatalDetails.investigations.xrayInvestigation.details}
-              onChange={handleChange}
-              documents={antenatalDetails.investigations.xrayInvestigation.documents}
-              onFileChange={handleFileChange}
-              onRemoveDocument={(index) => removeDocument(index, 'xrayInvestigation')}
-            />
-              </>
-            )}
-
-            {showSection('treatments') && (
-              <>
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Treatments</h3>
-            <Field label="Treatments" htmlFor="treatments">
-              <textarea
-                className="ui-textarea"
-                id="treatments"
-                name="treatments"
-                rows={4}
-                value={antenatalDetails.treatments}
-                onChange={handleChange}
-              />
-            </Field>
-              </>
-            )}
-
-            <div className="case-form-actions">
-              <Button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Submit Antenatal Details')}
-              </Button>
-              <Link to="/patients"><Button type="button" variant="ghost">Cancel</Button></Link>
-            </div>
-          </form>
-        </Card>
+              <div className="wizard-nav">
+                <Button type="button" variant="ghost" onClick={goBack} disabled={wizardStepIndex === 0}>
+                  <Icon name="arrow-left" size={16} /> Previous
+                </Button>
+                {/* Real bug found live (same root cause on AddPatient.js's
+                    own wizard): a type="submit" button on the last step
+                    lets React silently flip the SAME clicked DOM node from
+                    type="button" to "submit" mid-click as it re-renders past
+                    the step boundary, so the browser's native default
+                    action then submits the form a step early. Always
+                    type="button"; the last step calls handleSubmit directly. */}
+                <Button type="button" onClick={isLastWizardStep ? () => handleSubmit() : goNext} disabled={saving}>
+                  {isLastWizardStep ? (saving ? 'Saving...' : 'Submit Antenatal Details') : 'Next'}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
       </div>
     </div>
   );

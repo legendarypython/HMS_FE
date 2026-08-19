@@ -32,6 +32,126 @@
   border-bottom-color: var(--color-primary);
 }
 
+/* Guided multi-step create form (Add Patient/AnteNatal/Infertility) - a
+   vertical sibling of .ui-tabs above, used with StepTracker.js instead of
+   Tabs.js. Sits beside the form card on desktop; collapses to a horizontal
+   strip above it on mobile (see .wizard-layout below). */
+.wizard-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.wizard-tracker-col {
+  width: 220px;
+  flex-shrink: 0;
+  position: sticky;
+  top: var(--space-6);
+}
+
+.wizard-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.ui-step-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+}
+
+.ui-step-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: none;
+  background: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-family: var(--font-family);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.ui-step-item:hover:not(:disabled) {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.ui-step-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ui-step-active {
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+}
+
+.ui-step-active:hover {
+  background-color: var(--color-primary-bg) !important;
+}
+
+.ui-step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.ui-step-done .ui-step-icon {
+  color: var(--color-success);
+}
+
+.wizard-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+@media (max-width: 800px) {
+  .wizard-layout {
+    flex-direction: column;
+  }
+
+  .wizard-tracker-col {
+    width: 100%;
+    position: static;
+  }
+
+  /* Same horizontal-strip idea as BookAppointment.js's own step indicator -
+     a side list has nowhere to go on a narrow screen, so it becomes a
+     scrollable row above the form instead. */
+  .ui-step-tracker {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: var(--space-2);
+  }
+
+  .ui-step-item {
+    flex-direction: column;
+    gap: var(--space-1);
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    text-align: center;
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
 .ui-spinner-wrap {
   display: flex;
   flex-direction: column;
