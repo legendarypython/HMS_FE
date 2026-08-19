@@ -9,6 +9,9 @@ import { TENANT_ID } from './config/tenant';
 
 // Error tracking - a no-op whenever REACT_APP_SENTRY_DSN isn't set at build
 // time (e.g. local dev), same pattern as the backend's src/utils/sentry.js.
+// Reminder: REACT_APP_* is inlined by CRA at BUILD time, not read at
+// runtime - saving/changing this var in Cloudflare Pages only takes effect
+// on the *next* deploy, not retroactively on whatever's already live.
 // tracesSampleRate 0 and no replay/session-recording integration - only
 // error name/message/stack ever leaves the browser, never page content,
 // since real patient data (names, medical history) is visible on screen
