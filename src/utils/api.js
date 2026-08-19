@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as Sentry from '@sentry/react';
 import { TENANT_ID } from '../config/tenant';
 
 // Single source of truth for the backend origin. Set REACT_APP_API_URL at build
@@ -49,6 +50,22 @@ axios.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       handleSessionExpiry();
+    } else {
+      // A real failed request (network error, or any non-401 error status)
+      // on any of the app's flows - report it with just the request's
+      // method/URL/status for context, never the request or response body,
+      // since those routinely carry real patient data (names, medical
+      // history) on this app's endpoints.
+      Sentry.captureException(error, (scope) => {
+        scope.setTag('http.method', error.config?.method);
+        scope.setTag('http.status', error.response ? error.response.status : 'network_error');
+        scope.setFingerprint([
+          error.config?.method || 'unknown',
+          error.config?.url || 'unknown',
+          String(error.response ? error.response.status : 'network_error'),
+        ]);
+        return scope;
+      });
     }
     return Promise.reject(error);
   }

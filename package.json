@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@sentry/react": "^10.70.0",
     "axios": "^1.6.8",
     "http-proxy-middleware": "^3.0.0",
     "https": "^1.0.0",
