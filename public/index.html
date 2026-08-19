@@ -23,6 +23,55 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <title>Panchkuian Hospital</title>
+    <!-- Structured data for local/medical search - the site previously had
+         none at all, so Google had no explicit signal tying this exact
+         business (name/address/phone/hours) together, only whatever it could
+         infer from prose. alternateName covers the "Panchkuiyan" spelling
+         (the domain and some existing citations still use it) so both
+         spellings resolve to the same entity in Google's knowledge graph
+         instead of competing with each other. Hardcoded to the one real
+         production tenant's values, matching how the <title>/meta
+         description above are already handled in this file (not templated
+         per-tenant) - update by hand if a second tenant ever needs this. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MedicalClinic",
+      "name": "Panchkuian Hospital",
+      "alternateName": "Panchkuiyan Hospital",
+      "url": "https://panchkuiyanhospital.com",
+      "telephone": "+91-9412426818",
+      "email": "bhavanarmsk7@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "1/89, Panchkuian Hospital, Panchkuian, near Mathur Vaishya Bhawan",
+        "addressLocality": "Agra",
+        "addressRegion": "Uttar Pradesh",
+        "postalCode": "282001",
+        "addressCountry": "IN"
+      },
+      "medicalSpecialty": "Gynecologic",
+      "physician": {
+        "@type": "Physician",
+        "name": "Dr. Bhavana Gupta",
+        "medicalSpecialty": "Gynecologic"
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "opens": "11:00",
+          "closes": "15:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "opens": "18:00",
+          "closes": "20:00"
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
