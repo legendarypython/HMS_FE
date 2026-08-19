@@ -9,6 +9,7 @@ import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
 import Badge from '../ui/Badge';
+import IconBadge from '../ui/IconBadge';
 import PageHeader from '../ui/PageHeader';
 import Drawer from '../ui/Drawer';
 import PatientQuickView from './PatientQuickView';
@@ -17,7 +18,9 @@ import { API_BASE } from '../../utils/api';
 import './Admin.css';
 
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
-const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'warning', 3: 'neutral' };
+// Purely categorical, not a good/bad status - warning's amber previously
+// made "Infertility" look like a problem state rather than just a category.
+const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'accent', 3: 'neutral' };
 
 const getInitials = (firstName, lastName) =>
   `${(firstName || '')[0] || ''}${(lastName || '')[0] || ''}`.toUpperCase();
@@ -52,6 +55,39 @@ const Admin = () => {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [quickViewPatientId, setQuickViewPatientId] = useState(null);
+  // Overview strip above the table - real clinic-wide counts, independent of
+  // whatever's currently typed in the search box or filters (those narrow
+  // the table below, not these). null = still loading.
+  const [stats, setStats] = useState(null);
+
+  // Fetched once on mount, not on every search/filter change - these are
+  // "how's the clinic doing overall" numbers, not "how many results match
+  // my search". limit:1 on each since only pagination.total is needed, not
+  // the actual records.
+  useEffect(() => {
+    const fetchCount = (filters) => axios.post(`${API_BASE}/api/patients/search`, {
+      query: '', sortBy: 'firstName', order: 'asc', page: 1, limit: 1, filters
+    }, { headers: getAuthHeader() }).then(res => res.data.pagination.total);
+
+    const weekStart = new Date();
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - 6);
+
+    // Not a case-type breakdown - showing only one of the 3 case types here
+    // was arbitrary and looked like a bug. "Returning" is a single,
+    // unambiguous count that doesn't invite the same "why only this one"
+    // question.
+    Promise.all([
+      fetchCount({}),
+      fetchCount({ startDate: weekStart, endDate: new Date() }),
+      fetchCount({ IsNewPatient: 'No' }),
+      fetchCount({ PaymentStatus: 'pending' }),
+    ])
+      .then(([total, newThisWeek, returning, pendingPayment]) => {
+        setStats({ total, newThisWeek, returning, pendingPayment });
+      })
+      .catch(err => console.error('Error fetching patient stats:', err));
+  }, []);
 
   // 300ms debounce - was firing a request on every single keystroke before
   // (fetchPatients depends on searchQuery, which updated directly from the
@@ -115,6 +151,39 @@ const Admin = () => {
 
       <div className="page">
         <PageHeader icon="users" title="Patients" />
+
+        {stats && (
+          <div className="stat-tile-row">
+            <div className="stat-tile">
+              <IconBadge name="users" variant="primary" size="md" className="ui-icon-badge-inline stat-tile-icon" />
+              <div>
+                <div className="stat-tile-value">{stats.total.toLocaleString('en-IN')}</div>
+                <div className="stat-tile-label">Total Patients</div>
+              </div>
+            </div>
+            <div className="stat-tile">
+              <IconBadge name="user-plus" variant="primary" size="md" className="ui-icon-badge-inline stat-tile-icon" />
+              <div>
+                <div className="stat-tile-value">{stats.newThisWeek}</div>
+                <div className="stat-tile-label">New This Week</div>
+              </div>
+            </div>
+            <div className="stat-tile">
+              <IconBadge name="user-check" variant="neutral" size="md" className="ui-icon-badge-inline stat-tile-icon" />
+              <div>
+                <div className="stat-tile-value">{stats.returning}</div>
+                <div className="stat-tile-label">Returning Patients</div>
+              </div>
+            </div>
+            <div className="stat-tile">
+              <IconBadge name="wallet" variant="warning" size="md" className="ui-icon-badge-inline stat-tile-icon" />
+              <div>
+                <div className="stat-tile-value">{stats.pendingPayment}</div>
+                <div className="stat-tile-label">Pending Payment</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="dashboard-toolbar">
           <Link to="/patients/add"><Button>+ Add New Patient</Button></Link>
@@ -231,7 +300,11 @@ const Admin = () => {
                     </td>
                     <td data-label="Date of Appointment">{formatDate(patient.dateOfAdmission)}</td>
                     <td data-label="Status">
-                      <Badge variant={patient.isNewPatient ? 'success' : 'neutral'}>
+                      {/* primary (teal), not success (green) - this row also has a
+                          Payment badge that's genuinely green-for-good ("Paid"),
+                          and "New" isn't itself a positive/negative outcome the
+                          way paid/pending is, just a category. */}
+                      <Badge variant={patient.isNewPatient ? 'primary' : 'neutral'}>
                         {patient.isNewPatient ? 'New' : 'Returning'}
                       </Badge>
                     </td>

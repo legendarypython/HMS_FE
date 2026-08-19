@@ -33,6 +33,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
     aadhar: initialPatientDetails?.aadhar || initialAbhaProfile?.aadhar || '',
     phone: initialPatientDetails?.phone || initialPhone || '',
     email: initialPatientDetails?.email || '',
+    maritalStatus: initialPatientDetails?.maritalStatus || 'married',
     marriedFor: initialPatientDetails?.marriedFor || '',
     diagnosis: initialPatientDetails?.diagnosis || '',
     dateOfAdmission: initialPatientDetails?.dateOfAdmission ? initialPatientDetails.dateOfAdmission.slice(0, 10) : '',
@@ -175,6 +176,10 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
       const formData = new FormData();
       Object.entries(form).forEach(([key, value]) => {
         if (key === 'caseType') return;
+        // Backend already guards against this too, but skip it here as well
+        // rather than sending a stale/blank number for a field the form
+        // itself hides once marital status is "unmarried".
+        if (key === 'marriedFor' && form.maritalStatus !== 'married') return;
         formData.append(key, value);
       });
       formData.set('isNewPatient', form.isNewPatient.toString());
@@ -253,9 +258,17 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
           <Field label="Husband's Last Name" htmlFor="husbandLastName">
             <input className="ui-input" id="husbandLastName" value={form.husbandLastName} onChange={handleChange('husbandLastName')} />
           </Field>
-          <Field label="Married For (Years)" required htmlFor="marriedFor">
-            <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
+          <Field label="Marital Status" required htmlFor="maritalStatus">
+            <Select id="maritalStatus" value={form.maritalStatus} onChange={handleChange('maritalStatus')}>
+              <option value="married">Married</option>
+              <option value="unmarried">Unmarried</option>
+            </Select>
           </Field>
+          {form.maritalStatus === 'married' && (
+            <Field label="Married For (Years)" required htmlFor="marriedFor">
+              <input className="ui-input" type="number" id="marriedFor" value={form.marriedFor} onChange={handleChange('marriedFor')} required />
+            </Field>
+          )}
           {form.abhaNumber && (
             <Field label="ABHA Number (Verified)" htmlFor="abhaNumber">
               <input className="ui-input" id="abhaNumber" value={form.abhaNumber} disabled />

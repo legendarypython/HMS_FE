@@ -10,6 +10,7 @@ import Icon from '../ui/Icon';
 import PageHeader from '../ui/PageHeader';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
+import './DoctorManagement.css';
 
 const SPECIALIZATIONS = [
   'General Physician',
@@ -163,74 +164,68 @@ const DoctorManagement = () => {
 
         {loading ? (
           <Spinner label="Loading doctors..." />
+        ) : doctors.length === 0 ? (
+          <div className="ui-table-empty">
+            <Icon name="inbox" size={28} />
+            No doctors added yet — use the form above to add your first one.
+          </div>
         ) : (
-          <div className="ui-table-wrap">
-            <table className="ui-table">
-              <thead>
-                <tr>
-                  <th>Photo</th>
-                  <th>Name</th>
-                  <th>Specialization</th>
-                  <th>WhatsApp Number</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {doctors.map(doc => (
-                  <tr key={doc._id} className={!doc.active ? 'ui-row-inactive' : ''}>
-                    <td data-label="Photo">
-                      {doc.photoKey ? (
-                        <img src={`${API_BASE}/api/doctors/${doc._id}/photo`} alt="" className="doctor-thumb" />
-                      ) : (
-                        <span className="ui-avatar">{(doc.name || '').charAt(0).toUpperCase()}</span>
-                      )}
-                    </td>
-                    <td data-label="Name">{doc.name}</td>
-                    <td data-label="Specialization">{doc.specialization}</td>
-                    <td data-label="WhatsApp Number">
-                      {editingId === doc._id ? (
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <input
-                            type="tel"
-                            className="ui-input"
-                            style={{ width: 140 }}
-                            value={editPhone}
-                            onChange={(e) => setEditPhone(e.target.value)}
-                            autoFocus
-                          />
-                          <Button size="sm" onClick={() => saveEditPhone(doc._id)}>Save</Button>
-                          <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>Cancel</Button>
-                        </div>
-                      ) : (
-                        <span onClick={() => role === 'owner' && startEditPhone(doc)} style={{ cursor: role === 'owner' ? 'pointer' : 'default' }}>
-                          {doc.phone || <span className="text-muted">Not set</span>}
-                          {role === 'owner' && <Icon name="edit" size={14} style={{ marginLeft: 6, opacity: 0.6 }} />}
-                        </span>
-                      )}
-                    </td>
-                    <td data-label="Status">
-                      <Badge variant={doc.active ? 'success' : 'neutral'}>{doc.active ? 'Active' : 'Inactive'}</Badge>
-                    </td>
-                    <td data-label="Actions">
-                      {role === 'owner' && (
-                        doc.active ? (
-                          <Button size="sm" variant="danger" onClick={() => handleRemove(doc._id)}>Remove</Button>
-                        ) : (
-                          <Button size="sm" variant="secondary" onClick={() => handleRestore(doc._id)}>Restore</Button>
-                        )
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {doctors.length === 0 && (
-              <div className="ui-table-empty">
-                <Icon name="inbox" size={28} />
-                No doctors added yet — use the form above to add your first one.
-              </div>
-            )}
+          <div className="staff-doctor-grid">
+            {doctors.map(doc => (
+              <Card key={doc._id} className={`staff-doctor-card ${!doc.active ? 'staff-doctor-card-inactive' : ''}`}>
+                <div className="staff-doctor-card-header">
+                  {doc.photoKey ? (
+                    <span className="staff-doctor-photo-wrap">
+                      <img src={`${API_BASE}/api/doctors/${doc._id}/photo`} alt="" className="staff-doctor-photo" />
+                    </span>
+                  ) : (
+                    <span className="ui-avatar staff-doctor-avatar">{(doc.name || '').charAt(0).toUpperCase()}</span>
+                  )}
+                  <div>
+                    <div className="staff-doctor-name">{doc.name}</div>
+                    <div className="text-muted">{doc.specialization}</div>
+                  </div>
+                </div>
+
+                <Badge variant={doc.active ? 'success' : 'neutral'}>{doc.active ? 'Active' : 'Inactive'}</Badge>
+
+                <div className="staff-doctor-phone">
+                  {editingId === doc._id ? (
+                    <div className="staff-doctor-phone-edit">
+                      <input
+                        type="tel"
+                        className="ui-input"
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        autoFocus
+                      />
+                      <Button size="sm" onClick={() => saveEditPhone(doc._id)}>Save</Button>
+                      <Button size="sm" variant="secondary" onClick={() => setEditingId(null)}>Cancel</Button>
+                    </div>
+                  ) : (
+                    <span
+                      className="staff-doctor-phone-display"
+                      onClick={() => role === 'owner' && startEditPhone(doc)}
+                      style={{ cursor: role === 'owner' ? 'pointer' : 'default' }}
+                    >
+                      <Icon name="phone" size={14} />
+                      {doc.phone || <span className="text-muted">WhatsApp number not set</span>}
+                      {role === 'owner' && <Icon name="edit" size={14} style={{ opacity: 0.6 }} />}
+                    </span>
+                  )}
+                </div>
+
+                {role === 'owner' && (
+                  <div className="staff-doctor-actions">
+                    {doc.active ? (
+                      <Button size="sm" variant="danger" onClick={() => handleRemove(doc._id)} style={{ width: '100%' }}>Remove</Button>
+                    ) : (
+                      <Button size="sm" variant="secondary" onClick={() => handleRestore(doc._id)} style={{ width: '100%' }}>Restore</Button>
+                    )}
+                  </div>
+                )}
+              </Card>
+            ))}
           </div>
         )}
       </div>

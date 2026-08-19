@@ -49,4 +49,10 @@ export const TENANT_CONFIG = {
   // Real HFR ID from the facility's ABDM registration (see PROGRESS.md) - the
   // "hip-id" the Scan & Share QR encodes, per ABDM's documented QR URL format.
   abdmHfrId: process.env.REACT_APP_TENANT_ABDM_HFR_ID || 'IN0911573004',
+  // Real UPI ID payments are collected into - same account as legalName
+  // above. Personal UPI transfers have zero gateway fees (unlike routing
+  // in-person payments through Instamojo, which would take its cut on every
+  // transaction regardless of how it was initiated) - deliberately chosen
+  // over the payment gateway for this specific in-person flow.
+  upiId: process.env.REACT_APP_TENANT_UPI_ID || 'rishabh.agarwal4419@okaxis',
 };

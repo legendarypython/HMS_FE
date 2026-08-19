@@ -25,6 +25,7 @@ function handleSessionExpiry() {
   sessionStorage.removeItem('usertoken');
   sessionStorage.removeItem('userRole');
   sessionStorage.removeItem('userData');
+  sessionStorage.removeItem('userName');
   window.location.href = '/login?expired=1';
 }
 

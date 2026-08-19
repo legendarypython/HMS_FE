@@ -22,6 +22,40 @@
   font-size: 0.92rem;
 }
 
+.dashboard-today-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.dashboard-today-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--color-bg);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  margin-bottom: var(--space-4);
+}
+
+.dashboard-today-tabs button {
+  border: none;
+  background: transparent;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.dashboard-today-tabs button.active {
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
+  box-shadow: var(--shadow-sm);
+}
+
 .dashboard-today-list {
   display: flex;
   flex-direction: column;

@@ -66,6 +66,7 @@ const Login = () => {
       }
       sessionStorage.setItem('usertoken', json.token);
       sessionStorage.setItem('userRole', json.role);
+      sessionStorage.setItem('userName', json.username || '');
       // Was hardcoded to /dashboard for every role - broke manager login
       // entirely once /dashboard became owner-only (redirect landed on a
       // route manager can't access, which PrivateRoute immediately bounces

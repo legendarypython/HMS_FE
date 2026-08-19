@@ -7,26 +7,30 @@
 */
 
 :root {
-  /* 2026-08-18 rebrand: calm/clinical/premium (Linear+Stripe-influenced)
-     replacing the earlier warm rose/blush maternity-boutique palette. One
-     strong accent (teal) instead of two competing brand colors, deep navy
-     for text/dark surfaces instead of near-black, off-white instead of
-     pale blue-grey. */
-  --color-primary: #0ea5a4;
-  --color-primary-light: #34d1cf;
-  --color-primary-dark: #0a7876;
-  --color-primary-bg: #eafbfa;
-  --color-accent: #2563eb;
+  /* 2026-08-19 rebrand: mockup-inspired blue, replacing the 2026-08-18
+     teal rebrand - user reviewed it live across every page and confirmed
+     it as final, not just a trial. Swapped with --color-accent (below)
+     rather than invented fresh, since #2563eb was already sitting in the
+     palette unused as a secondary token and is a close match to the
+     mockups' own blue. */
+  --color-primary: #2563eb;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-bg: #eff6ff;
+  /* Former primary teal, demoted to the secondary/categorical accent (case
+     type badges etc.) - still a real, used color, just not the lead one. */
+  --color-accent: #0ea5a4;
+  --color-accent-bg: #eafbfa;
 
   /* Kept as an alias of primary rather than removed outright - this project
      has no global find/replace for every call site that reads --color-warm*
      (stat-strip icons, the CTA section gradient, etc.), and a one-accent
      system means "secondary contrast color" and "primary" are now the same
      color anyway. Cheaper and safer than touching every call site. */
-  --color-warm: #0ea5a4;
-  --color-warm-light: #34d1cf;
-  --color-warm-dark: #0a7876;
-  --color-warm-bg: #eafbfa;
+  --color-warm: #2563eb;
+  --color-warm-light: #60a5fa;
+  --color-warm-dark: #1d4ed8;
+  --color-warm-bg: #eff6ff;
 
   --color-success: #15803d;
   --color-success-dark: #14532d;
@@ -75,15 +79,15 @@
   --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.12);
   --shadow-xl: 0 20px 50px rgba(15, 23, 42, 0.16);
   /* Tinted shadow for primary CTAs - reads as "glowing" rather than a flat grey drop shadow. */
-  --shadow-primary: 0 12px 24px -8px rgba(14, 165, 164, 0.4);
+  --shadow-primary: 0 12px 24px -8px rgba(37, 99, 235, 0.4);
 
-  /* Gradients kept to a minimum per the calm/clinical brief - flat teal
+  /* Gradients kept to a minimum per the calm/clinical brief - flat blue
      rather than the old two-stop rose blend, and gradient-mesh (the hero's
      background wash) collapsed from three layered rose/teal/dark radials
      down to one quiet highlight instead of a busy multi-color mesh. */
-  --gradient-primary: linear-gradient(135deg, #0ea5a4 0%, #0a7876 100%);
-  --gradient-warm: linear-gradient(135deg, #0ea5a4 0%, #0a7876 100%);
-  --gradient-mesh: radial-gradient(circle at 20% 20%, rgba(14, 165, 164, 0.16) 0%, transparent 50%),
+  --gradient-primary: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --gradient-warm: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --gradient-mesh: radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.16) 0%, transparent 50%),
     var(--color-ink);
 
   --transition-fast: 0.15s ease;

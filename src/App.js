@@ -21,6 +21,7 @@ import PatientDetails from './component/Patient/PatientDetails';
 import ViewAntenatalForm from './component/Patient/ViewAnteNatal';
 import ViewInfertilityForm from './component/Patient/ViewInfertilityCase';
 import MyRecord from './component/Patient/MyRecord';
+import PaymentQrPage from './component/Payment/PaymentQrPage';
 import Terms from './component/Legal/Terms';
 import RefundPolicy from './component/Legal/RefundPolicy';
 import NotFound from './component/Shared/NotFound';
@@ -46,6 +47,7 @@ function App() {
           <PrivateRoute exact path="/dashboard" roles={['owner']} component={Dashboard} />
           <PrivateRoute exact path="/doctors" roles={['owner']} component={DoctorManagement} />
           <PrivateRoute exact path="/availability" roles={['owner']} component={DoctorAvailability} />
+          <PrivateRoute exact path="/payment-qr" roles={['owner']} component={PaymentQrPage} />
 
           <PrivateRoute exact path="/patients" roles={STAFF_ROLES} component={Admin} />
           <PrivateRoute exact path="/appointments" roles={STAFF_ROLES} component={AppointmentInbox} />

@@ -8,13 +8,14 @@ import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
+import Tabs from '../ui/Tabs';
 import { AddPatientForm } from './AddPatient';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
 import './PatientDetails.css';
 
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
-const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'warning', 3: 'neutral' };
+const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'accent', 3: 'neutral' };
 
 const getInitials = (first, last) => `${(first || '')[0] || ''}${(last || '')[0] || ''}`.toUpperCase();
 
@@ -38,6 +39,13 @@ const RecordField = ({ label, value, icon }) => (
   </div>
 );
 
+const DETAIL_TABS = [
+  { key: 'personal', label: 'Personal Info', icon: 'user' },
+  { key: 'family', label: 'Family & Marriage', icon: 'heart' },
+  { key: 'visit', label: 'Visit & Payment', icon: 'calendar' },
+  { key: 'documents', label: 'Documents', icon: 'file' },
+];
+
 const PatientDetails = () => {
   const role = sessionStorage.getItem('userRole');
   const { patientId } = useParams();
@@ -47,6 +55,7 @@ const PatientDetails = () => {
   const [previewDocument, setPreviewDocument] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [activeTab, setActiveTab] = useState('personal');
 
   const fetchPatientDetails = async () => {
     try {
@@ -138,45 +147,86 @@ const PatientDetails = () => {
               </div>
             </div>
 
-            <div className="record-grid">
-              <RecordField label="Husband's Name" value={`${patientDetails.husbandFirstName} ${patientDetails.husbandLastName}`} />
-              <RecordField label="Date of Birth" value={patientDetails.dateOfBirth} icon={FIELD_ICONS.dob} />
-              <RecordField label="Address" value={patientDetails.address} icon={FIELD_ICONS.address} />
-              <RecordField label="Aadhar Number" value={patientDetails.aadhar} />
-              <RecordField label="Phone Number" value={patientDetails.phone} icon={FIELD_ICONS.phone} />
-              <RecordField label="Email" value={patientDetails.email || '-'} icon={FIELD_ICONS.email} />
-              <RecordField label="Married For (Years)" value={patientDetails.marriedFor} />
-              <RecordField label="Date of Appointment" value={new Date(patientDetails.dateOfAdmission).toLocaleDateString()} icon={FIELD_ICONS.admission} />
-              <RecordField label="Is New Patient" value={patientDetails.isNewPatient ? 'Yes' : 'No'} />
-              <RecordField
-                label="Payment Status"
-                value={patientDetails.paymentStatus === 'paid'
-                  ? `Paid (${patientDetails.paymentMethod === 'online' ? 'Online' : 'Offline'})`
-                  : 'Pending'}
-              />
-            </div>
+            <Tabs tabs={DETAIL_TABS} active={activeTab} onChange={setActiveTab} />
 
+            {activeTab === 'personal' && (
+              <div className="record-grid">
+                <RecordField label="Date of Birth" value={patientDetails.dateOfBirth} icon={FIELD_ICONS.dob} />
+                <RecordField label="Address" value={patientDetails.address} icon={FIELD_ICONS.address} />
+                <RecordField label="Aadhar Number" value={patientDetails.aadhar} />
+                <RecordField label="Phone Number" value={patientDetails.phone} icon={FIELD_ICONS.phone} />
+                <RecordField label="Email" value={patientDetails.email || '-'} icon={FIELD_ICONS.email} />
+              </div>
+            )}
+
+            {activeTab === 'family' && (
+              <div className="record-grid">
+                <div className="record-field">
+                  <div>
+                    <div className="record-field-label">Marital Status</div>
+                    <Badge variant={patientDetails.maritalStatus === 'married' ? 'primary' : 'neutral'}>
+                      {patientDetails.maritalStatus === 'unmarried' ? 'Unmarried' : 'Married'}
+                    </Badge>
+                  </div>
+                </div>
+                {patientDetails.maritalStatus !== 'unmarried' && (
+                  <RecordField label="Married For (Years)" value={patientDetails.marriedFor} />
+                )}
+                <RecordField label="Husband's Name" value={`${patientDetails.husbandFirstName} ${patientDetails.husbandLastName}`} />
+              </div>
+            )}
+
+            {activeTab === 'visit' && (
+              <div className="record-grid">
+                <RecordField label="Date of Appointment" value={new Date(patientDetails.dateOfAdmission).toLocaleDateString()} icon={FIELD_ICONS.admission} />
+                <div className="record-field">
+                  <div>
+                    <div className="record-field-label">Patient Status</div>
+                    <Badge variant={patientDetails.isNewPatient ? 'primary' : 'neutral'}>
+                      {patientDetails.isNewPatient ? 'New' : 'Returning'}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="record-field">
+                  <div>
+                    <div className="record-field-label">Payment Status</div>
+                    <Badge variant={patientDetails.paymentStatus === 'paid' ? 'success' : 'warning'}>
+                      {patientDetails.paymentStatus === 'paid'
+                        ? `Paid (${patientDetails.paymentMethod === 'online' ? 'Online' : 'Offline'})`
+                        : 'Pending'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'documents' && (
+              patientDetails.documents && patientDetails.documents.length > 0 ? (
+                <div className="record-documents">
+                  {patientDetails.documents.map((document) => (
+                    <button key={document._id} className="record-document-item" onClick={() => handleDocumentPreview(document)}>
+                      <Icon name="file" size={18} />
+                      {document.filename}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="ui-empty-state">
+                  <Icon name="inbox" size={28} />
+                  <p>No documents uploaded.</p>
+                </div>
+              )
+            )}
+
+            {/* Diagnosis stays visible regardless of which tab is active - the
+                highest-priority clinical info for staff, not something that
+                should require a click to see (same reasoning the mockup
+                itself uses for its always-visible vitals strip above its own
+                tabs). */}
             <div className="record-diagnosis-callout">
               <div className="record-field-label">Diagnosis</div>
               <div className="record-field-value">{patientDetails.diagnosis || '-'}</div>
             </div>
-
-            <h3 className="record-section-title">Documents</h3>
-            {patientDetails.documents && patientDetails.documents.length > 0 ? (
-              <div className="record-documents">
-                {patientDetails.documents.map((document) => (
-                  <button key={document._id} className="record-document-item" onClick={() => handleDocumentPreview(document)}>
-                    <Icon name="file" size={18} />
-                    {document.filename}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="ui-empty-state">
-                <Icon name="inbox" size={28} />
-                <p>No documents uploaded.</p>
-              </div>
-            )}
 
             <div className="patient-detail-actions">
               {role === 'owner' && <Button onClick={() => setEditMode(true)}>Edit</Button>}

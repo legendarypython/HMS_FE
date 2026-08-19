@@ -23,6 +23,21 @@ const TODAY = new Date().toLocaleDateString('en-CA'); // yyyy-mm-dd, local timez
 const POLL_INTERVAL_MS = 3000;
 const POLL_MAX_ATTEMPTS = 100; // ~5 minutes
 
+// Step-by-step wizard instead of one long scrolling form - one decision at a
+// time reads better on mobile, which is where most patients actually book
+// from. "doctor" is skipped entirely when there's only one doctor (this
+// practice's real case) rather than showing a pointless single-option step.
+const STEPS_MULTI_DOCTOR = ['doctor', 'slot', 'details', 'confirm'];
+const STEPS_SINGLE_DOCTOR = ['slot', 'details', 'confirm'];
+const STEP_LABELS = { doctor: 'Select Doctor', slot: 'Choose Slot', details: 'Your Details', confirm: 'Confirmation' };
+
+const formatDateLong = (isoDate) => {
+  if (!isoDate) return '-';
+  // T00:00:00 (not a bare date string) avoids the UTC-shift-near-midnight
+  // bug the rest of this codebase already works around the same way.
+  return new Date(`${isoDate}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+};
+
 const BookAppointment = () => {
   const [doctors, setDoctors] = useState([]);
   const [form, setForm] = useState({ patientName: '', patientPhone: '', email: '', doctorId: '', preferredDate: '', preferredTimeSlot: '', reason: '' });
@@ -44,7 +59,13 @@ const BookAppointment = () => {
   // so the dropdown isn't empty before a date is picked); array = the real,
   // doctor-availability-filtered set for that specific date.
   const [availableSlots, setAvailableSlots] = useState(null);
+  const [stepIndex, setStepIndex] = useState(0);
   const pollRef = useRef(null);
+
+  const steps = doctors.length > 1 ? STEPS_MULTI_DOCTOR : STEPS_SINGLE_DOCTOR;
+  // Guards against a stale index if `doctors` resolves from >1 to 1 (or vice
+  // versa) after the initial fetch, between renders.
+  const currentStep = steps[Math.min(stepIndex, steps.length - 1)];
 
   useEffect(() => {
     apiFetch(`${API_BASE}/api/doctors/public`)
@@ -232,6 +253,41 @@ const BookAppointment = () => {
     }
   };
 
+  // Per-step validation before advancing - same rules handleSubmit already
+  // enforces as a final backstop, just surfaced earlier so a patient finds
+  // out about a missing field on the step that actually needs it instead of
+  // only at the very end.
+  const goNext = () => {
+    setError('');
+    if (currentStep === 'doctor' && !form.doctorId) {
+      setError('Please select a doctor');
+      return;
+    }
+    if (currentStep === 'slot' && (!form.preferredDate || !form.preferredTimeSlot)) {
+      setError('Please select a preferred date and time');
+      return;
+    }
+    if (currentStep === 'details') {
+      if (!form.patientName.trim()) {
+        setError('Please enter your name');
+        return;
+      }
+      if (!/^\d{10}$/.test(form.patientPhone)) {
+        setError('Enter a valid 10-digit phone number');
+        return;
+      }
+    }
+    setStepIndex((i) => Math.min(i + 1, steps.length - 1));
+  };
+
+  const goBack = () => {
+    setError('');
+    setStepIndex((i) => Math.max(i - 1, 0));
+  };
+
+  const selectedDoctor = doctors.find((d) => d._id === form.doctorId);
+  const selectedSlotLabel = TIME_SLOTS.find((s) => s.value === form.preferredTimeSlot)?.label;
+
   return (
     <div>
       <AppNavbar role="public" />
@@ -253,15 +309,17 @@ const BookAppointment = () => {
       <div className="booking-page-bg">
         <div className="page page-narrow">
           <Card variant="elevated">
-          {!success && (
+          {!success && !confirming && (
             <div className="booking-steps">
-              <span className={`booking-step ${!confirming ? 'booking-step-active' : ''}`}>
-                <span className="booking-step-num">1</span> Your Details
-              </span>
-              <span className="booking-step-divider">&mdash;</span>
-              <span className={`booking-step ${confirming ? 'booking-step-active' : ''}`}>
-                <span className="booking-step-num">2</span> Payment
-              </span>
+              {steps.map((key, idx) => (
+                <React.Fragment key={key}>
+                  {idx > 0 && <span className="booking-step-divider">&mdash;</span>}
+                  <span className={`booking-step ${idx === stepIndex ? 'booking-step-active' : ''} ${idx < stepIndex ? 'booking-step-complete' : ''}`}>
+                    <span className="booking-step-num">{idx < stepIndex ? <Icon name="check-circle" size={12} /> : idx + 1}</span>
+                    <span className="booking-step-label">{STEP_LABELS[key]}</span>
+                  </span>
+                </React.Fragment>
+              ))}
             </div>
           )}
           {success ? (
@@ -288,80 +346,132 @@ const BookAppointment = () => {
               {error && <div className="ui-banner ui-banner-error" style={{ marginTop: '16px' }}>{error}</div>}
             </>
           ) : (
-            <form onSubmit={handleSubmit}>
-              <IconBadge name="calendar" />
-              <h2 className="section-title">Book an Appointment</h2>
-              <p className="text-muted" style={{ marginTop: '-12px', marginBottom: '8px' }}>
-                A consultation fee of {CONSULTATION_FEE_DISPLAY} is collected online to confirm your slot.
-              </p>
-              <p className="text-muted" style={{ marginTop: 0, marginBottom: '20px', fontSize: '0.88rem' }}>
-                OPD hours: {OPD_HOURS_SUMMARY} &middot; Closed Sundays
-              </p>
+            <>
               {error && <div className="ui-banner ui-banner-error">{error}</div>}
 
-              <Field label="Your Name" required htmlFor="patientName">
-                <input id="patientName" className="ui-input" value={form.patientName} onChange={handleChange('patientName')} />
-              </Field>
-
-              <Field label="Phone Number" required htmlFor="patientPhone">
-                <input id="patientPhone" className="ui-input" type="tel" value={form.patientPhone} onChange={handleChange('patientPhone')} />
-              </Field>
-
-              <Field label="Email" htmlFor="email">
-                <input id="email" className="ui-input" type="email" value={form.email} onChange={handleChange('email')} />
-              </Field>
-
-              {doctors.length > 1 && (
-                <Field label="Doctor" required htmlFor="doctorId">
-                  <Select id="doctorId" value={form.doctorId} onChange={handleChange('doctorId')}>
-                    <option value="">Select a doctor</option>
-                    {doctors.map(doc => (
-                      <option key={doc._id} value={doc._id}>{doc.name} - {doc.specialization}</option>
-                    ))}
-                  </Select>
-                </Field>
-              )}
-              {doctors.length === 1 && (
-                <p className="text-muted">Doctor: {doctors[0].name} ({doctors[0].specialization})</p>
+              {currentStep === 'doctor' && (
+                <div>
+                  <IconBadge name="stethoscope" />
+                  <h2 className="section-title">Select Your Doctor</h2>
+                  <Field label="Doctor" required htmlFor="doctorId">
+                    <Select id="doctorId" value={form.doctorId} onChange={handleChange('doctorId')}>
+                      <option value="">Select a doctor</option>
+                      {doctors.map(doc => (
+                        <option key={doc._id} value={doc._id}>{doc.name} - {doc.specialization}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <div className="booking-step-actions">
+                    <Button size="lg" style={{ width: '100%' }} onClick={goNext}>
+                      Continue <Icon name="arrow-right" size={18} />
+                    </Button>
+                  </div>
+                </div>
               )}
 
-              <Field label="Preferred Date" required htmlFor="preferredDate">
-                <DateInput id="preferredDate" min={TODAY} value={form.preferredDate} onChange={handleDateChange} />
-              </Field>
-
-              <Field label="Preferred Time" required htmlFor="preferredTimeSlot">
-                <Select id="preferredTimeSlot" value={form.preferredTimeSlot} onChange={handleChange('preferredTimeSlot')} disabled={!form.preferredDate}>
-                  <option value="">{form.preferredDate ? 'Select a time slot' : 'Pick a date first'}</option>
-                  {visibleSlots.map(slot => (
-                    <option key={slot.value} value={slot.value}>{slot.label}</option>
-                  ))}
-                </Select>
-                {form.preferredDate && availableSlots !== null && visibleSlots.length === 0 && (
-                  <p className="text-muted" style={{ fontSize: '0.82rem', marginTop: '6px' }}>
-                    No slots available this day - please pick another date.
+              {currentStep === 'slot' && (
+                <div>
+                  <IconBadge name="calendar" />
+                  <h2 className="section-title">Choose Date &amp; Time</h2>
+                  <p className="text-muted" style={{ marginTop: '-12px', marginBottom: '20px', fontSize: '0.88rem' }}>
+                    OPD hours: {OPD_HOURS_SUMMARY} &middot; Closed Sundays
                   </p>
-                )}
-              </Field>
 
-              <Field label="Reason for visit" htmlFor="reason">
-                <textarea id="reason" className="ui-textarea" rows={3} value={form.reason} onChange={handleChange('reason')} />
-              </Field>
+                  <Field label="Preferred Date" required htmlFor="preferredDate">
+                    <DateInput id="preferredDate" min={TODAY} value={form.preferredDate} onChange={handleDateChange} />
+                  </Field>
 
-              <Button type="submit" size="lg" disabled={loading} style={{ width: '100%' }}>
-                {loading ? 'Processing...' : `Pay ${CONSULTATION_FEE_DISPLAY} & Request Appointment`}
-              </Button>
-              {/* Reassurance right at the point of payment - a first-time patient
-                  paying a small clinic online has no prior trust signal to lean
-                  on, and the actual mechanics (webhook-verified, auto-confirmed,
-                  WhatsApp notified) already happen instantly - just not stated
-                  anywhere before this. */}
-              <p className="text-muted" style={{ fontSize: '0.82rem', marginTop: '10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <Icon name="lock" size={13} /> Secure payment &middot; Instant confirmation on WhatsApp
-              </p>
-              <p className="text-muted" style={{ fontSize: '0.8rem', marginTop: '4px', textAlign: 'center' }}>
-                By paying, you agree to our <a href="/terms">Terms & Conditions</a> and <a href="/refund-policy">Refund Policy</a>.
-              </p>
-            </form>
+                  <Field label="Preferred Time" required htmlFor="preferredTimeSlot">
+                    <Select id="preferredTimeSlot" value={form.preferredTimeSlot} onChange={handleChange('preferredTimeSlot')} disabled={!form.preferredDate}>
+                      <option value="">{form.preferredDate ? 'Select a time slot' : 'Pick a date first'}</option>
+                      {visibleSlots.map(slot => (
+                        <option key={slot.value} value={slot.value}>{slot.label}</option>
+                      ))}
+                    </Select>
+                    {form.preferredDate && availableSlots !== null && visibleSlots.length === 0 && (
+                      <p className="text-muted" style={{ fontSize: '0.82rem', marginTop: '6px' }}>
+                        No slots available this day - please pick another date.
+                      </p>
+                    )}
+                  </Field>
+
+                  <div className="booking-step-actions">
+                    {stepIndex > 0 && <Button variant="ghost" onClick={goBack}>Back</Button>}
+                    <Button size="lg" style={{ flex: 1 }} onClick={goNext}>
+                      Continue <Icon name="arrow-right" size={18} />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 'details' && (
+                <div>
+                  <IconBadge name="calendar" />
+                  <h2 className="section-title">Your Details</h2>
+
+                  <Field label="Your Name" required htmlFor="patientName">
+                    <input id="patientName" className="ui-input" value={form.patientName} onChange={handleChange('patientName')} />
+                  </Field>
+
+                  <Field label="Phone Number" required htmlFor="patientPhone">
+                    <input id="patientPhone" className="ui-input" type="tel" value={form.patientPhone} onChange={handleChange('patientPhone')} />
+                  </Field>
+
+                  <Field label="Email" htmlFor="email">
+                    <input id="email" className="ui-input" type="email" value={form.email} onChange={handleChange('email')} />
+                  </Field>
+
+                  <Field label="Reason for visit" htmlFor="reason">
+                    <textarea id="reason" className="ui-textarea" rows={3} value={form.reason} onChange={handleChange('reason')} />
+                  </Field>
+
+                  <div className="booking-step-actions">
+                    <Button variant="ghost" onClick={goBack}>Back</Button>
+                    <Button size="lg" style={{ flex: 1 }} onClick={goNext}>
+                      Continue <Icon name="arrow-right" size={18} />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {currentStep === 'confirm' && (
+                <form onSubmit={handleSubmit}>
+                  <IconBadge name="check-circle" />
+                  <h2 className="section-title">Confirm &amp; Pay</h2>
+                  <p className="text-muted" style={{ marginTop: '-12px', marginBottom: '20px' }}>
+                    A consultation fee of {CONSULTATION_FEE_DISPLAY} is collected online to confirm your slot.
+                  </p>
+
+                  <div className="booking-summary">
+                    <div className="booking-summary-row"><span>Doctor</span><strong>{selectedDoctor ? selectedDoctor.name : '-'}</strong></div>
+                    <div className="booking-summary-row"><span>Date</span><strong>{formatDateLong(form.preferredDate)}</strong></div>
+                    <div className="booking-summary-row"><span>Time</span><strong>{selectedSlotLabel || '-'}</strong></div>
+                    <div className="booking-summary-row"><span>Name</span><strong>{form.patientName}</strong></div>
+                    <div className="booking-summary-row"><span>Phone</span><strong>{form.patientPhone}</strong></div>
+                    {form.reason && <div className="booking-summary-row"><span>Reason</span><strong>{form.reason}</strong></div>}
+                  </div>
+
+                  <Button type="submit" size="lg" disabled={loading} style={{ width: '100%' }}>
+                    {loading ? 'Processing...' : `Pay ${CONSULTATION_FEE_DISPLAY} & Request Appointment`}
+                  </Button>
+                  {/* Reassurance right at the point of payment - a first-time patient
+                      paying a small clinic online has no prior trust signal to lean
+                      on, and the actual mechanics (webhook-verified, auto-confirmed,
+                      WhatsApp notified) already happen instantly - just not stated
+                      anywhere before this. */}
+                  <p className="text-muted" style={{ fontSize: '0.82rem', marginTop: '10px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <Icon name="lock" size={13} /> Secure payment &middot; Instant confirmation on WhatsApp
+                  </p>
+                  <p className="text-muted" style={{ fontSize: '0.8rem', marginTop: '4px', textAlign: 'center' }}>
+                    By paying, you agree to our <a href="/terms">Terms & Conditions</a> and <a href="/refund-policy">Refund Policy</a>.
+                  </p>
+
+                  <div className="booking-step-actions">
+                    <Button type="button" variant="ghost" onClick={goBack} disabled={loading}>Back</Button>
+                  </div>
+                </form>
+              )}
+            </>
           )}
           </Card>
         </div>

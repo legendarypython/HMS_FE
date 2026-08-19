@@ -28,6 +28,7 @@ const BLANK_DETAILS = (patientId) => ({
     obstetricHistory: { gravida: '', para: '', abortus: '', living: '' },
     investigations: BLANK_INVESTIGATIONS(),
   },
+  treatments: '',
 });
 
 // Maps a populated Document object (from the backend) into the shape
@@ -109,6 +110,7 @@ const InfertilityDetailsForm = () => {
             },
             investigations: mapExistingInvestigations(existing.secondaryHistory?.investigations),
           },
+          treatments: existing.treatments || '',
         });
       })
       .catch((err) => console.error('Error checking for an existing infertility case:', err))
@@ -142,6 +144,7 @@ const InfertilityDetailsForm = () => {
       formData.append('secondaryHistory.obstetricHistory.abortus', Number(ob.abortus) || 0);
       formData.append('secondaryHistory.obstetricHistory.living', Number(ob.living) || 0);
       appendInvestigationDetails(formData, 'secondaryHistory', infertilityDetails.secondaryHistory);
+      formData.append('treatments', infertilityDetails.treatments);
 
       const response = await apiFetch(`${API_BASE}/api/infertility/${isEditMode ? 'update' : 'create'}`, {
         method: isEditMode ? 'PUT' : 'POST',
@@ -221,6 +224,15 @@ const InfertilityDetailsForm = () => {
     current[path[path.length - 1]] = value;
 
     return newObj;
+  };
+
+  // Separate from handleChange above - that one assumes every field name is
+  // a dotted nested path (mainCategory.nested...) and would break on a flat
+  // top-level field like this one (updateNestedProperty spreads its `obj`
+  // argument, which only works for objects, not a plain string value).
+  const handleTreatmentsChange = (event) => {
+    const { value } = event.target;
+    setInfertilityDetails((prevState) => ({ ...prevState, treatments: value }));
   };
 
   const handleFileChange = (event) => {
@@ -425,6 +437,18 @@ const InfertilityDetailsForm = () => {
               onFileChange={handleFileChange}
               onRemoveDocument={(index) => removeDocument('secondaryHistory', 'xrayInvestigation', index)}
             />
+
+            <h3 className="record-section-title">Treatments</h3>
+            <Field label="Treatments" htmlFor="treatments">
+              <textarea
+                className="ui-textarea"
+                id="treatments"
+                name="treatments"
+                rows={4}
+                value={infertilityDetails.treatments}
+                onChange={handleTreatmentsChange}
+              />
+            </Field>
 
             <div className="case-form-actions">
               <Button type="submit" disabled={saving}>

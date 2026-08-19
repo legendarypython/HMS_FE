@@ -9,7 +9,7 @@ import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
 
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
-const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'warning', 3: 'neutral' };
+const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'accent', 3: 'neutral' };
 
 const ACTION_LABELS = {
   patient_created: 'Patient record created',
@@ -90,7 +90,7 @@ const PatientQuickView = ({ patientId, onClose }) => {
         <Badge variant={CASE_TYPE_BADGE_VARIANT[patient.caseType] || 'neutral'}>
           {CASE_TYPE_LABELS[patient.caseType] || 'Unclassified'}
         </Badge>
-        <Badge variant={patient.isNewPatient ? 'success' : 'neutral'}>
+        <Badge variant={patient.isNewPatient ? 'primary' : 'neutral'}>
           {patient.isNewPatient ? 'New' : 'Returning'}
         </Badge>
         <Badge variant={patient.paymentStatus === 'paid' ? 'success' : 'warning'}>

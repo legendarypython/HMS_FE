@@ -6,6 +6,7 @@ import DocumentPreviewModal from '../Shared/DocumentPreviewModal';
 import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
+import Tabs from '../ui/Tabs';
 import '../../styles/caseForms.css';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
@@ -15,12 +16,20 @@ const formatDate = (date) => (date ? new Date(date).toLocaleDateString() : '-');
 // single letter it used to be - see AnteNatalCases.js for why.
 const formatObstetricHistory = (ob) => (ob ? `G${ob.gravida ?? 0} P${ob.para ?? 0} A${ob.abortus ?? 0} L${ob.living ?? 0}` : '-');
 
+const ANTENATAL_TABS = [
+  { key: 'obstetric', label: 'Obstetric History', icon: 'baby' },
+  { key: 'medical', label: 'Medical History', icon: 'heart' },
+  { key: 'investigations', label: 'Investigations', icon: 'file' },
+  { key: 'treatments', label: 'Treatments', icon: 'edit' },
+];
+
 const ViewAntenatalForm = () => {
   const { patientId } = useParams();
   const [antenatalDetails, setAntenatalDetails] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [previewDocument, setPreviewDocument] = useState(null);
+  const [activeTab, setActiveTab] = useState('obstetric');
 
   useEffect(() => {
     const fetchAntenatalDetails = async () => {
@@ -114,54 +123,64 @@ const ViewAntenatalForm = () => {
       <div className="antenatal-details-form-container">
         <h2>Antenatal Details</h2>
 
-        <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
-        <div className="record-grid">
-          <div><div className="record-field-label">Obstetric History</div><div className="record-field-value">{formatObstetricHistory(antenatalDetails.obstetricHistory)}</div></div>
-          <div><div className="record-field-label">Last Menstrual Period (LMP)</div><div className="record-field-value">{antenatalDetails.LMP || '-'}</div></div>
-          <div><div className="record-field-label">Expected Date of Delivery</div><div className="record-field-value">{formatDate(antenatalDetails.expectedDateOfDelivery)}</div></div>
-          <div><div className="record-field-label">Previous Delivery By</div><div className="record-field-value">{antenatalDetails.specificHistory.previousDeliveryBy || '-'}</div></div>
-        </div>
-        <div style={{ marginTop: 'var(--space-5)' }}>
-          <div className="record-field-label">Pregnancy Complications</div>
-          <div className="record-field-value">{antenatalDetails.specificHistory.pregnancyComplications || '-'}</div>
-        </div>
+        <Tabs tabs={ANTENATAL_TABS} active={activeTab} onChange={setActiveTab} />
 
-        <h3 className="record-section-title">Medical History</h3>
-        <div className="record-grid">
-          <div><div className="record-field-label">Heart Disease</div><div className="record-field-value">{antenatalDetails.medicalComplications.heartDisease || '-'}</div></div>
-          <div><div className="record-field-label">Liver Disease</div><div className="record-field-value">{antenatalDetails.medicalComplications.liverDisease || '-'}</div></div>
-          <div><div className="record-field-label">Gastrointestinal Tract (GIT) Disease</div><div className="record-field-value">{antenatalDetails.medicalComplications.GIT || '-'}</div></div>
-          <div><div className="record-field-label">Kidney Disease</div><div className="record-field-value">{antenatalDetails.medicalComplications.Kidney || '-'}</div></div>
-          <div><div className="record-field-label">Spine Problem</div><div className="record-field-value">{antenatalDetails.medicalComplications.SpineProblem || '-'}</div></div>
-          <div><div className="record-field-label">Other Medical Complications</div><div className="record-field-value">{antenatalDetails.medicalComplications.Others || '-'}</div></div>
-        </div>
+        {activeTab === 'obstetric' && (
+          <>
+            <div className="record-grid">
+              <div><div className="record-field-label">Obstetric History</div><div className="record-field-value">{formatObstetricHistory(antenatalDetails.obstetricHistory)}</div></div>
+              <div><div className="record-field-label">Last Menstrual Period (LMP)</div><div className="record-field-value">{antenatalDetails.LMP || '-'}</div></div>
+              <div><div className="record-field-label">Expected Date of Delivery</div><div className="record-field-value">{formatDate(antenatalDetails.expectedDateOfDelivery)}</div></div>
+              <div><div className="record-field-label">Previous Delivery By</div><div className="record-field-value">{antenatalDetails.specificHistory.previousDeliveryBy || '-'}</div></div>
+            </div>
+            <div style={{ marginTop: 'var(--space-5)' }}>
+              <div className="record-field-label">Pregnancy Complications</div>
+              <div className="record-field-value">{antenatalDetails.specificHistory.pregnancyComplications || '-'}</div>
+            </div>
+          </>
+        )}
 
-        <h3 className="record-section-title">Investigations</h3>
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-label">Blood Investigation</div>
-          <div className="record-field-value">{antenatalDetails.investigations.bloodInvestigation.details || '-'}</div>
-          {renderInvestigationDocuments('bloodInvestigation')}
-        </div>
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-label">Urine Investigation</div>
-          <div className="record-field-value">{antenatalDetails.investigations.urineInvestigation.details || '-'}</div>
-          {renderInvestigationDocuments('urineInvestigation')}
-        </div>
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-label">Ultrasound Investigation</div>
-          <div className="record-field-value">{antenatalDetails.investigations.ultrasoundInvestigation.details || '-'}</div>
-          {renderInvestigationDocuments('ultrasoundInvestigation')}
-        </div>
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-label">X-ray Investigation</div>
-          <div className="record-field-value">{antenatalDetails.investigations.xrayInvestigation.details || '-'}</div>
-          {renderInvestigationDocuments('xrayInvestigation')}
-        </div>
+        {activeTab === 'medical' && (
+          <div className="record-grid">
+            <div><div className="record-field-label">Heart Disease</div><div className="record-field-value">{antenatalDetails.medicalComplications.heartDisease || '-'}</div></div>
+            <div><div className="record-field-label">Liver Disease</div><div className="record-field-value">{antenatalDetails.medicalComplications.liverDisease || '-'}</div></div>
+            <div><div className="record-field-label">Gastrointestinal Tract (GIT) Disease</div><div className="record-field-value">{antenatalDetails.medicalComplications.GIT || '-'}</div></div>
+            <div><div className="record-field-label">Kidney Disease</div><div className="record-field-value">{antenatalDetails.medicalComplications.Kidney || '-'}</div></div>
+            <div><div className="record-field-label">Spine Problem</div><div className="record-field-value">{antenatalDetails.medicalComplications.SpineProblem || '-'}</div></div>
+            <div><div className="record-field-label">Other Medical Complications</div><div className="record-field-value">{antenatalDetails.medicalComplications.Others || '-'}</div></div>
+          </div>
+        )}
 
-        <h3 className="record-section-title">Treatments</h3>
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-value">{antenatalDetails.treatments || '-'}</div>
-        </div>
+        {activeTab === 'investigations' && (
+          <>
+            <div style={{ marginBottom: 'var(--space-5)' }}>
+              <div className="record-field-label">Blood Investigation</div>
+              <div className="record-field-value">{antenatalDetails.investigations.bloodInvestigation.details || '-'}</div>
+              {renderInvestigationDocuments('bloodInvestigation')}
+            </div>
+            <div style={{ marginBottom: 'var(--space-5)' }}>
+              <div className="record-field-label">Urine Investigation</div>
+              <div className="record-field-value">{antenatalDetails.investigations.urineInvestigation.details || '-'}</div>
+              {renderInvestigationDocuments('urineInvestigation')}
+            </div>
+            <div style={{ marginBottom: 'var(--space-5)' }}>
+              <div className="record-field-label">Ultrasound Investigation</div>
+              <div className="record-field-value">{antenatalDetails.investigations.ultrasoundInvestigation.details || '-'}</div>
+              {renderInvestigationDocuments('ultrasoundInvestigation')}
+            </div>
+            <div style={{ marginBottom: 'var(--space-5)' }}>
+              <div className="record-field-label">X-ray Investigation</div>
+              <div className="record-field-value">{antenatalDetails.investigations.xrayInvestigation.details || '-'}</div>
+              {renderInvestigationDocuments('xrayInvestigation')}
+            </div>
+          </>
+        )}
+
+        {activeTab === 'treatments' && (
+          <div style={{ marginBottom: 'var(--space-5)' }}>
+            <div className="record-field-value">{antenatalDetails.treatments || '-'}</div>
+          </div>
+        )}
 
         <div className="case-form-actions">
           <Link to={`/patients/add/anteNatalForm/${patientId}`}><Button>Edit</Button></Link>

@@ -6,6 +6,7 @@ import DocumentPreviewModal from '../Shared/DocumentPreviewModal';
 import Button from '../ui/Button';
 import Spinner from '../ui/Spinner';
 import Icon from '../ui/Icon';
+import Tabs from '../ui/Tabs';
 import '../../styles/caseForms.css';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE } from '../../utils/api';
@@ -14,12 +15,19 @@ import { API_BASE } from '../../utils/api';
 // single letter - see AnteNatalCases.js/InfertilityCases.js for why.
 const formatObstetricHistory = (ob) => (ob ? `G${ob.gravida ?? 0} P${ob.para ?? 0} A${ob.abortus ?? 0} L${ob.living ?? 0}` : '-');
 
+const INFERTILITY_TABS = [
+  { key: 'obstetric', label: 'Obstetric History', icon: 'baby' },
+  { key: 'investigations', label: 'Investigations', icon: 'file' },
+  { key: 'treatments', label: 'Treatments', icon: 'edit' },
+];
+
 const ViewInfertilityForm = () => {
   const { patientId } = useParams();
   const [infertilityDetails, setInfertilityDetails] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [previewDocument, setPreviewDocument] = useState(null);
+  const [activeTab, setActiveTab] = useState('obstetric');
 
   useEffect(() => {
     const fetchInfertilityDetails = async () => {
@@ -114,36 +122,48 @@ const ViewInfertilityForm = () => {
       <div className="infertility-details-form-container">
         <h2>Infertility Details</h2>
 
-        <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Obstetric History</h3>
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-label">Obstetric History</div>
-          <div className="record-field-value">{formatObstetricHistory(infertilityDetails.secondaryHistory.obstetricHistory)}</div>
-        </div>
+        <Tabs tabs={INFERTILITY_TABS} active={activeTab} onChange={setActiveTab} />
 
-        <h3 className="record-section-title">Investigations</h3>
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-label">Blood Investigation</div>
-          <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.bloodInvestigation.details || '-'}</div>
-          {renderInvestigationDocuments('primaryHistory.investigations.bloodInvestigation')}
-        </div>
+        {activeTab === 'obstetric' && (
+          <div style={{ marginBottom: 'var(--space-5)' }}>
+            <div className="record-field-label">Obstetric History</div>
+            <div className="record-field-value">{formatObstetricHistory(infertilityDetails.secondaryHistory.obstetricHistory)}</div>
+          </div>
+        )}
 
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-label">Urine Investigation</div>
-          <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.urineInvestigation.details || '-'}</div>
-          {renderInvestigationDocuments('primaryHistory.investigations.urineInvestigation')}
-        </div>
+        {activeTab === 'investigations' && (
+          <>
+            <div style={{ marginBottom: 'var(--space-5)' }}>
+              <div className="record-field-label">Blood Investigation</div>
+              <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.bloodInvestigation.details || '-'}</div>
+              {renderInvestigationDocuments('primaryHistory.investigations.bloodInvestigation')}
+            </div>
 
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-label">Ultrasound Investigation</div>
-          <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.details || '-'}</div>
-          {renderInvestigationDocuments('primaryHistory.investigations.ultrasoundInvestigation')}
-        </div>
+            <div style={{ marginBottom: 'var(--space-5)' }}>
+              <div className="record-field-label">Urine Investigation</div>
+              <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.urineInvestigation.details || '-'}</div>
+              {renderInvestigationDocuments('primaryHistory.investigations.urineInvestigation')}
+            </div>
 
-        <div style={{ marginBottom: 'var(--space-5)' }}>
-          <div className="record-field-label">X-ray Investigation</div>
-          <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.xrayInvestigation.details || '-'}</div>
-          {renderInvestigationDocuments('primaryHistory.investigations.xrayInvestigation')}
-        </div>
+            <div style={{ marginBottom: 'var(--space-5)' }}>
+              <div className="record-field-label">Ultrasound Investigation</div>
+              <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.ultrasoundInvestigation.details || '-'}</div>
+              {renderInvestigationDocuments('primaryHistory.investigations.ultrasoundInvestigation')}
+            </div>
+
+            <div style={{ marginBottom: 'var(--space-5)' }}>
+              <div className="record-field-label">X-ray Investigation</div>
+              <div className="record-field-value">{infertilityDetails.primaryHistory.investigations.xrayInvestigation.details || '-'}</div>
+              {renderInvestigationDocuments('primaryHistory.investigations.xrayInvestigation')}
+            </div>
+          </>
+        )}
+
+        {activeTab === 'treatments' && (
+          <div style={{ marginBottom: 'var(--space-5)' }}>
+            <div className="record-field-value">{infertilityDetails.treatments || '-'}</div>
+          </div>
+        )}
 
         <div className="case-form-actions">
           <Link to={`/patients/add/infertilityForm/${patientId}`}><Button>Edit</Button></Link>

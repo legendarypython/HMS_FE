@@ -28,10 +28,21 @@ const getGreeting = () => {
 // /patients). No fabricated name in the greeting - sessionStorage only ever
 // stores the role and token at login, not a display name, so "Good
 // morning, Dr. Sharma" isn't something this app can actually say.
+// A slot's own end hour tells us whether it's already passed today - real
+// appointment status (pending/confirmed/rejected) doesn't capture "did this
+// visit's time slot already happen", which is what "Done" actually means
+// here.
+const isSlotPast = (timeSlot) => {
+  const match = /^(\d{2}):00-(\d{2}):00$/.exec(timeSlot || '');
+  if (!match) return false;
+  return new Date().getHours() >= parseInt(match[2], 10);
+};
+
 const Dashboard = () => {
   const role = sessionStorage.getItem('userRole');
   const [totalPatientCount, setTotalPatientCount] = useState(null);
   const [appointments, setAppointments] = useState(null); // null = loading
+  const [todayFilter, setTodayFilter] = useState('all'); // all | upcoming | done
 
   useEffect(() => {
     axios.post(`${API_BASE}/api/patients/search`, {
@@ -50,13 +61,19 @@ const Dashboard = () => {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayAppointments = (appointments || [])
+  const allTodayAppointments = (appointments || [])
     .filter(a => {
       const d = new Date(a.preferredDate);
       d.setHours(0, 0, 0, 0);
       return d.getTime() === today.getTime();
     })
     .sort((a, b) => a.preferredTimeSlot.localeCompare(b.preferredTimeSlot));
+
+  const todayAppointments = allTodayAppointments.filter(a => {
+    if (todayFilter === 'upcoming') return !isSlotPast(a.preferredTimeSlot);
+    if (todayFilter === 'done') return isSlotPast(a.preferredTimeSlot);
+    return true;
+  });
 
   const pendingCount = (appointments || []).filter(a => a.status === 'pending').length;
   const dateLabel = today.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -71,15 +88,36 @@ const Dashboard = () => {
 
         <div className="dashboard-columns">
           <div className="dashboard-main-col">
-            <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
-              Today&apos;s appointments
-            </h3>
+            <div className="dashboard-today-header">
+              <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+                Today&apos;s appointments
+              </h3>
+              {allTodayAppointments.length > 0 && (
+                <div className="dashboard-today-tabs">
+                  {['all', 'upcoming', 'done'].map(f => (
+                    <button
+                      key={f}
+                      type="button"
+                      className={todayFilter === f ? 'active' : ''}
+                      onClick={() => setTodayFilter(f)}
+                    >
+                      {f === 'all' ? 'All' : f === 'upcoming' ? 'Upcoming' : 'Done'}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {appointments === null ? (
               <Spinner label="Loading appointments..." />
-            ) : todayAppointments.length === 0 ? (
+            ) : allTodayAppointments.length === 0 ? (
               <div className="ui-card dashboard-empty">
                 <Icon name="calendar" size={22} />
                 Nothing on the books for today.
+              </div>
+            ) : todayAppointments.length === 0 ? (
+              <div className="ui-card dashboard-empty">
+                <Icon name="calendar" size={22} />
+                No {todayFilter} appointments today.
               </div>
             ) : (
               <div className="dashboard-today-list">
@@ -115,6 +153,11 @@ const Dashboard = () => {
               <Link to="/availability">
                 <Button variant="secondary" style={{ width: '100%' }}>
                   <Icon name="calendar-off" size={16} /> Manage Availability
+                </Button>
+              </Link>
+              <Link to="/payment-qr">
+                <Button variant="secondary" style={{ width: '100%' }}>
+                  <Icon name="qr-code" size={16} /> Payment QR
                 </Button>
               </Link>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import Icon from '../ui/Icon';
+import IconBadge from '../ui/IconBadge';
 import { TENANT_CONFIG, TENANT_ID } from '../../config/tenant';
 import './AppNavbar.css';
 
@@ -16,6 +17,7 @@ const LINKS_BY_ROLE = {
     { to: '/doctors', label: 'Doctors', icon: 'stethoscope' },
     { to: '/appointments', label: 'Appointments', icon: 'calendar' },
     { to: '/availability', label: 'Availability', icon: 'calendar-off' },
+    { to: '/payment-qr', label: 'Payment QR', icon: 'qr-code' },
     // ABDM Section 17 certification was never actually completed - demo
     // tenant only (see the same restriction on the /scan-qr route itself,
     // ScanShareQr.js, which is the real enforcement; this just keeps the
@@ -67,11 +69,17 @@ const AppNavbar = ({ role = 'public' }) => {
 
   const links = LINKS_BY_ROLE[role] || LINKS_BY_ROLE.public;
   const isAuthenticated = role !== 'public';
+  // Only ever set on login (see Login.js) - a session from before this
+  // existed simply won't have one until the next real login, so this
+  // gracefully renders nothing rather than a blank chip.
+  const userName = isAuthenticated ? sessionStorage.getItem('userName') : '';
+  const roleLabel = role === 'owner' ? 'Owner' : role === 'manager' ? 'Manager' : '';
 
   const handleLogout = () => {
     sessionStorage.removeItem('usertoken');
     sessionStorage.removeItem('userRole');
     sessionStorage.removeItem('userData');
+    sessionStorage.removeItem('userName');
     setMenuOpen(false);
     history.push('/');
   };
@@ -81,6 +89,7 @@ const AppNavbar = ({ role = 'public' }) => {
   return (
     <nav className={`app-navbar ${hidden ? 'app-navbar--hidden' : ''}`}>
       <Link to={BRAND_LINK_BY_ROLE[role] || '/'} className="app-navbar-brand" onClick={closeMenu}>
+        <IconBadge name="heart" variant="brand" size="sm" className="ui-icon-badge-inline" />
         {TENANT_CONFIG.name}
       </Link>
 
@@ -121,6 +130,17 @@ const AppNavbar = ({ role = 'public' }) => {
             {!link.cta && <Icon name="chevron-right" size={16} className="app-navbar-link-chevron" />}
           </Link>
         ))}
+        {userName && (
+          <div className="app-navbar-user-chip">
+            <span className="ui-avatar app-navbar-user-avatar">
+              {userName.replace(/^Dr\.?\s*/i, '').charAt(0).toUpperCase()}
+            </span>
+            <div>
+              <div className="app-navbar-user-name">{userName}</div>
+              {roleLabel && <div className="app-navbar-user-role">{roleLabel}</div>}
+            </div>
+          </div>
+        )}
         {isAuthenticated && (
           <button className="app-navbar-link app-navbar-logout" onClick={handleLogout}>
             <Icon name="logout" size={18} className="app-navbar-link-icon" />

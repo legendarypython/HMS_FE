@@ -1,0 +1,82 @@
+.payment-qr-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.payment-qr-print-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 340px;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.payment-qr-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  align-self: flex-start;
+}
+
+.payment-qr-avatar.ui-avatar {
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+  background-color: var(--color-accent-bg);
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.payment-qr-name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-align: left;
+}
+
+.payment-qr-code {
+  background: #fff;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+}
+
+.payment-qr-id {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.payment-qr-tagline {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* Same "print only this one element" approach as the rest of the app's
+   print flows (ScanShareQr.js's counter-display QR) - hides the navbar,
+   page chrome, and the Print button itself, leaving just the QR slip. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .payment-qr-print-area, .payment-qr-print-area * {
+    visibility: visible;
+  }
+
+  .payment-qr-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border: none;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

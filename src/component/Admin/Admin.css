@@ -148,6 +148,16 @@
   min-width: 220px;
 }
 
+.week-stat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.week-stat-icon {
+  margin-bottom: 0;
+}
+
 .week-stat-value {
   font-size: 1.5rem;
   font-weight: 700;
@@ -168,13 +178,46 @@
   padding-left: var(--space-6);
 }
 
+.week-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
 .week-chart-label {
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-bottom: var(--space-3);
+}
+
+.week-chart-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--color-bg);
+  border-radius: var(--radius-pill);
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.week-chart-toggle button {
+  border: none;
+  background: transparent;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.week-chart-toggle button.active {
+  background: var(--color-surface);
+  color: var(--color-primary-dark);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Real bug found live: this used to have a fixed height:60px matching
@@ -198,17 +241,27 @@
   align-items: center;
 }
 
+/* Real gap found live: with a low-volume clinic, most days show 0-1
+   appointments - a lone 6px teal sliver had nothing around it to read
+   against, so it barely registered as a chart at all. A faint full-height
+   track (the actual 0-60 range) plus a baseline rule gives every bar,
+   including near-zero ones, a visible frame of reference. */
 .week-chart-bar-track {
   display: flex;
   align-items: flex-end;
+  justify-content: center;
   height: 60px;
+  width: 100%;
+  background-color: var(--color-bg);
+  border-radius: 4px;
+  border-bottom: 2px solid var(--color-border);
 }
 
 .week-chart-bar {
-  width: 18px;
-  min-width: 18px;
+  width: 26px;
+  min-width: 26px;
   background-color: var(--color-primary);
-  border-radius: 4px 4px 0 0;
+  border-radius: 6px 6px 0 0;
   transition: height var(--transition-base);
 }
 
@@ -238,8 +291,63 @@
   }
 
   .week-chart-bar {
-    width: 14px;
-    min-width: 14px;
+    width: 20px;
+    min-width: 20px;
+  }
+}
+
+/* Overview strip above the Patients table - same "real counts, not a
+   dashboard" honesty as WeekSummary.js, distinct four-tile row rather than
+   reusing week-summary's split stats+chart layout since there's no chart
+   here. */
+.stat-tile-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.stat-tile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+}
+
+/* An asymmetric border on just one tile read as a layout mistake rather
+   than intentional emphasis - the icon's own tint (warning amber on
+   "Pending Payment") now carries that signal consistently with how every
+   other tile's icon carries its own meaning, instead of being a one-off. */
+.stat-tile-icon {
+  margin-bottom: 0;
+}
+
+.stat-tile-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-tile-label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+@media (max-width: 768px) {
+  .stat-tile-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-tile-row {
+    grid-template-columns: 1fr;
   }
 }
 

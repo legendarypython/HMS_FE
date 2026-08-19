@@ -1,0 +1,118 @@
+/* Real bug found live on the PUBLIC homepage: this file originally reused
+   plain "doctor-card"/"doctor-card-photo"/etc class names, not realizing
+   Home.css already defines those same names for its own "Our Doctors"
+   section (plain 96px circular <img>, no wrapper). CSS classes are global
+   in this app (no modules/scoping) - this file's position:absolute,
+   width:145% photo-zoom rule was overriding Home.css's rule everywhere,
+   with no positioned ancestor on the homepage's markup to contain it,
+   so the public doctor photo grew to fill the page. Every selector here
+   is now prefixed staff-doctor- specifically so this can't collide with
+   any other component's class names again, not just Home's. */
+
+/* Card grid instead of a plain admin table - the same real fields (photo,
+   specialization, active status) already existed, this just gives them the
+   same visual language the rest of the app's card-based pages use. */
+.staff-doctor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.staff-doctor-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* .staff-doctor-card's flex-direction:column defaults every direct child to
+   align-items:stretch, which stretched the pill-shaped status Badge to the
+   card's full width instead of hugging its own text. */
+.staff-doctor-card > .ui-badge {
+  align-self: flex-start;
+}
+
+.staff-doctor-card-inactive {
+  opacity: 0.65;
+}
+
+.staff-doctor-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Clips to a circle at the layout size (52px, same as before - doesn't
+   disturb the flex row), while the <img> inside renders oversized and
+   centered so it visually zooms in rather than overflowing into the name
+   text next to it. */
+.staff-doctor-photo-wrap {
+  position: relative;
+  display: block;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.staff-doctor-photo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Moderate zoom - most uploaded headshots have a lot of empty
+     background/headroom around the face (see the real doctor photo this
+     renders), and object-fit:cover alone does no cropping at all when the
+     source is already square, so the full uncentered frame showed through
+     untouched. Sizing the image larger than its clipping circle and
+     centering it crops in toward the (usually centered-ish) subject
+     instead. Doesn't fully correct a photo where the subject itself is
+     off-center in the original frame - that needs a better source crop,
+     not a CSS fix. */
+  width: 145%;
+  height: 145%;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+}
+
+.staff-doctor-avatar.ui-avatar {
+  width: 52px;
+  height: 52px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.staff-doctor-name {
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+
+.staff-doctor-phone {
+  font-size: 0.9rem;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.staff-doctor-phone-edit {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.staff-doctor-phone-edit .ui-input {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Real bug found live: this was plain inline content (icon, text, icon)
+   with no flex alignment at all, so the phone/edit icons baseline-aligned
+   against the text instead of sitting on its vertical center. */
+.staff-doctor-phone-display {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.staff-doctor-actions {
+  margin-top: auto;
+}

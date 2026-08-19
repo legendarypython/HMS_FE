@@ -132,6 +132,13 @@
   display: none;
 }
 
+/* Desktop's horizontal link row has no room for a two-line identity block -
+   this only ever renders in the mobile drawer below, the structural
+   equivalent of a sidebar's own bottom-pinned user card. */
+.app-navbar-user-chip {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .app-navbar {
     padding: 0 var(--space-4);
@@ -229,5 +236,43 @@
 
   .app-navbar-logout .app-navbar-link-icon {
     color: var(--color-danger);
+  }
+
+  /* Bottom-pinned identity card, same spirit as a sidebar's own user chip -
+     mockup's "drawer bottom" placement translated to this app's slide-over
+     mobile menu instead of a permanent sidebar. */
+  .app-navbar-user-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Logout already gets a divider from the chip immediately above it when
+     one renders - without this, a session with a stored username would show
+     two stacked divider lines back to back. */
+  .app-navbar-user-chip + .app-navbar-logout {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .app-navbar-user-avatar.ui-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .app-navbar-user-name {
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+
+  .app-navbar-user-role {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
   }
 }
