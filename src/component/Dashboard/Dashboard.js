@@ -25,9 +25,7 @@ const getGreeting = () => {
 
 // The real operational landing page - what's happening today - rather than
 // the patient-management table that used to live at this route (moved to
-// /patients). No fabricated name in the greeting - sessionStorage only ever
-// stores the role and token at login, not a display name, so "Good
-// morning, Dr. Sharma" isn't something this app can actually say.
+// /patients).
 // A slot's own end hour tells us whether it's already passed today - real
 // appointment status (pending/confirmed/rejected) doesn't capture "did this
 // visit's time slot already happen", which is what "Done" actually means
@@ -38,8 +36,18 @@ const isSlotPast = (timeSlot) => {
   return new Date().getHours() >= parseInt(match[2], 10);
 };
 
+// "Dr. Bhavana Gupta" -> "Bhavana" for the greeting - first-name-only reads
+// as a person-to-person hello, whereas the navbar's identity chip still
+// shows the full "Dr. Bhavana Gupta" where a formal, credentialed name fits
+// better.
+const getFirstName = (fullName) => {
+  if (!fullName) return '';
+  return fullName.replace(/^Dr\.?\s*/i, '').trim().split(/\s+/)[0] || '';
+};
+
 const Dashboard = () => {
   const role = sessionStorage.getItem('userRole');
+  const firstName = getFirstName(sessionStorage.getItem('userName'));
   const [totalPatientCount, setTotalPatientCount] = useState(null);
   const [appointments, setAppointments] = useState(null); // null = loading
   const [todayFilter, setTodayFilter] = useState('all'); // all | upcoming | done
@@ -82,7 +90,11 @@ const Dashboard = () => {
     <div>
       <AppNavbar role={role} />
       <div className="page">
-        <PageHeader icon="home" title={getGreeting()} subtitle={dateLabel} />
+        <PageHeader
+          icon="home"
+          title={firstName ? <>{getGreeting()}, <span className="dashboard-greeting-name">{firstName}</span></> : getGreeting()}
+          subtitle={dateLabel}
+        />
 
         {totalPatientCount !== null && <WeekSummary totalPatients={totalPatientCount} />}
 

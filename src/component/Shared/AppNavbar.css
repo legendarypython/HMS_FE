@@ -253,8 +253,13 @@
   /* Logout already gets a divider from the chip immediately above it when
      one renders - without this, a session with a stored username would show
      two stacked divider lines back to back. */
+  /* Real bug found live: removing the divider (avoiding a doubled-up line
+     right under the chip's own border-top) also removed the space that
+     border's padding-top was providing - Log Out ended up sitting flush
+     against the chip with no gap at all. Keep a plain margin so there's
+     still breathing room, just no second border. */
   .app-navbar-user-chip + .app-navbar-logout {
-    margin-top: 0;
+    margin-top: var(--space-3);
     border-top: none;
     padding-top: 0;
   }
