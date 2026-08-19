@@ -43,10 +43,9 @@ const WeekSummary = ({ totalPatients }) => {
   // reason, the page's actual job (finding a patient) still works.
   if (appointments === null) return null;
 
-  // Real bug found live: this used to build i from 6 down to 0, so the
-  // array read [6 days ago, ..., yesterday, today] - today ended up as the
-  // LAST bar (rightmost) instead of the first. Building it 0 up to 6
-  // instead puts today first, 6-days-ago last, matching what was expected.
+  // Built newest-first ([today, yesterday, ..., 6 days ago]) since counts[0]
+  // needs to be today's count (see todayCount below) - the chart display
+  // order below is handled separately, not by this array's own order.
   const days = [];
   for (let i = 0; i <= 6; i++) {
     days.push(startOfDay(i));
@@ -84,6 +83,14 @@ const WeekSummary = ({ totalPatients }) => {
   }
   const monthMaxCount = Math.max(1, ...weekBuckets.map(w => w.count));
 
+  // Real bug found live: `days`/`weekBuckets` are both built newest-first
+  // (today/this-week at index 0, since other code above reads counts[0] as
+  // "today"), and the chart used to render them in that same order - today
+  // as the LEFTMOST bar, with the rest of the week trailing backward in
+  // time to the right. Every calendar/analytics convention reads left-to-
+  // right as oldest-to-newest, so this looked backward. .reverse() flips
+  // just the display order here, leaving the index-0-is-today arrays above
+  // (todayCount, weekPaidCount) untouched.
   const chartCols = chartView === 'week'
     ? days.map((day, i) => ({
       key: i,
@@ -91,14 +98,14 @@ const WeekSummary = ({ totalPatients }) => {
       heightPct: counts[i] / maxCount,
       label: DAY_LABELS[day.getDay()],
       title: `${counts[i]} appointment${counts[i] === 1 ? '' : 's'} on ${day.toLocaleDateString()}`,
-    }))
+    })).reverse()
     : weekBuckets.map((w, i) => ({
       key: i,
       count: w.count,
       heightPct: w.count / monthMaxCount,
       label: w.label,
       title: `${w.count} appointment${w.count === 1 ? '' : 's'}, ${shortDate(w.start)} - ${shortDate(w.end)}`,
-    }));
+    })).reverse();
 
   return (
     <div className="week-summary">
