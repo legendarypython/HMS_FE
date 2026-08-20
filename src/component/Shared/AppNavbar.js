@@ -111,7 +111,7 @@ const AppNavbar = ({ role = 'public' }) => {
     <nav className={`app-navbar ${hidden ? 'app-navbar--hidden' : ''} ${isStaffRole ? 'app-navbar--sidebar' : ''}`}>
       <Link to={BRAND_LINK_BY_ROLE[role] || '/'} className="app-navbar-brand" onClick={closeMenu}>
         <IconBadge name="heart" variant="brand" size="sm" className="ui-icon-badge-inline" />
-        {TENANT_CONFIG.name}
+        <span className="app-navbar-brand-text">{TENANT_CONFIG.name}</span>
       </Link>
 
       <div className="app-navbar-mobile-actions">

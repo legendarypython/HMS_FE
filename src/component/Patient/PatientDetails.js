@@ -242,8 +242,10 @@ const PatientDetails = () => {
                 <div className="record-field">
                   <div>
                     <div className="record-field-label">Payment Status</div>
-                    <Badge variant={patientDetails.paymentStatus === 'paid' ? 'success' : 'warning'}>
-                      {patientDetails.paymentStatus === 'paid'
+                    <Badge variant={patientDetails.paymentMethod === 'waived' ? 'primary' : patientDetails.paymentStatus === 'paid' ? 'success' : 'warning'}>
+                      {patientDetails.paymentMethod === 'waived'
+                        ? 'Waived (Free Follow-up)'
+                        : patientDetails.paymentStatus === 'paid'
                         ? `Paid (${patientDetails.paymentMethod === 'online' ? 'Online' : 'Offline'})`
                         : 'Pending'}
                     </Badge>
@@ -318,14 +320,14 @@ const PatientDetails = () => {
                       <div className="record-history-row" key={visit._id || i}>
                         <div>
                           <div className="record-history-row-title">
-                            Visit · {visit.paymentMethod === 'online' ? 'Online' : 'Offline'}
+                            Visit · {visit.paymentMethod === 'online' ? 'Online' : visit.paymentMethod === 'waived' ? 'Waived' : 'Offline'}
                           </div>
                           <div className="text-muted record-history-row-date">{new Date(visit.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                         </div>
                         <div className="record-history-row-amount">
-                          <div>{visit.paymentStatus === 'paid' ? `₹${CONSULTATION_FEE}` : '-'}</div>
-                          <Badge variant={visit.paymentStatus === 'paid' ? 'success' : 'warning'}>
-                            {visit.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                          <div>{visit.paymentMethod === 'waived' ? 'Free' : visit.paymentStatus === 'paid' ? `₹${CONSULTATION_FEE}` : '-'}</div>
+                          <Badge variant={visit.paymentMethod === 'waived' ? 'primary' : visit.paymentStatus === 'paid' ? 'success' : 'warning'}>
+                            {visit.paymentMethod === 'waived' ? 'Waived' : visit.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
                           </Badge>
                         </div>
                       </div>

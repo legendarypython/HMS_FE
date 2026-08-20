@@ -25,9 +25,29 @@
   font-size: 1.1rem;
   color: var(--color-primary-dark);
   text-decoration: none;
-  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Real bug found live: white-space/overflow/text-overflow used to sit on
+   .app-navbar-brand itself, but that's a flex row mixing a fixed-size icon
+   child with a bare text node - text-overflow:ellipsis doesn't reliably
+   apply to a flex container's own overflow that way, so long tenant names
+   just hard-clipped mid-letter with no "..." at all. Ellipsis needs to live
+   on the text's own box; min-width:0 (here and on the flex row above) is
+   what lets this shrink below its content size instead of overflowing the
+   sidebar's fixed 240px width in the first place. */
+.app-navbar-brand-text {
+  min-width: 0;
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Without this the icon was also a shrinkable flex item by default - once
+   the text span above stopped absorbing all the overflow itself, the icon
+   started getting squashed narrower than its own badge shape instead. */
+.app-navbar-brand > .ui-icon-badge-inline {
+  flex-shrink: 0;
 }
 
 .app-navbar-links {
@@ -335,6 +355,15 @@
   .app-navbar--sidebar .app-navbar-brand {
     margin-bottom: var(--space-6);
     max-width: none;
+  }
+
+  /* At the base 1.1rem this app's actual tenant name ("Panchkuian
+     Hospital") still overflows the sidebar's ~208px inner width by a
+     handful of pixels even after the ellipsis fix above - dropping one
+     notch here fits the real name in full, so the sidebar reads the tenant
+     name straight rather than truncating it on every single load. */
+  .app-navbar--sidebar .app-navbar-brand-text {
+    font-size: 1rem;
   }
 
   .app-navbar--sidebar .app-navbar-mobile-actions,

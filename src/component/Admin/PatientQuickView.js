@@ -93,8 +93,10 @@ const PatientQuickView = ({ patientId, onClose }) => {
         <Badge variant={patient.isNewPatient ? 'primary' : 'neutral'}>
           {patient.isNewPatient ? 'New' : 'Returning'}
         </Badge>
-        <Badge variant={patient.paymentStatus === 'paid' ? 'success' : 'warning'}>
-          {patient.paymentStatus === 'paid'
+        <Badge variant={patient.paymentMethod === 'waived' ? 'primary' : patient.paymentStatus === 'paid' ? 'success' : 'warning'}>
+          {patient.paymentMethod === 'waived'
+            ? 'Waived'
+            : patient.paymentStatus === 'paid'
             ? `Paid (${patient.paymentMethod === 'online' ? 'Online' : 'Offline'})`
             : 'Payment Pending'}
         </Badge>

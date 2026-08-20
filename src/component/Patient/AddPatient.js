@@ -153,6 +153,58 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
+  // Original on-load value, not the live form.dateOfAdmission - what the
+  // reset below (and the free-followup hint) need to know is "has staff
+  // actually moved this visit's date away from the one that was already
+  // saved", not "does it currently differ from whatever it was a moment
+  // ago".
+  const initialDateOfAdmission = initialPatientDetails?.dateOfAdmission
+    ? initialPatientDetails.dateOfAdmission.slice(0, 10)
+    : '';
+  // Fires the paymentStatus/paymentMethod reset (below) at most once per
+  // edit session, so a second date tweak after staff has already made a
+  // deliberate payment choice doesn't silently wipe it out again.
+  const dateResetApplied = useRef(false);
+
+  const handleDateOfAdmissionChange = (e) => {
+    const value = e.target.value;
+    setForm(prev => {
+      const next = { ...prev, dateOfAdmission: value };
+      // Real gap this closes: moving this field forward means "record a
+      // new visit" (see the helper text right below the field), but
+      // paymentStatus/paymentMethod used to just carry over unchanged from
+      // whichever visit was saved last - a patient who paid last time kept
+      // showing "Paid" for a visit that hasn't been paid for yet. Reset to
+      // the safe default the moment the date first genuinely moves, so
+      // staff have to make a fresh call for *this* visit instead of
+      // inheriting the old one.
+      if (isEditMode && !dateResetApplied.current && value && value !== initialDateOfAdmission) {
+        dateResetApplied.current = true;
+        next.paymentStatus = 'pending';
+        next.paymentMethod = 'offline';
+      }
+      return next;
+    });
+  };
+
+  // Same 7-day free-follow-up concept as the online-booking flow's own
+  // isEligibleForFreeFollowup (HMS/src/controllers/appointmentController.js),
+  // applied here to this patient's real visitHistory - a hint only, never
+  // auto-applied, since only staff can judge whether this particular return
+  // visit is actually the doctor-agreed free follow-up.
+  const FREE_FOLLOWUP_WINDOW_DAYS = 7;
+  const priorPaidVisit = isEditMode
+    ? (initialPatientDetails.visitHistory || [])
+        .filter(v => v.paymentStatus === 'paid' && v.date && v.date.slice(0, 10) < form.dateOfAdmission)
+        .sort((a, b) => (a.date < b.date ? 1 : -1))[0]
+    : null;
+  const daysSincePriorPaidVisit = priorPaidVisit && form.dateOfAdmission
+    ? Math.round((new Date(form.dateOfAdmission) - new Date(priorPaidVisit.date.slice(0, 10))) / 86400000)
+    : null;
+  const showFreeFollowupHint = daysSincePriorPaidVisit !== null
+    && daysSincePriorPaidVisit >= 0
+    && daysSincePriorPaidVisit <= FREE_FOLLOWUP_WINDOW_DAYS;
+
   const handleFileChange = (event) => {
     const files = event.target.files;
     const newDocuments = Array.from(files).map((file) => ({ name: file.name, file }));
@@ -380,13 +432,19 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
       <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Medical &amp; Appointment Details</h3>
       <div className="patient-form-grid">
         <Field label="Date of Appointment" required htmlFor="dateOfAdmission">
-          <DateInput id="dateOfAdmission" value={form.dateOfAdmission} onChange={handleChange('dateOfAdmission')} required />
+          <DateInput id="dateOfAdmission" value={form.dateOfAdmission} onChange={isEditMode ? handleDateOfAdmissionChange : handleChange('dateOfAdmission')} required />
           {isEditMode && (
             <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
               For a returning patient's next visit, update this to today's date instead of creating a new record.
             </p>
           )}
         </Field>
+
+        {showFreeFollowupHint && (
+          <div className="ui-banner ui-banner-warning patient-form-grid-full">
+            Last paid visit was {daysSincePriorPaidVisit === 0 ? 'today' : `${daysSincePriorPaidVisit} day${daysSincePriorPaidVisit === 1 ? '' : 's'} ago`} ({priorPaidVisit.date.slice(0, 10)}) - within the {FREE_FOLLOWUP_WINDOW_DAYS}-day free follow-up window. If the doctor is waiving this visit, set Payment Status to Paid and Payment Method to Waived below.
+          </div>
+        )}
 
         <Field label="Payment Status" htmlFor="paymentStatus">
           <Select id="paymentStatus" value={form.paymentStatus} onChange={handleChange('paymentStatus')}>
@@ -400,6 +458,7 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
             <Select id="paymentMethod" value={form.paymentMethod} onChange={handleChange('paymentMethod')}>
               <option value="offline">Offline (cash/card at desk)</option>
               <option value="online">Online</option>
+              <option value="waived">Waived (Free Follow-up)</option>
             </Select>
           </Field>
         )}
