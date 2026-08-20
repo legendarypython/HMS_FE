@@ -9,6 +9,7 @@ import IconBadge from '../ui/IconBadge';
 import Icon from '../ui/Icon';
 import Tabs from '../ui/Tabs';
 import StepTracker from '../ui/StepTracker';
+import AddDocumentsUploader from './AddDocumentsUploader';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
 import './AddPatient.css';
@@ -33,7 +34,7 @@ const DETAIL_TABS = [
   { key: 'documents', label: 'Documents', icon: 'file' },
 ];
 
-const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfile, initialAbhaIdentifier, initialTab, onPreviewDocument, onSaved }) => {
+const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfile, initialAbhaIdentifier, initialTab, onPreviewDocument, onSaved, onDocumentsUploaded }) => {
   const isEditMode = Boolean(initialPatientDetails);
   const history = useHistory();
   const formRef = useRef(null);
@@ -517,10 +518,15 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
     </>
   );
 
-  // Edit mode can't attach/remove documents (the update endpoint doesn't
-  // accept file uploads) - this tab just lets you get back to what's
-  // already here without leaving the edit flow, same preview behavior as
-  // the read view via the callback PatientDetails.js passes down.
+  // Lets you both review what's already here (same preview behavior as the
+  // read view, via the callback PatientDetails.js passes down) and attach
+  // more - a standalone "pick files, upload" action via the same reusable
+  // AddDocumentsUploader the duplicate-check flow already uses, deliberately
+  // not folded into this form's own Save Changes (same reasoning as the
+  // Medical Notes add-note action: an upload shouldn't have to wait on, or
+  // be bundled with, an unrelated edit to payment/visit-date elsewhere on
+  // this form). Removing an already-uploaded document isn't supported here
+  // (no delete-document endpoint exists yet) - same limit create mode has.
   const renderDocumentsReadOnlySection = () => (
     <>
       <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>Documents</h3>
@@ -544,9 +550,8 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
           <p>No documents uploaded.</p>
         </div>
       )}
-      <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 'var(--space-3)' }}>
-        Documents can only be attached when a patient is first added, not from this edit form.
-      </p>
+      <h3 className="record-section-title">Add Documents</h3>
+      <AddDocumentsUploader patientId={initialPatientDetails.patientId} onUploaded={onDocumentsUploaded} />
     </>
   );
 

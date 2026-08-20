@@ -184,6 +184,7 @@ const PatientDetails = () => {
             onSaved={handleSaved}
             initialTab={activeTab}
             onPreviewDocument={handleDocumentPreview}
+            onDocumentsUploaded={setPatientDetails}
           />
         ) : (
           <Card variant="elevated">
