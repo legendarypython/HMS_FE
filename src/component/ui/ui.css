@@ -32,44 +32,45 @@
   border-bottom-color: var(--color-primary);
 }
 
-/* Guided multi-step create form (Add Patient/AnteNatal/Infertility) - a
-   vertical sibling of .ui-tabs above, used with StepTracker.js instead of
-   Tabs.js. Sits beside the form card on desktop; collapses to a horizontal
-   strip above it on mobile (see .wizard-layout below). */
+/* Guided multi-step create form (Add Patient/AnteNatal/Infertility) - used
+   with StepTracker.js instead of Tabs.js. A horizontal bar above the form
+   card, not a side column - staff pages already have their own persistent
+   left sidebar (see AppNavbar.css's .app-navbar--sidebar), and stacking a
+   second left-side rail just for the wizard's own steps read as two
+   competing navs. Same idea BookAppointment.js's own step indicator
+   already uses for patients, just reusing this app's icon+checkmark
+   styling instead of that page's numbered-circle one. */
 .wizard-layout {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   gap: var(--space-6);
   max-width: 900px;
   margin: 0 auto;
 }
 
-.wizard-tracker-col {
-  width: 220px;
-  flex-shrink: 0;
-  position: sticky;
-  top: var(--space-6);
-}
-
+.wizard-tracker-col,
 .wizard-card {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
 }
 
 .ui-step-tracker {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 2px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-2);
+  overflow-x: auto;
 }
 
 .ui-step-item {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  justify-content: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: max-content;
   padding: var(--space-3);
   border: none;
   background: none;
@@ -78,7 +79,7 @@
   font-family: var(--font-family);
   font-size: 0.88rem;
   font-weight: 500;
-  text-align: left;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
@@ -123,32 +124,18 @@
   margin-top: var(--space-6);
 }
 
-@media (max-width: 800px) {
-  .wizard-layout {
-    flex-direction: column;
-  }
-
-  .wizard-tracker-col {
-    width: 100%;
-    position: static;
-  }
-
-  /* Same horizontal-strip idea as BookAppointment.js's own step indicator -
-     a side list has nowhere to go on a narrow screen, so it becomes a
-     scrollable row above the form instead. */
-  .ui-step-tracker {
-    flex-direction: row;
-    overflow-x: auto;
-    padding: var(--space-2);
-  }
-
+@media (max-width: 640px) {
   .ui-step-item {
     flex-direction: column;
     gap: var(--space-1);
-    flex-shrink: 0;
     font-size: 0.72rem;
-    text-align: center;
     padding: var(--space-2) var(--space-3);
+  }
+}
+
+@media (min-width: 901px) {
+  body.has-sidebar-nav .wizard-layout {
+    margin-left: 240px;
   }
 }
 

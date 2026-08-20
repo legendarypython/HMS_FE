@@ -227,6 +227,10 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
       });
       formData.set('isNewPatient', form.isNewPatient.toString());
       formData.append('caseTypeEnum', CASE_TYPE_ENUM[form.caseType] || '');
+      // Display label for this patient's very first diagnosisNotes[] entry
+      // (see createPatient) - sessionStorage already has this at login, no
+      // need to look up the logged-in user's name server-side for it.
+      formData.append('diagnosisAuthor', sessionStorage.getItem('userName') || '');
       documents.forEach((doc) => formData.append('documents', doc.file));
 
       const response = await apiFetch(`${API_BASE}/api/patients/create`, {
@@ -415,9 +419,17 @@ const AddPatientForm = ({ initialPatientDetails, initialPhone, initialAbhaProfil
           </Field>
         )}
 
-        <Field label="Diagnosis" htmlFor="diagnosis" className="patient-form-grid-full">
-          <textarea className="ui-textarea" id="diagnosis" rows={4} value={form.diagnosis} onChange={handleChange('diagnosis')} />
-        </Field>
+        {/* Create-only - a brand-new patient's initial reason for the visit
+            is worth capturing at this same moment, but this becomes their
+            first diagnosisNotes[] entry, not an editable flat field.
+            Edit mode adds/reads notes from Patient Detail's own Medical
+            Notes section instead (a standalone "type and save" action, on
+            purpose never bundled with editing payment/visit-date here). */}
+        {!isEditMode && (
+          <Field label="Diagnosis" htmlFor="diagnosis" className="patient-form-grid-full">
+            <textarea className="ui-textarea" id="diagnosis" rows={4} value={form.diagnosis} onChange={handleChange('diagnosis')} />
+          </Field>
+        )}
       </div>
 
       <label className="ui-checkbox-field" htmlFor="isNewPatient">

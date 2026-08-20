@@ -14,12 +14,112 @@
   flex-shrink: 0;
 }
 
-.record-diagnosis-callout {
+.record-section-title-icon {
+  color: var(--color-primary);
+  vertical-align: -3px;
+  margin-right: var(--space-2);
+}
+
+.record-history-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
   margin-top: var(--space-6);
-  padding: var(--space-4) var(--space-5);
-  background-color: var(--color-primary-bg);
+}
+
+.record-history-card,
+.record-notes-card {
+  padding: var(--space-5);
+  background-color: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.record-notes-card {
+  margin-top: var(--space-6);
+}
+
+.record-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.record-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.record-history-row-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.record-history-row-date {
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+
+.record-history-row-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.record-add-note-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+/* flex-direction:column stretches children full-width by default - the
+   Add Note button reads as a real button, not a form-wide bar, when it's
+   left to its own natural width instead. */
+.record-add-note-form .ui-btn {
+  align-self: flex-start;
+}
+
+.record-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.record-note-item {
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface);
   border-radius: var(--radius-md);
   border-left: 3px solid var(--color-primary);
+}
+
+.record-note-item-text {
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+}
+
+.record-note-item-meta {
+  font-size: 0.76rem;
+  margin-top: var(--space-2);
+}
+
+.ui-empty-state-sm {
+  padding: var(--space-5) var(--space-3);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  .record-history-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .patient-detail-actions {

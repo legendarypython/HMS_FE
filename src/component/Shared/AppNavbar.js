@@ -75,6 +75,27 @@ const AppNavbar = ({ role = 'public' }) => {
   const userName = isAuthenticated ? sessionStorage.getItem('userName') : '';
   const roleLabel = role === 'owner' ? 'Owner' : role === 'manager' ? 'Manager' : '';
 
+  // Staff (owner/manager) get a persistent left sidebar on wide screens
+  // instead of the top bar - matches a real admin-tool layout, and this is
+  // the role that lives inside the app all day, unlike a patient checking
+  // their record once or a first-time visitor on the public site. Public
+  // and patient roles keep the top bar unchanged at every width; every role
+  // still gets the same slide-over drawer on narrow screens (see the
+  // .app-navbar--sidebar media query in AppNavbar.css, which only differs
+  // from .app-navbar above a breakpoint - below it, this class adds nothing).
+  const isStaffRole = role === 'owner' || role === 'manager';
+
+  // .page (and .app-footer) need to know a sidebar is eating the left 240px
+  // of the viewport so their own content shifts right - reaching out to
+  // toggle a body class is a pragmatic way to do that without threading a
+  // "sidebar active" flag through every single staff page's own layout
+  // JSX (every one of them already renders this same <AppNavbar> as a
+  // top-level sibling of the page content it's shifting).
+  useEffect(() => {
+    document.body.classList.toggle('has-sidebar-nav', isStaffRole);
+    return () => document.body.classList.remove('has-sidebar-nav');
+  }, [isStaffRole]);
+
   const handleLogout = () => {
     sessionStorage.removeItem('usertoken');
     sessionStorage.removeItem('userRole');
@@ -87,7 +108,7 @@ const AppNavbar = ({ role = 'public' }) => {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <nav className={`app-navbar ${hidden ? 'app-navbar--hidden' : ''}`}>
+    <nav className={`app-navbar ${hidden ? 'app-navbar--hidden' : ''} ${isStaffRole ? 'app-navbar--sidebar' : ''}`}>
       <Link to={BRAND_LINK_BY_ROLE[role] || '/'} className="app-navbar-brand" onClick={closeMenu}>
         <IconBadge name="heart" variant="brand" size="sm" className="ui-icon-badge-inline" />
         {TENANT_CONFIG.name}
@@ -122,7 +143,7 @@ const AppNavbar = ({ role = 'public' }) => {
           <Link
             key={link.to}
             to={link.to}
-            className={`app-navbar-link ${link.cta ? 'app-navbar-cta' : ''}`}
+            className={`app-navbar-link ${link.cta ? 'app-navbar-cta' : ''} ${location.pathname === link.to ? 'app-navbar-link-active' : ''}`}
             onClick={closeMenu}
           >
             <Icon name={link.icon} size={18} className="app-navbar-link-icon" />

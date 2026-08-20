@@ -120,6 +120,22 @@ body {
   margin: 0 auto;
 }
 
+/* AppNavbar.js toggles this on <body> for staff roles - matches its own
+   sidebar media query breakpoint exactly, so .page only shifts right once
+   the sidebar itself has actually appeared (below that width, staff still
+   get the normal top bar, and .page needs its normal centered layout). */
+@media (min-width: 901px) {
+  body.has-sidebar-nav .page {
+    min-height: 100vh;
+    margin-left: 240px;
+    margin-right: 0;
+  }
+
+  body.has-sidebar-nav .app-footer {
+    margin-left: 240px;
+  }
+}
+
 .page-narrow {
   max-width: 560px;
 }

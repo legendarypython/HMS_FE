@@ -30,6 +30,18 @@
   margin-top: var(--space-6);
 }
 
+/* Same reasoning as .page/.app-footer in theme.css - AddAnteNatal.js/
+   AddInfertlityCase.js and their read-only view pages use this wrapper
+   instead of .page, but need the identical shift-right-of-the-sidebar
+   treatment. justify-content:center already centers within whatever width
+   is left after this margin, so the form still reads as centered in the
+   remaining space, not off to one side of it. */
+@media (min-width: 901px) {
+  body.has-sidebar-nav .background-container {
+    margin-left: 240px;
+  }
+}
+
 @media (max-width: 640px) {
   .background-container {
     padding: var(--space-5) var(--space-3);

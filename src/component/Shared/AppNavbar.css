@@ -58,6 +58,18 @@
   color: var(--color-primary-dark);
 }
 
+/* Which page you're actually on - real gap this closed, the nav never
+   indicated current location at all before (a receptionist glancing at
+   the sidebar/drawer had no way to tell "Patients" was the page they were
+   already on). */
+.app-navbar-link-active {
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary-dark);
+}
+.app-navbar-link-active .app-navbar-link-icon {
+  color: var(--color-primary-dark);
+}
+
 .app-navbar-link-icon {
   display: none;
   flex-shrink: 0;
@@ -279,5 +291,136 @@
   .app-navbar-user-role {
     font-size: 0.78rem;
     color: var(--color-text-muted);
+  }
+}
+
+/* Staff (owner/manager) get a persistent left sidebar here instead of the
+   top bar - see AppNavbar.js's isStaffRole comment for why. Below this
+   width, .app-navbar--sidebar adds nothing on top of the plain
+   .app-navbar/.app-navbar-links rules above, so staff still get the exact
+   same slide-over drawer everyone else does on a narrow screen. */
+@media (min-width: 901px) {
+  .app-navbar--sidebar {
+    /* Real bug found live: this app has no global box-sizing:border-box
+       reset (checked - genuinely nowhere in the codebase), so the default
+       content-box model made width:240px + this rule's own left/right
+       padding render at 272px total. .page/.app-footer/etc. only ever
+       shifted right by the 240px they were told about, so real content
+       painted directly over the sidebar's own rightmost ~32px - it looked
+       like the sidebar was "hiding behind the background" because the
+       content's opaque surface was covering part of it. */
+    box-sizing: border-box;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 100;
+    width: 240px;
+    height: 100vh;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: var(--space-6) var(--space-4);
+    border-bottom: none;
+    border-right: 1px solid var(--color-border);
+    box-shadow: none;
+  }
+
+  /* A persistent sidebar shouldn't hide-on-scroll the way the top bar
+     does - overrides .app-navbar--hidden's top:-64px (irrelevant to a
+     left-positioned element anyway, but this also stops the leftover
+     transition from doing anything odd on scroll). */
+  .app-navbar--sidebar.app-navbar--hidden {
+    top: 0;
+  }
+
+  .app-navbar--sidebar .app-navbar-brand {
+    margin-bottom: var(--space-6);
+    max-width: none;
+  }
+
+  .app-navbar--sidebar .app-navbar-mobile-actions,
+  .app-navbar--sidebar .app-navbar-backdrop {
+    display: none;
+  }
+
+  .app-navbar--sidebar .app-navbar-links {
+    position: static;
+    transform: none;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-1);
+    padding: 0;
+    box-shadow: none;
+    background: none;
+    overflow-y: auto;
+  }
+
+  .app-navbar--sidebar .app-navbar-link {
+    width: 100%;
+    text-align: left;
+    padding: 10px var(--space-3);
+  }
+
+  .app-navbar--sidebar .app-navbar-link-icon {
+    display: block;
+  }
+
+  /* A chevron makes sense pointing at a drawer item you're about to
+     navigate away to (mobile); it doesn't mean anything next to an item
+     in a sidebar you're already looking at every other item of. */
+  .app-navbar--sidebar .app-navbar-link-chevron {
+    display: none;
+  }
+
+  .app-navbar--sidebar .app-navbar-cta {
+    border-radius: var(--radius-md);
+    margin: var(--space-2) 0;
+  }
+
+  /* Bottom-pinned identity card, same spirit as the mobile drawer's own
+     (margin-top: auto pushes it - and Log Out below it - to the bottom of
+     the sidebar's flex column instead of sitting right under the links). */
+  .app-navbar--sidebar .app-navbar-user-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: auto;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .app-navbar--sidebar .app-navbar-user-chip + .app-navbar-logout {
+    margin-top: var(--space-3);
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .app-navbar--sidebar .app-navbar-user-avatar.ui-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .app-navbar--sidebar .app-navbar-user-name {
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+
+  .app-navbar--sidebar .app-navbar-user-role {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+  }
+
+  .app-navbar--sidebar .app-navbar-logout {
+    width: 100%;
+    color: var(--color-danger);
+  }
+
+  .app-navbar--sidebar .app-navbar-logout .app-navbar-link-icon {
+    color: var(--color-danger);
   }
 }

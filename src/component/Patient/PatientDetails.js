@@ -16,8 +16,24 @@ import './PatientDetails.css';
 
 const CASE_TYPE_LABELS = { 1: 'AnteNatal', 2: 'Infertility', 3: 'General' };
 const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'accent', 3: 'neutral' };
+// Same flat fee used everywhere else revenue is shown (WeekSummary.js,
+// BookAppointment.js) - no per-visit amount is actually stored, so a paid
+// billing-history entry's real amount is always this constant, never
+// invented per row.
+const CONSULTATION_FEE = 500;
+const APPOINTMENT_STATUS_VARIANT = { appointment_confirmed: 'success', appointment_pending: 'warning', appointment_rejected: 'danger' };
+const APPOINTMENT_STATUS_LABEL = { appointment_confirmed: 'Confirmed', appointment_pending: 'Pending', appointment_rejected: 'Rejected' };
 
 const getInitials = (first, last) => `${(first || '')[0] || ''}${(last || '')[0] || ''}`.toUpperCase();
+
+const formatNoteDate = (iso) => {
+  const date = new Date(iso);
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) {
+    return `Today · ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+  }
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
 // Only the "contact-ish" fields get an icon - keeps the grid scannable
 // instead of every single field competing for attention with one.
@@ -49,6 +65,15 @@ const PatientDetails = () => {
   const [editMode, setEditMode] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
+  // Real appointment history for this patient - the same activity feed
+  // PatientQuickView's drawer already uses, filtered down to just the
+  // appointment_* events (that endpoint also returns AuditLog entries like
+  // "record updated", which belong in an activity feed but not here).
+  // null = still loading.
+  const [appointmentEvents, setAppointmentEvents] = useState(null);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [noteError, setNoteError] = useState(null);
 
   const fetchPatientDetails = async () => {
     try {
@@ -60,6 +85,35 @@ const PatientDetails = () => {
   };
 
   useEffect(() => { fetchPatientDetails(); }, [patientId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    axios.get(`${API_BASE}/api/patients/${patientId}/activity`, { headers: getAuthHeader() })
+      .then(res => setAppointmentEvents((res.data.data || []).filter(e => e.action.startsWith('appointment_'))))
+      .catch(() => setAppointmentEvents([])); // Non-critical - the rest of the page still works without it.
+  }, [patientId]);
+
+  // Deliberately standalone from editing the patient (see Patients.js's own
+  // model comment) - just type and save, no visit date or payment status
+  // involved, per the doctor's explicit preference.
+  const handleAddNote = async (event) => {
+    event.preventDefault();
+    if (!noteText.trim()) return;
+    setNoteError(null);
+    setSavingNote(true);
+    try {
+      const response = await axios.post(
+        `${API_BASE}/api/patients/${patientId}/diagnosis-notes`,
+        { text: noteText.trim(), author: sessionStorage.getItem('userName') || '' },
+        { headers: getAuthHeader() }
+      );
+      setPatientDetails(response.data.data);
+      setNoteText('');
+    } catch (err) {
+      setNoteError(err.response?.data?.message || 'Could not save the note. Please try again.');
+    } finally {
+      setSavingNote(false);
+    }
+  };
 
   const handleDocumentPreview = async (document) => {
     try {
@@ -216,14 +270,105 @@ const PatientDetails = () => {
               )
             )}
 
-            {/* Diagnosis stays visible regardless of which tab is active - the
-                highest-priority clinical info for staff, not something that
-                should require a click to see (same reasoning the mockup
-                itself uses for its always-visible vitals strip above its own
-                tabs). */}
-            <div className="record-diagnosis-callout">
-              <div className="record-field-label">Diagnosis</div>
-              <div className="record-field-value">{patientDetails.diagnosis || '-'}</div>
+            {/* Recent Appointments/Billing History/Medical Notes stay visible
+                regardless of which tab is active, same reasoning as the
+                Diagnosis callout this replaced - real clinical/financial
+                history shouldn't require a click to see. */}
+            <div className="record-history-grid">
+              <div className="record-history-card">
+                <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+                  <Icon name="calendar" size={16} className="record-section-title-icon" /> Recent Appointments
+                </h3>
+                {appointmentEvents === null ? (
+                  <div className="text-muted">Loading...</div>
+                ) : appointmentEvents.length === 0 ? (
+                  <div className="ui-empty-state ui-empty-state-sm">
+                    <Icon name="calendar" size={22} />
+                    <p>No online appointments yet.</p>
+                  </div>
+                ) : (
+                  <div className="record-history-list">
+                    {appointmentEvents.map((event, i) => (
+                      <div className="record-history-row" key={i}>
+                        <div>
+                          <div className="record-history-row-title">{event.detail || 'Appointment'}</div>
+                          <div className="text-muted record-history-row-date">{formatNoteDate(event.timestamp)}</div>
+                        </div>
+                        <Badge variant={APPOINTMENT_STATUS_VARIANT[event.action] || 'neutral'}>
+                          {APPOINTMENT_STATUS_LABEL[event.action] || event.action}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="record-history-card">
+                <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+                  <Icon name="wallet" size={16} className="record-section-title-icon" /> Billing History
+                </h3>
+                {!patientDetails.visitHistory || patientDetails.visitHistory.length === 0 ? (
+                  <div className="ui-empty-state ui-empty-state-sm">
+                    <Icon name="wallet" size={22} />
+                    <p>No visits recorded yet.</p>
+                  </div>
+                ) : (
+                  <div className="record-history-list">
+                    {[...patientDetails.visitHistory].reverse().map((visit, i) => (
+                      <div className="record-history-row" key={visit._id || i}>
+                        <div>
+                          <div className="record-history-row-title">
+                            Visit · {visit.paymentMethod === 'online' ? 'Online' : 'Offline'}
+                          </div>
+                          <div className="text-muted record-history-row-date">{new Date(visit.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                        </div>
+                        <div className="record-history-row-amount">
+                          <div>{visit.paymentStatus === 'paid' ? `₹${CONSULTATION_FEE}` : '-'}</div>
+                          <Badge variant={visit.paymentStatus === 'paid' ? 'success' : 'warning'}>
+                            {visit.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="record-history-card record-notes-card">
+              <h3 className="record-section-title" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+                <Icon name="edit" size={16} className="record-section-title-icon" /> Medical Notes
+              </h3>
+              <form className="record-add-note-form" onSubmit={handleAddNote}>
+                <textarea
+                  className="ui-textarea"
+                  rows={2}
+                  placeholder="Add a clinical note..."
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                />
+                {noteError && <div className="ui-banner ui-banner-error">{noteError}</div>}
+                <Button type="submit" size="sm" disabled={savingNote || !noteText.trim()}>
+                  {savingNote ? 'Saving...' : 'Add Note'}
+                </Button>
+              </form>
+              {!patientDetails.diagnosisNotes || patientDetails.diagnosisNotes.length === 0 ? (
+                <div className="ui-empty-state ui-empty-state-sm">
+                  <Icon name="inbox" size={22} />
+                  <p>No notes yet.</p>
+                </div>
+              ) : (
+                <div className="record-notes-list">
+                  {[...patientDetails.diagnosisNotes].reverse().map((note, i) => (
+                    <div className="record-note-item" key={note._id || i}>
+                      <div className="record-note-item-text">{note.text}</div>
+                      <div className="text-muted record-note-item-meta">
+                        {note.author ? `${note.author} · ` : ''}{formatNoteDate(note.createdAt)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="patient-detail-actions">
