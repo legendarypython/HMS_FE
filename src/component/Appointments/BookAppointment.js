@@ -12,7 +12,7 @@ import { TENANT_CONFIG } from '../../config/tenant';
 import { generateTimeSlots, isClinicClosed, formatWindowsSummary } from '../../utils/timeSlots';
 import './BookAppointment.css';
 
-const CONSULTATION_FEE_DISPLAY = '₹500';
+const CONSULTATION_FEE_DISPLAY = '₹400';
 const TIME_SLOTS = generateTimeSlots(TENANT_CONFIG.opdWindows);
 const OPD_HOURS_SUMMARY = formatWindowsSummary(TENANT_CONFIG.opdWindows);
 const TODAY = new Date().toLocaleDateString('en-CA'); // yyyy-mm-dd, local timezone

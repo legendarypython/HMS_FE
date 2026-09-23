@@ -20,7 +20,7 @@ const CASE_TYPE_BADGE_VARIANT = { 1: 'primary', 2: 'accent', 3: 'neutral' };
 // BookAppointment.js) - no per-visit amount is actually stored, so a paid
 // billing-history entry's real amount is always this constant, never
 // invented per row.
-const CONSULTATION_FEE = 500;
+const CONSULTATION_FEE = 400;
 const APPOINTMENT_STATUS_VARIANT = { appointment_confirmed: 'success', appointment_pending: 'warning', appointment_rejected: 'danger' };
 const APPOINTMENT_STATUS_LABEL = { appointment_confirmed: 'Confirmed', appointment_pending: 'Pending', appointment_rejected: 'Rejected' };
 

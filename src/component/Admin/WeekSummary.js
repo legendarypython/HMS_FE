@@ -6,7 +6,7 @@ import { API_BASE, apiFetch } from '../../utils/api';
 // Fixed consultation fee (see BookAppointment.js's own CONSULTATION_FEE_DISPLAY) -
 // no per-appointment amount is stored on the model, so revenue is derived
 // from a count of paid appointments rather than summed from real values.
-const CONSULTATION_FEE = 500;
+const CONSULTATION_FEE = 400;
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
