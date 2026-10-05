@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import AppNavbar from '../Shared/AppNavbar';
 import Footer from '../Footer';
 import Button from '../ui/Button';
@@ -8,6 +7,7 @@ import Icon from '../ui/Icon';
 import IconBadge from '../ui/IconBadge';
 import { API_BASE, apiFetch } from '../../utils/api';
 import { TENANT_CONFIG } from '../../config/tenant';
+import { mapsHref, telHref } from '../../utils/contact';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import './Home.css';
 
@@ -84,11 +84,9 @@ const Home = () => {
             <p>{TENANT_CONFIG.name} is a focused gynaecology practice built around one thing: knowing your name and your history, every time you walk in.</p>
           </div>
           <div className="home-hero-cta-card">
-            <Link to="/book-appointment">
-              <Button variant="primary" size="lg" style={{ width: '100%' }}>
-                Book with {TENANT_CONFIG.doctorName} <Icon name="arrow-right" size={18} />
-              </Button>
-            </Link>
+            <Button to="/book-appointment" variant="primary" size="lg" style={{ width: '100%' }}>
+              Book with {TENANT_CONFIG.doctorName} <Icon name="arrow-right" size={18} />
+            </Button>
             <p className="hero-cta-microline">No app. No account. Under a minute.</p>
           </div>
         </div>
@@ -149,11 +147,9 @@ const Home = () => {
           ))}
         </div>
         <div className="features-section-cta">
-          <Link to="/book-appointment">
-            <Button size="lg">
-              Book with {TENANT_CONFIG.doctorName} <Icon name="arrow-right" size={18} />
-            </Button>
-          </Link>
+          <Button to="/book-appointment" size="lg">
+            Book with {TENANT_CONFIG.doctorName} <Icon name="arrow-right" size={18} />
+          </Button>
         </div>
       </section>
 
@@ -193,6 +189,14 @@ const Home = () => {
           <span className="ui-eyebrow">Visit Us</span>
           <h2 className="section-title">Find Us in Agra</h2>
           <p>{TENANT_CONFIG.address}</p>
+          <div className="visit-section-actions">
+            <Button href={mapsHref()} target="_blank" rel="noopener noreferrer" variant="primary">
+              <Icon name="map-pin" size={16} /> Get directions
+            </Button>
+            <Button href={telHref()} variant="secondary">
+              <Icon name="phone" size={16} /> Call {TENANT_CONFIG.phone}
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -214,22 +218,18 @@ const Home = () => {
         </span>
         <h2>Book with {TENANT_CONFIG.doctorName} in about 30 seconds.</h2>
         <p>Trusted gynaecology &amp; antenatal care in Agra - no paperwork, no phone tag.</p>
-        <Link to="/book-appointment">
-          <Button variant="secondary" className="cta-btn-light" size="lg">
-            Book My Appointment <Icon name="arrow-right" size={18} />
-          </Button>
-        </Link>
+        <Button to="/book-appointment" variant="secondary" className="cta-btn-light" size="lg">
+          Book My Appointment <Icon name="arrow-right" size={18} />
+        </Button>
         <p className="cta-microline">No account. No app. No wait.</p>
       </section>
 
       <Footer />
 
       <div className={`mobile-sticky-cta ${showStickyCta ? 'mobile-sticky-cta-visible' : ''}`}>
-        <Link to="/book-appointment">
-          <Button variant="primary" size="lg" style={{ width: '100%' }}>
-            Book Appointment <Icon name="arrow-right" size={18} />
-          </Button>
-        </Link>
+        <Button to="/book-appointment" variant="primary" size="lg" style={{ width: '100%' }}>
+          Book Appointment <Icon name="arrow-right" size={18} />
+        </Button>
       </div>
     </div>
   );

@@ -38,6 +38,9 @@ export const TENANT_CONFIG = {
   email: process.env.REACT_APP_TENANT_EMAIL || 'bhavanarmsk7@gmail.com',
   phone: process.env.REACT_APP_TENANT_PHONE || '9412426818',
   address: process.env.REACT_APP_TENANT_ADDRESS || '1/89, Panchkuian Hospital, Panchkuian, near Mathur Vaishya Bhawan, Agra',
+  // Optional exact Google Maps share link for the "Get directions" button.
+  // Empty falls back to a Maps search for the address text above.
+  mapsUrl: process.env.REACT_APP_TENANT_MAPS_URL || '',
   heroBgImage: process.env.REACT_APP_TENANT_HERO_BG_IMG || process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/clinic-ot.jpg',
   heroImage1: process.env.REACT_APP_TENANT_HERO_IMG_1 || '/images/dr-bhavana-desk.jpg',
   heroImage2: process.env.REACT_APP_TENANT_HERO_IMG_2 || '/images/clinic-signboard.jpg',

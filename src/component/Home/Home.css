@@ -212,6 +212,15 @@
   min-width: 280px;
 }
 
+/* Tap-to-call and directions - the two things someone standing outside or
+   driving to a clinic actually needs from this section. */
+.visit-section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
 /* The signboard photo is portrait-shaped (unlike the standard 4:3 hero
    photos), so it gets its own aspect ratio matching the source exactly -
    avoids cropping any of the text/credentials printed on the sign itself. */

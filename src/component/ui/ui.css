@@ -173,6 +173,10 @@
 }
 
 .ui-btn {
+  /* A real <button> is border-box by default but an <a> is not - without
+     this, a link-styled button with width:100% overflows its container by
+     its own padding. */
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -195,6 +199,11 @@
 .ui-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+a.ui-btn,
+a.ui-btn:hover {
+  text-decoration: none;
 }
 
 .ui-btn-primary {

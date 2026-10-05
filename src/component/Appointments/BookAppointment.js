@@ -8,6 +8,7 @@ import IconBadge from '../ui/IconBadge';
 import Select from '../ui/Select';
 import DateInput from '../ui/DateInput';
 import { API_BASE, apiFetch } from '../../utils/api';
+import { loadInstamojo } from '../../utils/loadInstamojo';
 import { TENANT_CONFIG } from '../../config/tenant';
 import { generateTimeSlots, isClinicClosed, formatWindowsSummary } from '../../utils/timeSlots';
 import './BookAppointment.css';
@@ -79,6 +80,11 @@ const BookAppointment = () => {
       })
       .catch(err => console.error('Error fetching doctors:', err));
   }, []);
+
+  // Start fetching the payment script as soon as someone lands on the booking
+  // page, so it's ready by the time they reach "Pay". handleSubmit still
+  // awaits it, so a slow or failed load never causes a missed payment.
+  useEffect(() => { loadInstamojo().catch(() => {}); }, []);
 
   // Don't leave a polling interval running after the component unmounts
   // (e.g. patient navigates away mid-payment).
@@ -229,7 +235,9 @@ const BookAppointment = () => {
       }
 
       const { longurl, paymentRequestId } = json.data;
-      if (!window.Instamojo) {
+      try {
+        await loadInstamojo();
+      } catch (loadErr) {
         setError('Payment could not load. Please refresh and try again.');
         return;
       }
@@ -375,6 +383,8 @@ const BookAppointment = () => {
                   <h2 className="section-title">Choose Date &amp; Time</h2>
                   <p className="text-muted" style={{ marginTop: '-12px', marginBottom: '20px', fontSize: '0.88rem' }}>
                     OPD hours: {OPD_HOURS_SUMMARY} &middot; Closed Sundays
+                    <br />
+                    Consultation fee {CONSULTATION_FEE_DISPLAY}, paid online to confirm your slot.
                   </p>
 
                   <Field label="Preferred Date" required htmlFor="preferredDate">
@@ -410,15 +420,15 @@ const BookAppointment = () => {
                   <h2 className="section-title">Your Details</h2>
 
                   <Field label="Your Name" required htmlFor="patientName">
-                    <input id="patientName" className="ui-input" value={form.patientName} onChange={handleChange('patientName')} />
+                    <input id="patientName" className="ui-input" autoComplete="name" aria-required="true" value={form.patientName} onChange={handleChange('patientName')} />
                   </Field>
 
                   <Field label="Phone Number" required htmlFor="patientPhone">
-                    <input id="patientPhone" className="ui-input" type="tel" value={form.patientPhone} onChange={handleChange('patientPhone')} />
+                    <input id="patientPhone" className="ui-input" type="tel" autoComplete="tel-national" inputMode="numeric" aria-required="true" value={form.patientPhone} onChange={handleChange('patientPhone')} />
                   </Field>
 
                   <Field label="Email" htmlFor="email">
-                    <input id="email" className="ui-input" type="email" value={form.email} onChange={handleChange('email')} />
+                    <input id="email" className="ui-input" type="email" autoComplete="email" inputMode="email" value={form.email} onChange={handleChange('email')} />
                   </Field>
 
                   <Field label="Reason for visit" htmlFor="reason">

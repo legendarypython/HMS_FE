@@ -36,6 +36,20 @@
   font-size: 0.9rem;
 }
 
+/* Phone/email are real tap-to-call and tap-to-mail links now. The vertical
+   padding gives a thumb-sized target without changing the line's look. */
+.app-footer-link {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  display: inline-block;
+  padding: 6px 0;
+}
+
+.app-footer-link:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .app-footer-copyright {
   text-align: center;
   margin-top: var(--space-8);

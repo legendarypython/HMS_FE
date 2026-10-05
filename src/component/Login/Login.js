@@ -99,6 +99,9 @@ const Login = () => {
                   id="mobile"
                   className="ui-input"
                   type="tel"
+                  autoComplete="tel-national"
+                  inputMode="numeric"
+                  aria-required="true"
                   placeholder="Enter your mobile number"
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
@@ -120,6 +123,8 @@ const Login = () => {
                   id="password"
                   className="ui-input"
                   type="password"
+                  autoComplete="current-password"
+                  aria-required="true"
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
