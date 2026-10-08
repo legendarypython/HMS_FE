@@ -19,6 +19,19 @@ import axios from 'axios';
 import { getAuthHeader } from '../../utils/auth';
 import { API_BASE, apiFetch } from '../../utils/api';
 
+// Standard due-date rule (Naegele's): 40 weeks = 280 days after the first day
+// of the last menstrual period. UTC arithmetic so DST or the browser's
+// timezone can never shift the result by a day. Anything that isn't a clean
+// yyyy-mm-dd date gives '' rather than a wrong date.
+const EDD_OFFSET_DAYS = 280;
+const eddFromLmp = (lmp) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(lmp || '')) return '';
+  const [y, m, d] = lmp.split('-').map(Number);
+  const start = new Date(Date.UTC(y, m - 1, d));
+  if (start.getUTCMonth() !== m - 1 || start.getUTCDate() !== d) return '';
+  return new Date(Date.UTC(y, m - 1, d + EDD_OFFSET_DAYS)).toISOString().slice(0, 10);
+};
+
 const BLANK_INVESTIGATIONS = {
   bloodInvestigation: { details: '', documents: [] },
   urineInvestigation: { details: '', documents: [] },
@@ -92,6 +105,10 @@ const AntenatalDetailsForm = () => {
   const [caseId, setCaseId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [antenatalDetails, setAntenatalDetails] = useState(() => BLANK_DETAILS(patientId));
+  // True once the due date was entered or changed by hand (or saved earlier
+  // with a date that differs from LMP + 40 weeks, e.g. revised after a dating
+  // scan) - from then on changing the LMP must not overwrite it.
+  const eddEdited = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +117,8 @@ const AntenatalDetailsForm = () => {
       .then((json) => {
         if (cancelled || !json?.data) return;
         const existing = json.data;
+        const savedEdd = existing.expectedDateOfDelivery ? existing.expectedDateOfDelivery.slice(0, 10) : '';
+        eddEdited.current = Boolean(savedEdd) && savedEdd !== eddFromLmp(existing.LMP);
         setCaseId(existing.caseId);
         setAntenatalDetails({
           patientId,
@@ -319,7 +338,18 @@ const AntenatalDetailsForm = () => {
             [subCategory]: value
           }
         }));
-      }  else {
+      } else if (name === 'LMP') {
+        setAntenatalDetails((prevState) => ({
+          ...prevState,
+          LMP: value,
+          expectedDateOfDelivery: eddEdited.current ? prevState.expectedDateOfDelivery : eddFromLmp(value)
+        }));
+      } else if (name === 'expectedDateOfDelivery') {
+        // A hand-entered date wins over the calculation. Clearing it, or
+        // typing exactly the calculated date, hands control back to the LMP.
+        eddEdited.current = Boolean(value) && value !== eddFromLmp(antenatalDetails.LMP);
+        setAntenatalDetails((prevState) => ({ ...prevState, expectedDateOfDelivery: value }));
+      } else {
       setAntenatalDetails((prevState) => ({
         ...prevState,
         [name]: value
@@ -443,6 +473,9 @@ const AntenatalDetailsForm = () => {
           onChange={handleChange}
           required
         />
+        <p className="text-muted" style={{ fontSize: '0.78rem', marginTop: 4 }}>
+          Fills in automatically as LMP + 40 weeks. You can change it, for example after a dating scan.
+        </p>
       </Field>
 
       <Field label="Pregnancy Complications" required htmlFor="pregnancyComplications">
